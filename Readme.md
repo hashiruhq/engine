@@ -47,7 +47,12 @@ The engine should support the following actions:
 
 ## Resources
 
+Trading Engine
 - Matcher: https://github.com/fmstephe/matching_engine/blob/master/matcher/matcher.go
 - Order book: https://github.com/hookercookerman/trading_engine/blob/master/trading_engine/order_book.go
 - https://github.com/bloq/cpptrade#summary
 - https://www.investopedia.com/university/intro-to-order-types/ 
+
+Golang Docs
+- https://gobyexample.com/goroutines
+- https://www.apress.com/gp/book/9781484226919
