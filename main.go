@@ -39,7 +39,7 @@ func main() {
 	rand.Seed(42)
 	count = 0
 	orderPool := make(chan *trading_engine.Order, 1000000)
-	tradePool := make(chan *trading_engine.Trade, 3000000)
+	tradePool := make(chan *trading_engine.Trade, 1000000)
 
 	tradingEngine := trading_engine.NewTradingEngine()
 	// w.Add(1)
