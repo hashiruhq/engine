@@ -25,3 +25,16 @@ func (engine *TradingEngine) Start(orderPool <-chan *Order, tradePool chan<- *Tr
 	}
 	return errors.New("ERROR: Stopping engine due to closing order channel")
 }
+
+func (engine *TradingEngine) Process(order *Order) []*Trade {
+	trades, err := engine.OrderBook.Process(order)
+	engine.mtx.Lock()
+	engine.OrdersCompleted++
+	if err == nil {
+		engine.TradesCompleted += (int64)(len(trades))
+	} else {
+		fmt.Println("Error executing order", err, order)
+	}
+	engine.mtx.Unlock()
+	return trades
+}

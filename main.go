@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"runtime"
+	"sync"
 	"time"
 	"trading_engine/trading_engine"
 )
@@ -32,14 +33,12 @@ func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
 
-// var w sync.WaitGroup
-var count int
+var w sync.WaitGroup
 
 func main() {
 	rand.Seed(42)
-	count = 0
-	orderPool := make(chan *trading_engine.Order, 1000000)
-	tradePool := make(chan *trading_engine.Trade, 1000000)
+	// orderPool := make(chan *trading_engine.Order, 1000000)
+	// tradePool := make(chan *trading_engine.Trade, 1000000)
 
 	tradingEngine := trading_engine.NewTradingEngine()
 	// w.Add(1)
@@ -49,24 +48,20 @@ func main() {
 	startTime := time.Now().UnixNano() // / (int64(time.Millisecond)/int64(time.Nanosecond))
 
 	// w.Add(runtime.NumCPU())
+	// for i := 0; i < runtime.NumCPU(); i++ {
+	// 	go processTrades(i, tradePool)
+	// }
+
+	w.Add(runtime.NumCPU())
 	for i := 0; i < runtime.NumCPU(); i++ {
-		go processTrades(i, tradePool)
-	}
-	// w.Add(runtime.NumCPU())
-	for i := 0; i < runtime.NumCPU()/2; i++ {
-		go generateOrders(orderPool)
+		go generateOrders(tradingEngine)
 	}
 
-	go func(orderPool chan *trading_engine.Order, tradePool chan *trading_engine.Trade) {
-		time.Sleep(10 * time.Second)
-		fmt.Println("Closing pools")
-		close(orderPool)
-		// close(tradePool)
-	}(orderPool, tradePool)
+	w.Wait()
 
-	tradingEngine.Start(orderPool, tradePool)
+	// tradingEngine.Start(orderPool, tradePool)
 
-	close(tradePool)
+	// close(tradePool)
 	endTime := time.Now().UnixNano()
 
 	timeout := (float64)(int64(time.Nanosecond) * (endTime - startTime) / int64(time.Second))
@@ -93,13 +88,14 @@ func main() {
 	)
 }
 
-func generateOrders(orderPool chan<- *trading_engine.Order) {
-	for {
-		id := fmt.Sprintf("%d", rand.Int())
-		price := rand.Float64() * 100
-		amount := rand.Float64() * 10000
+func generateOrders(tradingEngine *trading_engine.TradingEngine) {
+	for i := 0; i < 100000; i++ {
+		id := "" //fmt.Sprintf("%d", rand.Int())
+		rnd := rand.Float64()
+		price := 1000100.00 - float64(i) - 99*rnd
+		amount := 10000.0 - 9000*rnd
 		var side trading_engine.OrderSide
-		if rand.Intn(2) == 1 {
+		if i%2 == 1 {
 			side = trading_engine.BUY
 		} else {
 			side = trading_engine.SELL
@@ -115,20 +111,7 @@ func generateOrders(orderPool chan<- *trading_engine.Order) {
 			Amount:   amount,
 			Price:    price,
 		}
-		select {
-		case orderPool <- order:
-		default:
-			fmt.Println("Order not sent", order, len(orderPool), cap(orderPool))
-			return
-		}
+		tradingEngine.Process(order)
 	}
-}
-
-func processTrades(index int, tradePool <-chan *trading_engine.Trade) {
-	for trade := range tradePool {
-		if trade.Amount >= 0 {
-			count++
-		}
-	}
-	fmt.Println("Trade pool closed. Stop processing trades.")
+	w.Done()
 }

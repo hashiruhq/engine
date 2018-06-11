@@ -1,6 +1,9 @@
 package trading_engine
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // import "github.com/ryszard/goskiplist/skiplist"
 
@@ -45,6 +48,11 @@ type Order struct {
 	// TraderID string        `json:"trader_id"` // @todo: we may not need this for the trading engine, instead we can use just the order id
 }
 
+// // LessThan implementes the skiplist interface
+// func (order *Order) LessThan(other *Order) bool {
+// 	return order.Price < other.Price
+// }
+
 // Trade represents a completed trade between two orders
 type Trade struct {
 	TakerOrderID string    `json:"taker_order_id"`
@@ -65,34 +73,36 @@ func NewTrade(takerOrder *Order, makerOrder *Order, amount float64, price float6
 	}
 }
 
-// BookEntry keeps minimal information about the order in the OrderBook
-type BookEntry struct {
-	Price  float64
-	Amount float64
-	Order  *Order
-}
+// // BookEntry keeps minimal information about the order in the OrderBook
+// type BookEntry struct {
+// 	Price  float64
+// 	Amount float64
+// 	Order  *Order
+// }
 
-// NewBookEntry Creates a new book entry based on an Order to be used by the order book
-func NewBookEntry(order *Order) *BookEntry {
-	return &BookEntry{Price: order.Price, Amount: order.Amount, Order: order}
-}
+// // NewBookEntry Creates a new book entry based on an Order to be used by the order book
+// func NewBookEntry(order *Order) *BookEntry {
+// 	return &BookEntry{Price: order.Price, Amount: order.Amount, Order: order}
+// }
 
 // OrderBook type
 type OrderBook struct {
-	BuyOrders  []*BookEntry
-	SellOrders []*BookEntry
+	mtx        sync.Mutex
+	BuyOrders  []*Order
+	SellOrders []*Order
 }
 
 // NewOrderBook Creates a new empty order book for the trading engine
 func NewOrderBook() *OrderBook {
-	buyOrders := make([]*BookEntry, 0, 1000)
-	sellOrders := make([]*BookEntry, 0, 1000)
+	buyOrders := make([]*Order, 0, 100000)
+	sellOrders := make([]*Order, 0, 100000)
 	return &OrderBook{BuyOrders: buyOrders, SellOrders: sellOrders}
 }
 
 // TradingEngine contains the current order book and information about the service since it was created
 type TradingEngine struct {
 	OrderBook       *OrderBook
+	mtx             sync.Mutex
 	Symbol          string
 	LastRestart     string
 	OrdersCompleted int64
