@@ -3,6 +3,8 @@ package trading_engine
 import (
 	"sync"
 	"time"
+
+	"github.com/ryszard/goskiplist/skiplist"
 )
 
 // import "github.com/ryszard/goskiplist/skiplist"
@@ -48,10 +50,23 @@ type Order struct {
 	// TraderID string        `json:"trader_id"` // @todo: we may not need this for the trading engine, instead we can use just the order id
 }
 
-// // LessThan implementes the skiplist interface
-// func (order *Order) LessThan(other *Order) bool {
-// 	return order.Price < other.Price
-// }
+// LessThan implementes the skiplist interface
+func (order *Order) LessThan(other *Order) bool {
+	return order.Price < other.Price
+}
+
+// PricePoint holds the records for a particular price
+type PricePoint struct {
+	SellBookEntries []*BookEntry
+	BuyBookEntries  []*BookEntry
+}
+
+// NewPricePoints creates a new skiplist in which to hold all price points
+func NewPricePoints() *skiplist.SkipList {
+	return skiplist.NewCustomMap(func(l, r interface{}) bool {
+		return l.(float64) < r.(float64)
+	})
+}
 
 // Trade represents a completed trade between two orders
 type Trade struct {
@@ -73,30 +88,80 @@ func NewTrade(takerOrder *Order, makerOrder *Order, amount float64, price float6
 	}
 }
 
-// // BookEntry keeps minimal information about the order in the OrderBook
-// type BookEntry struct {
-// 	Price  float64
-// 	Amount float64
-// 	Order  *Order
-// }
+// BookEntry keeps minimal information about the order in the OrderBook
+type BookEntry struct {
+	Price  float64
+	Amount float64
+	Order  *Order
+}
 
-// // NewBookEntry Creates a new book entry based on an Order to be used by the order book
-// func NewBookEntry(order *Order) *BookEntry {
-// 	return &BookEntry{Price: order.Price, Amount: order.Amount, Order: order}
-// }
+// NewBookEntry Creates a new book entry based on an Order to be used by the order book
+func NewBookEntry(order *Order) *BookEntry {
+	return &BookEntry{Price: order.Price, Amount: order.Amount, Order: order}
+}
 
 // OrderBook type
 type OrderBook struct {
-	mtx        sync.Mutex
-	BuyOrders  []*Order
-	SellOrders []*Order
+	mtx         sync.Mutex
+	PricePoints *skiplist.SkipList
+	// BuyOrders   []*BookEntry
+	// SellOrders  []*BookEntry
+	LowestAsk   float64
+	HighestBid  float64
+	MarketPrice float64
 }
 
 // NewOrderBook Creates a new empty order book for the trading engine
 func NewOrderBook() *OrderBook {
-	buyOrders := make([]*Order, 0, 100000)
-	sellOrders := make([]*Order, 0, 100000)
-	return &OrderBook{BuyOrders: buyOrders, SellOrders: sellOrders}
+	pricePoints := NewPricePoints()
+	// buyOrders := make([]*BookEntry, 0, 100000)
+	// sellOrders := make([]*BookEntry, 0, 100000)
+	return &OrderBook{PricePoints: pricePoints, LowestAsk: 0, HighestBid: 0, MarketPrice: 0}
+}
+
+func (orderBook *OrderBook) addBookEntry(bookEntry *BookEntry) {
+	if value, ok := orderBook.PricePoints.Get(bookEntry.Price); ok {
+		pricePoint := value.(*PricePoint)
+		if bookEntry.Order.Side == BUY {
+			pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries, bookEntry)
+		} else {
+			pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
+		}
+	} else {
+		buyBookEntries := []*BookEntry{}
+		sellBookEntries := []*BookEntry{}
+		if bookEntry.Order.Side == BUY {
+			buyBookEntries = append(buyBookEntries, bookEntry)
+		} else {
+			sellBookEntries = append(sellBookEntries, bookEntry)
+		}
+		pricePoint := &PricePoint{BuyBookEntries: buyBookEntries, SellBookEntries: sellBookEntries}
+		orderBook.PricePoints.Set(bookEntry.Price, pricePoint)
+	}
+}
+
+func (orderBook *OrderBook) removeBookEntry(bookEntry *BookEntry) {
+	if value, ok := orderBook.PricePoints.Get(bookEntry.Price); ok {
+		pricePoint := value.(*PricePoint)
+		if bookEntry.Order.Side == BUY {
+			for i, buyEntry := range pricePoint.BuyBookEntries {
+				if buyEntry == bookEntry {
+					pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries[:i], pricePoint.BuyBookEntries[i+1:]...)
+					break
+				}
+			}
+		} else {
+			for i, sellEntry := range pricePoint.SellBookEntries {
+				if bookEntry == sellEntry {
+					pricePoint.SellBookEntries = append(pricePoint.SellBookEntries[:i], pricePoint.SellBookEntries[i+1:]...)
+					break
+				}
+			}
+		}
+		if len(pricePoint.BuyBookEntries) == 0 && len(pricePoint.SellBookEntries) == 0 {
+			orderBook.PricePoints.Delete(bookEntry.Price)
+		}
+	}
 }
 
 // TradingEngine contains the current order book and information about the service since it was created

@@ -37,15 +37,9 @@ var w sync.WaitGroup
 
 func main() {
 	rand.Seed(42)
-	// orderPool := make(chan *trading_engine.Order, 1000000)
-	// tradePool := make(chan *trading_engine.Trade, 1000000)
 
 	tradingEngine := trading_engine.NewTradingEngine()
-	// w.Add(1)
-	// go func(orderPool <-chan *trading_engine.Order, tradePool chan<- *trading_engine.Trade) {
-	// 	tradingEngine.Start(orderPool, tradePool)
-	// }(orderPool, tradePool)
-	startTime := time.Now().UnixNano() // / (int64(time.Millisecond)/int64(time.Nanosecond))
+	startTime := time.Now().UnixNano()
 
 	// w.Add(runtime.NumCPU())
 	// for i := 0; i < runtime.NumCPU(); i++ {
@@ -59,31 +53,26 @@ func main() {
 
 	w.Wait()
 
-	// tradingEngine.Start(orderPool, tradePool)
-
-	// close(tradePool)
 	endTime := time.Now().UnixNano()
-
 	timeout := (float64)(int64(time.Nanosecond) * (endTime - startTime) / int64(time.Second))
-	// time.Sleep(30 * time.Second)
 	fmt.Printf(
 		"Total Orders: %d\n"+
 			"Total Trades: %d\n"+
 			"Orders/second: %f\n"+
 			"Trades/second: %f\n"+
 			"Pending Buy: %d\n"+
-			"Lowest Bid: %f\n"+
+			"Lowest Ask: %f\n"+
 			"Pending Sell: %d\n"+
-			"Highest Ask: %f\n"+
+			"Highest Bid: %f\n"+
 			"Duration (seconds): %f",
 		tradingEngine.OrdersCompleted,
 		tradingEngine.TradesCompleted,
 		float64(tradingEngine.OrdersCompleted)/timeout,
 		float64(tradingEngine.TradesCompleted)/timeout,
-		len(tradingEngine.OrderBook.BuyOrders),
-		tradingEngine.OrderBook.BuyOrders[0].Price,
-		len(tradingEngine.OrderBook.SellOrders),
-		tradingEngine.OrderBook.SellOrders[0].Price,
+		tradingEngine.OrderBook.PricePoints.Len(),
+		tradingEngine.OrderBook.LowestAsk,
+		tradingEngine.OrderBook.PricePoints.Len(),
+		tradingEngine.OrderBook.HighestBid,
 		timeout,
 	)
 }
@@ -92,8 +81,8 @@ func generateOrders(tradingEngine *trading_engine.TradingEngine) {
 	for i := 0; i < 100000; i++ {
 		id := "" //fmt.Sprintf("%d", rand.Int())
 		rnd := rand.Float64()
-		price := 1000100.00 - float64(i) - 99*rnd
-		amount := 10000.0 - 9000*rnd
+		price := 4000100.00 - float64(i) - 1000000*rnd
+		amount := 10000.0 - 9000*rand.Float64()
 		var side trading_engine.OrderSide
 		if i%2 == 1 {
 			side = trading_engine.BUY
