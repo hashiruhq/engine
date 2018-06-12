@@ -56,3 +56,10 @@ Trading Engine
 Golang Docs
 - https://gobyexample.com/goroutines
 - https://www.apress.com/gp/book/9781484226919
+
+Performance
+- https://blog.golang.org/profiling-go-programs
+- https://github.com/golang/go/wiki/Performance
+
+Algorithms
+- http://igoro.com/archive/skip-lists-are-fascinating/
