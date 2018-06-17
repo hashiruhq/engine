@@ -14,17 +14,15 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
 	benchmark.ResetTimer()
 	benchmark.RunParallel(func(pb *testing.PB) {
-		i := 0
 		for pb.Next() {
 			rnd := rand.Float64()
 			order := trading_engine.Order{
-				Price:    4000100.00 - (float64)(i) - 1000000*rnd,
+				Price:    4000100.00 - 1000000*rnd,
 				Amount:   10001.0 - 10000*rand.Float64(),
 				Side:     rand.Intn(2) % 2,
 				ID:       "",
 				Category: trading_engine.LIMIT_ORDER,
 			}
-			i++
 			tradingEngine.Process(order)
 		}
 	})

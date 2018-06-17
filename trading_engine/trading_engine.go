@@ -4,7 +4,7 @@ import "sync"
 
 // TradingEngine contains the current order book and information about the service since it was created
 type TradingEngine struct {
-	OrderBook       *OrderBook
+	OrderBook       OrderBook
 	OrdersCompleted int64
 	TradesCompleted int64
 	lock            sync.Mutex

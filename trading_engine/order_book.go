@@ -13,9 +13,9 @@ type OrderBook struct {
 }
 
 // NewOrderBook Creates a new empty order book for the trading engine
-func NewOrderBook() *OrderBook {
+func NewOrderBook() OrderBook {
 	pricePoints := NewPricePoints()
-	return &OrderBook{PricePoints: pricePoints, LowestAsk: 0, HighestBid: 0, MarketPrice: 0}
+	return OrderBook{PricePoints: pricePoints, LowestAsk: 0, HighestBid: 0, MarketPrice: 0}
 }
 
 func (orderBook *OrderBook) addBookEntry(bookEntry *BookEntry) {
