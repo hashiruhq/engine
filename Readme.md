@@ -57,9 +57,20 @@ Golang Docs
 - https://gobyexample.com/goroutines
 - https://www.apress.com/gp/book/9781484226919
 
+Communication
+- Apache Kafka: https://godoc.org/github.com/Shopify/sarama
+- JSON Decoder IO Reader: https://golang.org/pkg/encoding/json/#Decoder.Decode
+- Unix Domain Socket: https://gist.github.com/hakobe/6f70d69b8c5243117787fd488ae7fbf2
+
 Performance
 - https://blog.golang.org/profiling-go-programs
 - https://github.com/golang/go/wiki/Performance
+- https://www.quora.com/How-does-one-become-a-low-latency-programmer
+- https://www.akkadia.org/drepper/cpumemory.pdf
+- https://engineering.linkedin.com/kafka/benchmarking-apache-kafka-2-million-writes-second-three-cheap-machines
+- FS buffering: https://zensrc.wordpress.com/2016/06/15/golang-buffer-vs-non-buffer-in-io/
+- Fwd: https://blog.kintoandar.com/2016/08/fwd-the-little-forwarder-that-could.html
+
 
 Algorithms
 - http://igoro.com/archive/skip-lists-are-fascinating/

@@ -14,29 +14,22 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
 	benchmark.ResetTimer()
 	benchmark.RunParallel(func(pb *testing.PB) {
+		i := 0
 		for pb.Next() {
-			id := "" //fmt.Sprintf("%d", rand.Int())
 			rnd := rand.Float64()
-			price := 4000100.00 - 1000000*rnd
-			amount := 10000.0 - 9000*rand.Float64()
-			var side trading_engine.OrderSide
-			if rand.Intn(2) == 1 {
-				side = trading_engine.BUY
-			} else {
-				side = trading_engine.SELL
+			order := trading_engine.Order{
+				Price:    4000100.00 - (float64)(i) - 1000000*rnd,
+				Amount:   10001.0 - 10000*rand.Float64(),
+				Side:     rand.Intn(2) % 2,
+				ID:       "",
+				Category: trading_engine.LIMIT_ORDER,
 			}
-			order := &trading_engine.Order{
-				ID:       id,
-				Side:     side,
-				Category: 1,
-				Amount:   amount,
-				Price:    price,
-			}
+			i++
 			tradingEngine.Process(order)
 		}
 	})
 	endTime := time.Now().UnixNano()
-	timeout := (float64)(int64(time.Nanosecond) * (endTime - startTime) / int64(time.Second))
+	timeout := (float64)(float64(time.Nanosecond) * float64(endTime-startTime) / float64(time.Second))
 	fmt.Printf(
 		"Total Orders: %d\n"+
 			"Total Trades: %d\n"+

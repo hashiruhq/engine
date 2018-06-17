@@ -1,25 +1,82 @@
 package trading_engine
 
-// Process a new received order and return a list of trades make
-func (orderBook *OrderBook) Process(order *Order) ([]*Trade, error) {
-	var trades []*Trade
-	var err error
-	if order.Side == BUY {
-		orderBook.mtx.Lock()
-		trades, err = orderBook.processLimitBuy(order)
-		orderBook.mtx.Unlock()
+import (
+	"github.com/ryszard/goskiplist/skiplist"
+)
 
-	} else {
-		orderBook.mtx.Lock()
-		trades, err = orderBook.processLimitSell(order)
-		orderBook.mtx.Unlock()
-	}
-	return trades, err
+// OrderBook type
+type OrderBook struct {
+	PricePoints *skiplist.SkipList
+	LowestAsk   float64
+	HighestBid  float64
+	MarketPrice float64
 }
 
-func (orderBook *OrderBook) processLimitBuy(order *Order) ([]*Trade, error) {
+// NewOrderBook Creates a new empty order book for the trading engine
+func NewOrderBook() *OrderBook {
+	pricePoints := NewPricePoints()
+	return &OrderBook{PricePoints: pricePoints, LowestAsk: 0, HighestBid: 0, MarketPrice: 0}
+}
+
+func (orderBook *OrderBook) addBookEntry(bookEntry *BookEntry) {
+	if value, ok := orderBook.PricePoints.Get(bookEntry.Price); ok {
+		pricePoint := value.(*PricePoint)
+		if bookEntry.Order.Side == BUY {
+			pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries, bookEntry)
+		} else {
+			pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
+		}
+	} else {
+		buyBookEntries := []*BookEntry{}
+		sellBookEntries := []*BookEntry{}
+		if bookEntry.Order.Side == BUY {
+			buyBookEntries = append(buyBookEntries, bookEntry)
+		} else {
+			sellBookEntries = append(sellBookEntries, bookEntry)
+		}
+		pricePoint := &PricePoint{BuyBookEntries: buyBookEntries, SellBookEntries: sellBookEntries}
+		orderBook.PricePoints.Set(bookEntry.Price, pricePoint)
+	}
+}
+
+func (orderBook *OrderBook) removeBookEntry(bookEntry *BookEntry) {
+	if value, ok := orderBook.PricePoints.Get(bookEntry.Price); ok {
+		pricePoint := value.(*PricePoint)
+		if bookEntry.Order.Side == BUY {
+			for i, buyEntry := range pricePoint.BuyBookEntries {
+				if buyEntry == bookEntry {
+					pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries[:i], pricePoint.BuyBookEntries[i+1:]...)
+					break
+				}
+			}
+		} else {
+			for i, sellEntry := range pricePoint.SellBookEntries {
+				if bookEntry == sellEntry {
+					pricePoint.SellBookEntries = append(pricePoint.SellBookEntries[:i], pricePoint.SellBookEntries[i+1:]...)
+					break
+				}
+			}
+		}
+		if len(pricePoint.BuyBookEntries) == 0 && len(pricePoint.SellBookEntries) == 0 {
+			orderBook.PricePoints.Delete(bookEntry.Price)
+		}
+	}
+}
+
+// Process a new received order and return a list of trades make
+func (orderBook *OrderBook) Process(order Order) []Trade {
+	var trades []Trade
+	if order.Side == BUY {
+		trades = orderBook.processLimitBuy(order)
+	} else {
+		trades = orderBook.processLimitSell(order)
+	}
+	return trades
+}
+
+func (orderBook *OrderBook) processLimitBuy(order Order) []Trade {
 	bookEntry := NewBookEntry(order)
-	trades := make([]*Trade, 0, 5)
+	var trades []Trade
 
 	if orderBook.LowestAsk <= bookEntry.Price && orderBook.LowestAsk != 0 {
 		iterator := orderBook.PricePoints.Seek(orderBook.LowestAsk)
@@ -36,7 +93,7 @@ func (orderBook *OrderBook) processLimitBuy(order *Order) ([]*Trade, error) {
 					if sellEntry.Amount == 0 {
 						orderBook.removeBookEntry(sellEntry)
 					}
-					return trades, nil
+					return trades
 				}
 
 				// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
@@ -66,12 +123,12 @@ func (orderBook *OrderBook) processLimitBuy(order *Order) ([]*Trade, error) {
 		orderBook.HighestBid = order.Price
 	}
 
-	return trades, nil
+	return trades
 }
 
-func (orderBook *OrderBook) processLimitSell(order *Order) ([]*Trade, error) {
+func (orderBook *OrderBook) processLimitSell(order Order) []Trade {
 	bookEntry := NewBookEntry(order)
-	trades := make([]*Trade, 0, 5)
+	var trades []Trade
 
 	if orderBook.HighestBid >= bookEntry.Price && orderBook.HighestBid != 0 {
 		iterator := orderBook.PricePoints.Seek(orderBook.HighestBid)
@@ -88,7 +145,7 @@ func (orderBook *OrderBook) processLimitSell(order *Order) ([]*Trade, error) {
 					if buyEntry.Amount == 0 {
 						orderBook.removeBookEntry(buyEntry)
 					}
-					return trades, nil
+					return trades
 				}
 
 				// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
@@ -118,5 +175,5 @@ func (orderBook *OrderBook) processLimitSell(order *Order) ([]*Trade, error) {
 		orderBook.LowestAsk = order.Price
 	}
 
-	return trades, nil
+	return trades
 }

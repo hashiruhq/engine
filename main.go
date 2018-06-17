@@ -1,61 +1,62 @@
 package main
 
 import (
+	"log"
+	"os"
+	"os/signal"
 	"runtime"
-	"sync"
+	"syscall"
+	"trading_engine/net"
 	"trading_engine/trading_engine"
 )
-
-// User test structure
-// type User struct {
-// 	FirstName string `json:"first_name"`
-// 	LastName  string `json:"last_name"`
-// 	Age       int
-// 	Languages []string `json:"languages"`
-// }
-
-// func printUserData(jsonData string, age int) string {
-// 	var output string
-// 	res := &User{}
-// 	json.Unmarshal([]byte(jsonData), &res)
-// 	if res.Age > age {
-// 		output = fmt.Sprintf("User %s %s, who's %d can code in the following languages: %s\n", res.FirstName, res.LastName, res.Age, strings.Join(res.Languages, ", "))
-// 	} else {
-// 		output = fmt.Sprintf("User %s %s must be over %d before we can print their details", res.FirstName, res.LastName, age)
-// 	}
-// 	return output
-// }
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
 
-var w sync.WaitGroup
-
 func main() {
-	tradingEngine := trading_engine.NewTradingEngine()
+	engine := trading_engine.NewTradingEngine()
 
-	// w.Add(runtime.NumCPU())
-	// for i := 0; i < runtime.NumCPU(); i++ {
-	// 	go processTrades(i, tradePool)
-	// }
+	kafkaBroker := Config.Get("KAFKA_BROKER")
+	kafkaOrderTopic := Config.Get("KAFKA_ORDER_TOPIC")
+	kafkaOrderConsumer := Config.Get("KAFKA_ORDER_CONSUMER")
+	kafkaTradeTopic := Config.Get("KAFKA_TRADE_TOPIC")
 
-	w.Add(runtime.NumCPU())
-	for i := 0; i < runtime.NumCPU(); i++ {
-		go generateOrders(tradingEngine)
-	}
+	producer := net.NewKafkaProducer([]string{kafkaBroker}, kafkaTradeTopic)
+	producer.Start()
+	defer producer.Close()
 
-	w.Wait()
+	consumer := net.NewKafkaConsumer([]string{kafkaBroker}, []string{kafkaOrderTopic})
+	consumer.Start(kafkaOrderConsumer)
+	defer consumer.Close()
+
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
+
+	go listenToMessages(producer, consumer, engine)
+	closeOnSignal(producer, consumer, sigc)
 }
 
-func generateOrders(tradingEngine *trading_engine.TradingEngine) {
-	// order := &trading_engine.Order{
-	// 	ID:       id,
-	// 	Side:     side,
-	// 	Category: 1,
-	// 	Amount:   amount,
-	// 	Price:    price,
-	// }
-	// tradingEngine.Process(order)
-	w.Done()
+func listenToMessages(producer *net.KafkaProducer, consumer *net.KafkaConsumer, engine *trading_engine.TradingEngine) {
+	messageChan := consumer.GetMessageChan()
+	for msg := range messageChan {
+		orderMsg := net.DecodeOrder(msg.Value)
+		order := trading_engine.NewOrder(orderMsg.ID, orderMsg.Price, orderMsg.Amount, orderMsg.Side, orderMsg.Category)
+		trades := engine.Process(order)
+		consumer.MarkOffset(msg, "")
+		for i := range trades {
+			trade := trades[i]
+			tradeMsg := net.EncodeTrade(trade.MakerOrderID, trade.TakerOrderID, trade.Price, trade.Amount)
+			producer.Send(tradeMsg.Encoded)
+		}
+	}
+}
+
+func closeOnSignal(producer *net.KafkaProducer, consumer *net.KafkaConsumer, sigc chan os.Signal) {
+	sig := <-sigc
+	log.Printf("Caught signal %s: shutting down.", sig)
+	producer.Close()
+	consumer.Close()
+	// @todo: Do some cleanning up here
+	os.Exit(0)
 }

@@ -1,40 +1,29 @@
 package trading_engine
 
-import (
-	"errors"
-	"fmt"
-)
+import "sync"
 
-// Start the engine by consuming orders from the order pool and send them to the tradePool
-func (engine *TradingEngine) Start(orderPool <-chan *Order, tradePool chan<- *Trade) error {
-	for order := range orderPool {
-		engine.OrdersCompleted++
-		trades, err := engine.OrderBook.Process(order)
-		if err == nil {
-			engine.TradesCompleted += (int64)(len(trades))
-			for index := range trades {
-				select {
-				case tradePool <- trades[index]:
-				default:
-					fmt.Println("Unable to send results", len(tradePool), cap(tradePool))
-				}
-			}
-		} else {
-			fmt.Println("Error executing order", err, order)
-		}
-	}
-	return errors.New("ERROR: Stopping engine due to closing order channel")
+// TradingEngine contains the current order book and information about the service since it was created
+type TradingEngine struct {
+	OrderBook       *OrderBook
+	OrdersCompleted int64
+	TradesCompleted int64
+	lock            sync.Mutex
+	Symbol          string
+	LastRestart     string
 }
 
-func (engine *TradingEngine) Process(order *Order) []*Trade {
-	trades, err := engine.OrderBook.Process(order)
-	engine.mtx.Lock()
+// NewTradingEngine creates a new trading engine that contains an empty order book and can start receving requests
+func NewTradingEngine() *TradingEngine {
+	orderBook := NewOrderBook()
+	return &TradingEngine{OrderBook: orderBook, OrdersCompleted: 0, TradesCompleted: 0}
+}
+
+// Process a single order and returned all the trades that can be satisfied instantly
+func (engine *TradingEngine) Process(order Order) []Trade {
+	engine.lock.Lock()
+	trades := engine.OrderBook.Process(order)
 	engine.OrdersCompleted++
-	if err == nil {
-		engine.TradesCompleted += (int64)(len(trades))
-	} else {
-		fmt.Println("Error executing order", err, order)
-	}
-	engine.mtx.Unlock()
+	engine.TradesCompleted += (int64)(len(trades))
+	engine.lock.Unlock()
 	return trades
 }

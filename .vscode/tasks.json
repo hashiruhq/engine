@@ -6,7 +6,7 @@
     {
       "label": "Go: Benchmark",
       "type": "shell",
-      "command": "/usr/local/bin/go test -benchmem -benchtime 10s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData$"
+      "command": "/usr/local/bin/go test -benchmem -benchtime 10s -cpus 1 -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkSingleKafkaTest"
     }
   ]
 }
