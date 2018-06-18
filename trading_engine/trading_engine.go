@@ -9,7 +9,6 @@ type TradingEngine struct {
 	TradesCompleted int64
 	lock            sync.Mutex
 	Symbol          string
-	LastRestart     string
 }
 
 // NewTradingEngine creates a new trading engine that contains an empty order book and can start receving requests

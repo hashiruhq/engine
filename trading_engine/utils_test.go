@@ -20,7 +20,7 @@ func generateOrdersInKafka(n int) {
 
 	for i := 0; i < n; i++ {
 		rnd := rand.Float64()
-		msg := fmt.Sprintf("order[%d][ %s ] %d - %f @ %f", 1, "id", rand.Intn(2)%2, 10001.0-10000*rand.Float64(), 4000100.00-(float64)(i)-1000000*rnd)
+		msg := fmt.Sprintf("order[%d][ %s ] %d - %f @ %f", 1, "id", 1+rand.Intn(2)%2, 10001.0-10000*rand.Float64(), 4000100.00-(float64)(i)-1000000*rnd)
 		_, _, err := producer.Send(([]byte)(msg))
 		if err != nil {
 			log.Println(err)

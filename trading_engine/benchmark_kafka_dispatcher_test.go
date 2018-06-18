@@ -23,7 +23,7 @@ func BenchmarkKafkaDispatcher(benchmark *testing.B) {
 	const MAX_RECORDS = 240000
 	// MAX_RECORDS := benchmark.N
 
-	// generateOrders(MAX_RECORDS)
+	// generateOrdersInKafka(MAX_RECORDS)
 	engine := trading_engine.NewTradingEngine()
 
 	dispatcher := queue.NewDispatcher(engine, config.Config.GetInt("MAX_WORKERS"))

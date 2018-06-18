@@ -5,15 +5,15 @@ package trading_engine
 type Order struct {
 	Price    float64 `json:"price"`
 	Amount   float64 `json:"amount"`
-	Side     int     `json:"side"`
-	Category int     `json:"category"`
+	Side     int8    `json:"side"`
+	Category int8    `json:"category"`
 	ID       string  `json:"id"`
 	// Symbol   string        `json:"symbol"` // @todo: Not sure what this is used for
 	// TraderID string        `json:"trader_id"` // @todo: we may not need this for the trading engine, instead we can use just the order id
 }
 
 // NewOrder create a new order
-func NewOrder(id string, price, amount float64, side int, category int) Order {
+func NewOrder(id string, price, amount float64, side int8, category int8) Order {
 	return Order{ID: id, Price: price, Amount: amount, Side: side, Category: category}
 }
 

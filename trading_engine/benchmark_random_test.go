@@ -2,6 +2,7 @@ package trading_engine_test
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"testing"
 	"time"
@@ -14,13 +15,15 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
 	benchmark.ResetTimer()
 	benchmark.RunParallel(func(pb *testing.PB) {
+		i := 0.0
 		for pb.Next() {
+			i++
 			rnd := rand.Float64()
 			order := trading_engine.Order{
-				Price:    4000100.00 - 1000000*rnd,
-				Amount:   10001.0 - 10000*rand.Float64(),
-				Side:     rand.Intn(2) % 2,
-				ID:       "",
+				Price:    4000100.00 - 10*i - math.Ceil(10000*rnd),
+				Amount:   10001.0 - math.Ceil(10000*rand.Float64()),
+				Side:     int8(1 + rand.Intn(2)%2),
+				ID:       "asdfasdfasdfaasfadf",
 				Category: trading_engine.LIMIT_ORDER,
 			}
 			tradingEngine.Process(order)

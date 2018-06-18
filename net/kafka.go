@@ -14,13 +14,13 @@ type OrderMessage struct {
 	ID       string  `json:"id"`
 	Price    float64 `json:"price"`
 	Amount   float64 `json:"amount"`
-	Side     int     `json:"side"`
-	Category int     `json:"category"`
+	Side     int8    `json:"side"`
+	Category int8    `json:"category"`
 	Encoded  []byte
 }
 
 // EncodeOrder an order as a message
-func EncodeOrder(id string, price float64, amount float64, side int) *OrderMessage {
+func EncodeOrder(id string, price float64, amount float64, side int8) *OrderMessage {
 	msg := OrderMessage{ID: id, Price: price, Amount: amount, Side: side}
 	encoded, _ := json.Marshal(msg)
 	msg.Encoded = encoded

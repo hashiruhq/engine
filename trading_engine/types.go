@@ -2,9 +2,9 @@ package trading_engine
 
 const (
 	// BUY value means the user wants to buy from the market
-	BUY = 0
+	BUY = 1
 	// SELL value means the user wants to sell to the market
-	SELL = 1
+	SELL = 2
 )
 
 const (
