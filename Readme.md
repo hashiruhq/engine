@@ -59,6 +59,7 @@ Golang Docs
 
 Communication
 - Apache Kafka: https://godoc.org/github.com/Shopify/sarama
+- Alternative Kafka Client: https://github.com/confluentinc/confluent-kafka-go
 - JSON Decoder IO Reader: https://golang.org/pkg/encoding/json/#Decoder.Decode
 - Unix Domain Socket: https://gist.github.com/hakobe/6f70d69b8c5243117787fd488ae7fbf2
 

@@ -1,1 +1,0 @@
-{"base": "sym", "market": "tst", "id":"id1", "price": 1900, "amount": 1000, "side": 1}

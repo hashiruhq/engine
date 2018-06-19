@@ -33,36 +33,38 @@ func (orderBook *OrderBook) processLimitBuy(order Order) []Trade {
 		defer iterator.Close()
 
 		// traverse orders to find a matching one based on the sell order list
-		for iterator != nil && order.Price >= orderBook.LowestAsk {
-			pricePoint := iterator.Value().(*PricePoint)
-			for _, sellEntry := range pricePoint.SellBookEntries {
-				// if we can fill the trade instantly then we add the trade and complete the order
-				if sellEntry.Amount >= order.Amount {
-					trades = append(trades, NewTrade(order, sellEntry.Order, order.Amount, order.Price))
-					sellEntry.Amount -= order.Amount
-					if sellEntry.Amount == 0 {
-						orderBook.removeBookEntry(sellEntry)
+		if iterator != nil {
+			for order.Price >= orderBook.LowestAsk {
+				pricePoint := iterator.Value().(*PricePoint)
+				for _, sellEntry := range pricePoint.SellBookEntries {
+					// if we can fill the trade instantly then we add the trade and complete the order
+					if sellEntry.Amount >= order.Amount {
+						trades = append(trades, NewTrade(order, sellEntry.Order, order.Amount, order.Price))
+						sellEntry.Amount -= order.Amount
+						if sellEntry.Amount == 0 {
+							orderBook.removeBookEntry(sellEntry)
+						}
+						return trades
 					}
-					return trades
+
+					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
+					// we complete the sell order and we move to the next order
+					if sellEntry.Amount < order.Amount {
+						trades = append(trades, NewTrade(order, sellEntry.Order, sellEntry.Amount, sellEntry.Price))
+						order.Amount -= sellEntry.Amount
+						orderBook.removeBookEntry(sellEntry)
+						continue
+					}
 				}
 
-				// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
-				// we complete the sell order and we move to the next order
-				if sellEntry.Amount < order.Amount {
-					trades = append(trades, NewTrade(order, sellEntry.Order, sellEntry.Amount, sellEntry.Price))
-					order.Amount -= sellEntry.Amount
-					orderBook.removeBookEntry(sellEntry)
-					continue
+				if ok := iterator.Next(); ok {
+					if len(iterator.Value().(*PricePoint).SellBookEntries) > 0 {
+						orderBook.LowestAsk = iterator.Key().(float64)
+					}
+				} else {
+					orderBook.LowestAsk = 0
+					break
 				}
-			}
-
-			if ok := iterator.Next(); ok {
-				if len(iterator.Value().(*PricePoint).SellBookEntries) > 0 {
-					orderBook.LowestAsk = iterator.Key().(float64)
-				}
-			} else {
-				orderBook.LowestAsk = 0
-				break
 			}
 		}
 	}
@@ -83,36 +85,38 @@ func (orderBook *OrderBook) processLimitSell(order Order) []Trade {
 		defer iterator.Close()
 
 		// traverse orders to find a matching one based on the sell order list
-		for iterator != nil && order.Price <= orderBook.HighestBid {
-			pricePoint := iterator.Value().(*PricePoint)
-			for _, buyEntry := range pricePoint.BuyBookEntries {
-				// if we can fill the trade instantly then we add the trade and complete the order
-				if buyEntry.Amount >= order.Amount {
-					trades = append(trades, NewTrade(order, buyEntry.Order, order.Amount, order.Price))
-					buyEntry.Amount -= order.Amount
-					if buyEntry.Amount == 0 {
-						orderBook.removeBookEntry(buyEntry)
+		if iterator != nil {
+			for order.Price <= orderBook.HighestBid {
+				pricePoint := iterator.Value().(*PricePoint)
+				for _, buyEntry := range pricePoint.BuyBookEntries {
+					// if we can fill the trade instantly then we add the trade and complete the order
+					if buyEntry.Amount >= order.Amount {
+						trades = append(trades, NewTrade(order, buyEntry.Order, order.Amount, order.Price))
+						buyEntry.Amount -= order.Amount
+						if buyEntry.Amount == 0 {
+							orderBook.removeBookEntry(buyEntry)
+						}
+						return trades
 					}
-					return trades
+
+					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
+					// we complete the sell order and we move to the next order
+					if buyEntry.Amount < order.Amount {
+						trades = append(trades, NewTrade(order, buyEntry.Order, buyEntry.Amount, buyEntry.Price))
+						order.Amount -= buyEntry.Amount
+						orderBook.removeBookEntry(buyEntry)
+						continue
+					}
 				}
 
-				// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
-				// we complete the sell order and we move to the next order
-				if buyEntry.Amount < order.Amount {
-					trades = append(trades, NewTrade(order, buyEntry.Order, buyEntry.Amount, buyEntry.Price))
-					order.Amount -= buyEntry.Amount
-					orderBook.removeBookEntry(buyEntry)
-					continue
+				if ok := iterator.Previous(); ok {
+					if len(iterator.Value().(*PricePoint).BuyBookEntries) > 0 {
+						orderBook.HighestBid = iterator.Key().(float64)
+					}
+				} else {
+					orderBook.HighestBid = 0
+					break
 				}
-			}
-
-			if ok := iterator.Previous(); ok {
-				if len(iterator.Value().(*PricePoint).BuyBookEntries) > 0 {
-					orderBook.HighestBid = iterator.Key().(float64)
-				}
-			} else {
-				orderBook.HighestBid = 0
-				break
 			}
 		}
 	}
@@ -126,27 +130,30 @@ func (orderBook *OrderBook) processLimitSell(order Order) []Trade {
 	return trades
 }
 
+// Cancel an order from the order book based on the order price and ID
+func (orderBook *OrderBook) Cancel(id string, price float64) error {
+	// @todo implement this method
+	return nil
+}
+
 // Add a new book entry in the order book
 // If the price point already exists then the book entry is simply added at the end of the pricepoint
 // If the price point does not exist yet it will be created
 func (orderBook *OrderBook) addBookEntry(bookEntry *BookEntry) {
+	var pricePoint *PricePoint
 	if value, ok := orderBook.PricePoints.Get(bookEntry.Price); ok {
-		pricePoint := value.(*PricePoint)
-		if bookEntry.Order.Side == BUY {
-			pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries, bookEntry)
-		} else {
-			pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
-		}
+		pricePoint = value.(*PricePoint)
 	} else {
 		buyBookEntries := []*BookEntry{}
 		sellBookEntries := []*BookEntry{}
-		if bookEntry.Order.Side == BUY {
-			buyBookEntries = append(buyBookEntries, bookEntry)
-		} else {
-			sellBookEntries = append(sellBookEntries, bookEntry)
-		}
-		pricePoint := &PricePoint{BuyBookEntries: buyBookEntries, SellBookEntries: sellBookEntries}
+		pricePoint = &PricePoint{BuyBookEntries: buyBookEntries, SellBookEntries: sellBookEntries}
 		orderBook.PricePoints.Set(bookEntry.Price, pricePoint)
+	}
+
+	if bookEntry.Order.Side == BUY {
+		pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries, bookEntry)
+	} else {
+		pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
 	}
 }
 

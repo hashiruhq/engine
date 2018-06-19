@@ -1,9 +1,10 @@
 package trading_engine_test
 
 import (
+	"encoding/json"
 	"fmt"
-	"math"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 	"trading_engine/trading_engine"
@@ -11,24 +12,58 @@ import (
 
 func BenchmarkWithRandomData(benchmark *testing.B) {
 	rand.Seed(42)
-	tradingEngine := trading_engine.NewTradingEngine()
+	engine := trading_engine.NewTradingEngine()
+
+	testFile := "/Users/cosmin/Incubator/go/src/trading_engine/priv/data/market.txt"
+
+	// GenerateRandomRecordsInFile(testFile, benchmark.N)
+
+	fh, err := os.Open(testFile)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer fh.Close()
+	decoder := json.NewDecoder(fh)
+	orders := make(chan trading_engine.Order, 100000)
+	defer close(orders)
+	done := make(chan bool)
+	defer close(done)
+
 	startTime := time.Now().UnixNano()
 	benchmark.ResetTimer()
-	benchmark.RunParallel(func(pb *testing.PB) {
-		i := 0.0
-		for pb.Next() {
-			i++
-			rnd := rand.Float64()
-			order := trading_engine.Order{
-				Price:    4000100.00 - 10*i - math.Ceil(10000*rnd),
-				Amount:   10001.0 - math.Ceil(10000*rand.Float64()),
-				Side:     int8(1 + rand.Intn(2)%2),
-				ID:       "asdfasdfasdfaasfadf",
-				Category: trading_engine.LIMIT_ORDER,
+	go func(orders chan<- trading_engine.Order) {
+		arr := make([]trading_engine.Order, 0, benchmark.N)
+		for j := 0; j < benchmark.N; j++ {
+			if !decoder.More() {
+				break
 			}
-			tradingEngine.Process(order)
+			var order trading_engine.Order
+			decoder.Decode(&order)
+			arr = append(arr, order)
 		}
-	})
+		startTime = time.Now().UnixNano()
+		benchmark.ResetTimer()
+		for _, order := range arr {
+			orders <- order
+		}
+	}(orders)
+
+	ordersCompleted := 0
+	tradesCompleted := 0
+	go func(orders <-chan trading_engine.Order, n int) {
+		for {
+			order := <-orders
+			trades := engine.Process(order)
+			ordersCompleted++
+			tradesCompleted += len(trades)
+			if ordersCompleted >= n {
+				done <- true
+				return
+			}
+		}
+	}(orders, benchmark.N)
+
+	<-done
 	endTime := time.Now().UnixNano()
 	timeout := (float64)(float64(time.Nanosecond) * float64(endTime-startTime) / float64(time.Second))
 	fmt.Printf(
@@ -41,14 +76,14 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 			"Pending Sell: %d\n"+
 			"Highest Bid: %f\n"+
 			"Duration (seconds): %f\n\n",
-		tradingEngine.OrdersCompleted,
-		tradingEngine.TradesCompleted,
-		float64(tradingEngine.OrdersCompleted)/timeout,
-		float64(tradingEngine.TradesCompleted)/timeout,
-		tradingEngine.OrderBook.PricePoints.Len(),
-		tradingEngine.OrderBook.LowestAsk,
-		tradingEngine.OrderBook.PricePoints.Len(),
-		tradingEngine.OrderBook.HighestBid,
+		ordersCompleted,
+		tradesCompleted,
+		float64(ordersCompleted)/timeout,
+		float64(tradesCompleted)/timeout,
+		engine.OrderBook.PricePoints.Len(),
+		engine.OrderBook.LowestAsk,
+		engine.OrderBook.PricePoints.Len(),
+		engine.OrderBook.HighestBid,
 		timeout,
 	)
 }

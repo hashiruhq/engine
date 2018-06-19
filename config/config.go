@@ -13,16 +13,32 @@ type Configuration struct {
 // Config keeps the current configuration values
 var Config = Configuration{
 	Defaults: map[string]string{
-		"KAFKA_BROKER":                "kafka:9092",
-		"KAFKA_ORDER_TOPIC_PREFIX":    "trading.order.",
-		"KAFKA_ORDER_CONSUMER_PREFIX": "trading_engine_",
-		"KAFKA_TRADE_TOPIC_PREFIX":    "trading.trade.",
+		// The Kafka broker server to connect to. Defaults to "kafka:9092"
+		"KAFKA_BROKER": "kafka:9092",
 
-		"MARKETS": "btc.rpl,btc.eth,btc.ltc,btc.etn,btc.ada,btc.trn,eth.rpl,eth.rpl,eth.ltc,eth.ada,eth.trn",
+		// The type of engine to start
+		// This can be "SINGLE" or "MULTIPLE"
+		// Using the single engine type make better use of system resources and can ensure an optimal execution speed.
+		// Using the multiple engine type allows you to process multiple markets at once at the price of individual market performance.
+		// You can choose to deploy in SINGLE mode for the most active markets and in multiple mode for slow moving markets, thus
+		// achieving optimal resource allocation
+		"ENGINE_TYPE": "SINGLE",
 
-		// Dispatcher settings (unused for main engine)
-		"MAX_QUEUE":   "1000",
-		"MAX_WORKERS": "4",
+		// Single market topics to connect to.
+		// This is the recommended way of deploying in order to ensure optimal performance
+		"KAFKA_ORDER_TOPIC":    "trading.order.btc.eth",
+		"KAFKA_ORDER_CONSUMER": "trading_engine_btc_eth",
+		"KAFKA_TRADE_TOPIC":    "trading.trade.btc.eth",
+
+		// Dispatcher settings multiple market deployment
+		// Due to performance considerations multi market deployments are not recommended
+		// Try to deploy the trading engine on individual servers in order to reach optimal performance for each market pair
+		"MAX_QUEUE":                    "1000",
+		"MAX_WORKERS":                  "4",
+		"KAFKA_ORDER_TOPIC_PATTERN":    "trading.order.{base}.{market}",
+		"KAFKA_ORDER_CONSUMER_PATTERN": "trading_engine_{base}_{market}",
+		"KAFKA_TRADE_TOPIC_PATTERN":    "trading.trade.{base}.{market}",
+		"MARKETS":                      "btc.rpl,btc.eth,btc.ltc,btc.etn,btc.ada,btc.trn,eth.rpl,eth.rpl,eth.ltc,eth.ada,eth.trn",
 	},
 }
 
