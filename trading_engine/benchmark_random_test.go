@@ -1,6 +1,7 @@
 package trading_engine_test
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -16,30 +17,32 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 
 	testFile := "/Users/cosmin/Incubator/go/src/trading_engine/priv/data/market.txt"
 
-	// GenerateRandomRecordsInFile(testFile, benchmark.N)
+	// GenerateRandomRecordsInFile(&testFile, 2*benchmark.N)
 
 	fh, err := os.Open(testFile)
 	if err != nil {
 		panic(err.Error())
 	}
 	defer fh.Close()
-	decoder := json.NewDecoder(fh)
-	orders := make(chan trading_engine.Order, 100000)
+	bf := bufio.NewReader(fh)
+	decoder := json.NewDecoder(bf)
+	orders := make(chan *trading_engine.Order, 100000)
 	defer close(orders)
 	done := make(chan bool)
 	defer close(done)
 
 	startTime := time.Now().UnixNano()
 	benchmark.ResetTimer()
-	go func(orders chan<- trading_engine.Order) {
-		arr := make([]trading_engine.Order, 0, benchmark.N)
+	go func(orders chan<- *trading_engine.Order) {
+		arr := make([]*trading_engine.Order, 0, benchmark.N)
+
 		for j := 0; j < benchmark.N; j++ {
 			if !decoder.More() {
 				break
 			}
-			var order trading_engine.Order
+			order := trading_engine.Order{}
 			decoder.Decode(&order)
-			arr = append(arr, order)
+			arr = append(arr, &order)
 		}
 		startTime = time.Now().UnixNano()
 		benchmark.ResetTimer()
@@ -50,10 +53,10 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 
 	ordersCompleted := 0
 	tradesCompleted := 0
-	go func(orders <-chan trading_engine.Order, n int) {
+	go func(orders <-chan *trading_engine.Order, n int) {
 		for {
 			order := <-orders
-			trades := engine.Process(order)
+			trades := engine.Process(*order)
 			ordersCompleted++
 			tradesCompleted += len(trades)
 			if ordersCompleted >= n {

@@ -39,7 +39,7 @@ func (orderBook *OrderBook) processLimitBuy(order Order) []Trade {
 				for _, sellEntry := range pricePoint.SellBookEntries {
 					// if we can fill the trade instantly then we add the trade and complete the order
 					if sellEntry.Amount >= order.Amount {
-						trades = append(trades, NewTrade(order, sellEntry.Order, order.Amount, order.Price))
+						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, order.Amount, order.Price))
 						sellEntry.Amount -= order.Amount
 						if sellEntry.Amount == 0 {
 							orderBook.removeBookEntry(sellEntry)
@@ -50,7 +50,7 @@ func (orderBook *OrderBook) processLimitBuy(order Order) []Trade {
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
 					if sellEntry.Amount < order.Amount {
-						trades = append(trades, NewTrade(order, sellEntry.Order, sellEntry.Amount, sellEntry.Price))
+						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, sellEntry.Amount, sellEntry.Price))
 						order.Amount -= sellEntry.Amount
 						orderBook.removeBookEntry(sellEntry)
 						continue
@@ -91,7 +91,7 @@ func (orderBook *OrderBook) processLimitSell(order Order) []Trade {
 				for _, buyEntry := range pricePoint.BuyBookEntries {
 					// if we can fill the trade instantly then we add the trade and complete the order
 					if buyEntry.Amount >= order.Amount {
-						trades = append(trades, NewTrade(order, buyEntry.Order, order.Amount, order.Price))
+						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, order.Amount, order.Price))
 						buyEntry.Amount -= order.Amount
 						if buyEntry.Amount == 0 {
 							orderBook.removeBookEntry(buyEntry)
@@ -102,7 +102,7 @@ func (orderBook *OrderBook) processLimitSell(order Order) []Trade {
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
 					if buyEntry.Amount < order.Amount {
-						trades = append(trades, NewTrade(order, buyEntry.Order, buyEntry.Amount, buyEntry.Price))
+						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, buyEntry.Amount, buyEntry.Price))
 						order.Amount -= buyEntry.Amount
 						orderBook.removeBookEntry(buyEntry)
 						continue

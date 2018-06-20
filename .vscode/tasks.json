@@ -4,9 +4,29 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Go: Benchmark",
+      "label": "Go Profile: Consumer & Producer",
       "type": "shell",
-      "command": "/usr/local/bin/go test -benchmem -benchtime 10s -cpus 1 -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkSingleKafkaTest"
+      "command": "/usr/local/bin/go test -cpuprofile cpu.prof -memprofile mem.prof -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkKafkaConsumerProducer"
+    },
+    {
+      "label": "Go: Consumer & Producer",
+      "type": "shell",
+      "command": "/usr/local/bin/go test -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkKafkaConsumerProducer"
+    },
+    {
+      "label": "Go Profile: Benchmark Random Data",
+      "type": "shell",
+      "command": "/usr/local/bin/go test -gcflags=-m -cpuprofile cpu.prof -memprofile mem.prof -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData"
+    },
+    {
+      "label": "Go Escape Analisys: Benchmark Random Data",
+      "type": "shell",
+      "command": "/usr/local/bin/go test -gcflags=-m -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData"
+    },
+    {
+      "label": "Go: Benchmark Random Data",
+      "type": "shell",
+      "command": "/usr/local/bin/go test -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData"
     }
   ]
 }

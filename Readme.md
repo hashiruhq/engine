@@ -15,10 +15,10 @@ Such an order may look like the following data structure:
 ```js
 {
   action: 0, // 0=sell, 1=buy, 2=cancel-sell, 3=cancel-buy
-  type: 0, // 0=market, 1=limit, 2=stop-loss, 3=... // see https://www.investopedia.com/university/intro-to-order-types/ for other possible types
+  category: 0, // 0=market, 1=limit, 2=stop-loss, 3=... // see https://www.investopedia.com/university/intro-to-order-types/ for other possible types
   price: 100,
   amount: 124,
-  order_id: 51987123,
+  id: 51987123,
 }
 ```
 
@@ -44,6 +44,49 @@ The engine should support the following actions:
 - How do we prevent double spending?
 - How do we prevent memory leaks?
 - Perform benchmarks on the entire system and check what happens when the load is increased.
+
+## Benchmarks
+
+### Process orders rates
+
+This bechmark checks the performance of executing orders after they are available in memory.
+
+> Total Orders: 1000000\
+> Total Trades: 997065\
+> Orders/second: 614837.504596\
+> Trades/second: 613032.956520\
+> Pending Buy: 3022\
+> Lowest Ask: 7950529.000000\
+> Pending Sell: 3022\
+> Highest Bid: 7007034.000000\
+> Duration (seconds): 1.626446\
+> \
+> 1000000 &nbsp; &nbsp; &nbsp; 1626 ns/op &nbsp; &nbsp; &nbsp; 597 B/op &nbsp; &nbsp; &nbsp; 7 allocs/op
+
+### Consumer and Producer
+
+The following benchmark refers to consuming orders from a Kafka server, processing them 
+by the trading engine and saving generated trades back to the Kafka server.
+
+> Total Orders: 300000 \
+> Total Trades Generated: 293410 \
+> Orders/second: 207613.031455\
+> Trades Generated/second: 203052.465197\
+> Pending Buy: 5117\
+> Lowest Ask: 3867492.000000\
+> Pending Sell: 5117\
+> Highest Bid: 3735132.000000\
+> Duration (seconds): 1.444996\
+> \
+> 300000 &nbsp; &nbsp; &nbsp; 4840 ns/op &nbsp; &nbsp; &nbsp; 2583 B/op &nbsp; &nbsp; &nbsp; 25 allocs/op
+
+## Further optimizations
+- Decrease the size of the Kafka message value by switching the JSON encoded order to either Protobufs or FIX formats
+- Switch Kafka Client to: https://github.com/confluentinc/confluent-kafka-go
+- Optimize Kafka Producer rate
+- Use the golang profiler to see where the bottlenecks are in the code
+- Write to multiple partitions at once when generating trades
+- Optimize allocations with buffers bytes (see minute 23 of the video): https://www.youtube.com/watch?v=ZuQcbqYK0BY
 
 ## Resources
 

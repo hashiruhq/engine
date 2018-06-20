@@ -14,10 +14,10 @@ type Trade struct {
 }
 
 // NewTrade Creates a new trade between the taker order and the maker order
-func NewTrade(takerOrder Order, makerOrder Order, amount float64, price float64) Trade {
+func NewTrade(takerOrder string, makerOrder string, amount float64, price float64) Trade {
 	return Trade{
-		TakerOrderID: takerOrder.ID,
-		MakerOrderID: makerOrder.ID,
+		TakerOrderID: takerOrder,
+		MakerOrderID: makerOrder,
 		Amount:       amount,
 		Price:        price,
 		// Date:         time.Now(), // do not generate the timestamp in the trading engine to increase performance
