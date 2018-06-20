@@ -36,7 +36,7 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 	tradeChan := make(chan []trading_engine.Trade, 10000)
 	// defer close(tradeChan)
 
-	messages := make(chan []byte, 1000)
+	messages := make(chan []byte, 10000)
 	defer close(messages)
 
 	done := make(chan bool)
