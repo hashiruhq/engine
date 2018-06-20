@@ -10,19 +10,17 @@ const MAX_BUFFER_SIZE = 10000
 // @todo Account for any errors when sending to the Kafka server
 // @todo Check if sending the records in parallel has any affect on data consistency
 type KafkaBufferedProducer struct {
-	brokers    []string
-	topic      string
 	buffer     [][]byte
+	producer   *KafkaProducer
 	inProgress sync.WaitGroup
 	lock       sync.Mutex
-	producer   *KafkaProducer
 }
 
 // NewKafkaBufferedProducer returns a new producer
 func NewKafkaBufferedProducer(brokers []string, topic string) *KafkaBufferedProducer {
 	producer := NewKafkaProducer(brokers, topic)
 	buffer := make([][]byte, 0, MAX_BUFFER_SIZE)
-	return &KafkaBufferedProducer{brokers: brokers, topic: topic, producer: producer, buffer: buffer}
+	return &KafkaBufferedProducer{producer: producer, buffer: buffer}
 }
 
 // Start the kafka producer
