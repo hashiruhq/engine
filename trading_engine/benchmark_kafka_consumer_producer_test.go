@@ -2,6 +2,7 @@ package trading_engine_test
 
 import (
 	"fmt"
+	"log"
 	"testing"
 	"time"
 	"trading_engine/net"
@@ -21,12 +22,11 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 	tradesCompleted := 0
 
 	// start the producer service to send new trades to
-	producer := net.NewKafkaBufferedProducer([]string{kafkaBroker}, kafkaTradeTopic)
+	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker}, kafkaTradeTopic)
 	producer.Start()
-	defer producer.Close()
 
 	// start the consumer service and listen for new orders
-	consumer := net.NewKafkaConsumer([]string{kafkaBroker}, []string{kafkaOrderTopic})
+	consumer := net.NewKafkaPartitionConsumer([]string{kafkaBroker}, []string{kafkaOrderTopic})
 	consumer.Start(kafkaOrderConsumer)
 	defer consumer.Close()
 
@@ -34,7 +34,6 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 	defer close(orders)
 
 	tradeChan := make(chan []trading_engine.Trade, 10000)
-	// defer close(tradeChan)
 
 	messages := make(chan []byte, 10000)
 	defer close(messages)
@@ -52,6 +51,14 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 			msg := <-msgChan
 			consumer.MarkOffset(msg, "")
 			messages <- msg.Value
+		}
+	}
+
+	receiveProducerErrors := func() {
+		errors := producer.Errors()
+		for err := range errors {
+			value, _ := err.Msg.Value.Encode()
+			log.Print("Error received from trades producer", (string)(value), err.Msg)
 		}
 	}
 
@@ -88,18 +95,11 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 
 	publishTrades := func(tradeChan <-chan []trading_engine.Trade, finishTrades chan bool, closeChan bool) {
 		// buffer the writes to the publisher by 10000 records at a time
-		for {
-			trades, more := <-tradeChan
-			if !more {
-				producer.Flush()
-				break
-			}
-			buffer := make([][]byte, 0, len(trades))
+		for trades := range tradeChan {
 			for _, trade := range trades {
 				rawTrade, _ := trade.ToJSON() // @todo thread error on encoding json object (low priority)
-				buffer = append(buffer, rawTrade)
+				producer.Input() <- rawTrade
 			}
-			producer.SendMessages(buffer)
 		}
 		if closeChan {
 			finishTrades <- true
@@ -109,6 +109,7 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
 	benchmark.ResetTimer()
 
+	go receiveProducerErrors()
 	go receiveMessages(messages, benchmark.N)
 	go jsonDecode(messages, orders)
 	go processOrders(engine, orders, tradeChan, benchmark.N)
@@ -116,7 +117,7 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 
 	<-done
 	<-finishTrades
-	producer.Wait()
+	producer.Close()
 	endTime := time.Now().UnixNano()
 	timeout := (float64)(float64(time.Nanosecond) * float64(endTime-startTime) / float64(time.Second))
 	fmt.Printf(

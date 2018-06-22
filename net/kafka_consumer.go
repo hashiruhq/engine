@@ -8,27 +8,26 @@ import (
 	cluster "github.com/bsm/sarama-cluster"
 )
 
-// KafkaConsumer structure
-type KafkaConsumer struct {
+type kafkaPartitionConsumer struct {
 	config   *cluster.Config
 	brokers  []string
 	topics   []string
 	consumer *cluster.Consumer
 }
 
-// NewKafkaConsumer return a new Kafka consumer
-func NewKafkaConsumer(brokers []string, topics []string) *KafkaConsumer {
+// NewKafkaPartitionConsumer return a new Kafka consumer
+func NewKafkaPartitionConsumer(brokers []string, topics []string) KafkaConsumer {
 	config := cluster.NewConfig()
 	config.Consumer.Return.Errors = false
 	config.Group.Return.Notifications = false
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 	// config.Net.KeepAlive = time.Duration(30) * time.Second
 	config.ChannelBufferSize = 10000
-	return &KafkaConsumer{brokers: brokers, topics: topics, config: config}
+	return &kafkaPartitionConsumer{brokers: brokers, topics: topics, config: config}
 }
 
 // Start the consumer
-func (conn *KafkaConsumer) Start(name string) error {
+func (conn *kafkaPartitionConsumer) Start(name string) error {
 	consumer, err := cluster.NewConsumer(conn.brokers, name, conn.topics, conn.config)
 	conn.consumer = consumer
 	if err == nil {
@@ -39,17 +38,17 @@ func (conn *KafkaConsumer) Start(name string) error {
 }
 
 // GetMessageChan returns the message channel
-func (conn *KafkaConsumer) GetMessageChan() <-chan *sarama.ConsumerMessage {
+func (conn *kafkaPartitionConsumer) GetMessageChan() <-chan *sarama.ConsumerMessage {
 	return conn.consumer.Messages()
 }
 
 // MarkOffset for the given message
-func (conn *KafkaConsumer) MarkOffset(msg *sarama.ConsumerMessage, meta string) {
+func (conn *kafkaPartitionConsumer) MarkOffset(msg *sarama.ConsumerMessage, meta string) {
 	conn.consumer.MarkOffset(msg, meta)
 }
 
 // Close the consumer connection
-func (conn *KafkaConsumer) Close() error {
+func (conn *kafkaPartitionConsumer) Close() error {
 	return conn.consumer.Close()
 }
 

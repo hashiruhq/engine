@@ -38,17 +38,19 @@ func main() {
 	messages := make(chan []byte, 10000)
 	defer close(messages)
 
-	producer := net.NewKafkaBufferedProducer([]string{kafkaBroker}, kafkaTradeTopic)
+	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker}, kafkaTradeTopic)
 	producer.Start()
 	defer producer.Close()
 
-	consumer := net.NewKafkaConsumer([]string{kafkaBroker}, []string{kafkaOrderTopic})
+	consumer := net.NewKafkaPartitionConsumer([]string{kafkaBroker}, []string{kafkaOrderTopic})
 	consumer.Start(kafkaOrderConsumer)
 	defer consumer.Close()
 
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
 
+	// listen for producer errors when publishing trades
+	go ReceiveProducerErrors(producer)
 	// receive messages from the kafka server
 	go ReceiveMessages(consumer, messages)
 	// decode the json value for each message received into an Order Structure
@@ -61,16 +63,12 @@ func main() {
 	closeOnSignal(producer, consumer, sigc)
 }
 
-func closeOnSignal(producer *net.KafkaBufferedProducer, consumer *net.KafkaConsumer, sigc chan os.Signal) {
+func closeOnSignal(producer net.KafkaProducer, consumer net.KafkaConsumer, sigc chan os.Signal) {
 	sig := <-sigc
 	log.Printf("Caught signal %s: Shutting down in 3 seconds...", sig)
 	log.Println("Closing Kafka consumer client...")
 	consumer.Close()
 	time.Sleep(time.Second)
-	log.Println("Flushing remaining trades to Kafka...")
-	producer.Flush()
-	log.Println("Waiting on background trades to complete...")
-	producer.Wait()
 	log.Println("Closing the Kafka producer...")
 	producer.Close()
 	time.Sleep(2 * time.Second)
@@ -78,12 +76,24 @@ func closeOnSignal(producer *net.KafkaBufferedProducer, consumer *net.KafkaConsu
 	os.Exit(0)
 }
 
+// ReceiveProducerErrors listens for error messages trades that have not been published
+// and sends them on another queue to processing later.
+//
+// @todo Optionally we can send them to another service, like an in memory database (Redis) so
+// that we don't retry to push then to a broken Kafka instance
+func ReceiveProducerErrors(producer net.KafkaProducer) {
+	errors := producer.Errors()
+	for err := range errors {
+		log.Print("Error received from trades producer", err)
+	}
+}
+
 // ReceiveMessages waits for new messages from the consumer and sends them
 // to the messages channel for processing
 //
 // Message flow is unidirectional from the Kafka Consumer to the messages channel
 // When the consumer is closed the messages channel can also be closed and we can shutdown the engine
-func ReceiveMessages(consumer *net.KafkaConsumer, messages chan<- []byte) {
+func ReceiveMessages(consumer net.KafkaConsumer, messages chan<- []byte) {
 	msgChan := consumer.GetMessageChan()
 	for {
 		msg, more := <-msgChan
@@ -100,11 +110,7 @@ func ReceiveMessages(consumer *net.KafkaConsumer, messages chan<- []byte) {
 //
 // Message flow is unidirectional from the messages channel to the orders channel
 func DecodeMessage(messages <-chan []byte, orders chan<- trading_engine.Order) {
-	for {
-		msg, more := <-messages
-		if !more {
-			return
-		}
+	for msg := range messages {
 		var order trading_engine.Order
 		order.FromJSON(msg)
 		orders <- order
@@ -115,12 +121,7 @@ func DecodeMessage(messages <-chan []byte, orders chan<- trading_engine.Order) {
 //
 // Message flow is unidirectional from the orders channel to the trades channel
 func ProcessOrder(engine *trading_engine.TradingEngine, orders <-chan trading_engine.Order, trades chan<- []trading_engine.Trade) {
-	for {
-		order, more := <-orders
-		if !more {
-			// close(tradeChan)
-			return
-		}
+	for order := range orders {
 		generatedTrades := engine.Process(order)
 		if len(generatedTrades) > 0 {
 			trades <- generatedTrades
@@ -129,18 +130,11 @@ func ProcessOrder(engine *trading_engine.TradingEngine, orders <-chan trading_en
 }
 
 // PublishTrades listens for new trades from the trading engine and publishes them to the Kafka server
-func PublishTrades(producer *net.KafkaBufferedProducer, trades <-chan []trading_engine.Trade) {
-	for {
-		completedTrades, more := <-trades
-		if !more {
-			producer.Flush()
-			return
-		}
-		buffer := make([][]byte, 0, len(completedTrades))
+func PublishTrades(producer net.KafkaProducer, trades <-chan []trading_engine.Trade) {
+	for completedTrades := range trades {
 		for _, trade := range completedTrades {
 			rawTrade, _ := trade.ToJSON() // @todo thread error on encoding json object (low priority)
-			buffer = append(buffer, rawTrade)
+			producer.Input() <- rawTrade
 		}
-		producer.SendMessages(buffer)
 	}
 }

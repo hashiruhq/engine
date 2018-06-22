@@ -19,7 +19,7 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 	ordersCompleted := 0
 	tradesCompleted := 0
 
-	consumer := net.NewKafkaConsumer([]string{kafkaBroker}, []string{kafkaOrderTopic})
+	consumer := net.NewKafkaPartitionConsumer([]string{kafkaBroker}, []string{kafkaOrderTopic})
 	consumer.Start(kafkaOrderConsumer)
 	defer consumer.Close()
 
