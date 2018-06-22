@@ -24,6 +24,11 @@ func main() {
 	kafkaOrderConsumer := config.Config.Get("KAFKA_ORDER_CONSUMER")
 	kafkaTradeTopic := config.Config.Get("KAFKA_TRADE_TOPIC")
 
+	log.Printf("Connecting to Kafka Broker: %s", kafkaBroker)
+	log.Printf("And listening on order topic: %s", kafkaOrderTopic)
+	log.Printf("With the consumer name: %s", kafkaOrderConsumer)
+	log.Printf("And publishing trades on this trade topic: %s", kafkaTradeTopic)
+
 	orders := make(chan trading_engine.Order, 10000)
 	defer close(orders)
 
@@ -117,7 +122,7 @@ func ProcessOrder(engine *trading_engine.TradingEngine, orders <-chan trading_en
 			return
 		}
 		generatedTrades := engine.Process(order)
-		if len(trades) > 0 {
+		if len(generatedTrades) > 0 {
 			trades <- generatedTrades
 		}
 	}
@@ -131,7 +136,7 @@ func PublishTrades(producer *net.KafkaBufferedProducer, trades <-chan []trading_
 			producer.Flush()
 			return
 		}
-		buffer := make([][]byte, 0, len(trades))
+		buffer := make([][]byte, 0, len(completedTrades))
 		for _, trade := range completedTrades {
 			rawTrade, _ := trade.ToJSON() // @todo thread error on encoding json object (low priority)
 			buffer = append(buffer, rawTrade)
