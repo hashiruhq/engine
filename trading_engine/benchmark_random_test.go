@@ -82,10 +82,10 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 		tradesCompleted,
 		float64(ordersCompleted)/timeout,
 		float64(tradesCompleted)/timeout,
-		engine.OrderBook.PricePoints.Len(),
-		engine.OrderBook.LowestAsk,
-		engine.OrderBook.PricePoints.Len(),
-		engine.OrderBook.HighestBid,
+		engine.GetOrderBook().PricePoints.Len(),
+		engine.GetOrderBook().LowestAsk,
+		engine.GetOrderBook().PricePoints.Len(),
+		engine.GetOrderBook().HighestBid,
 		timeout,
 	)
 }

@@ -17,8 +17,3 @@ type KafkaConsumer interface {
 	MarkOffset(msg *sarama.ConsumerMessage, meta string)
 	Close() error
 }
-
-// AsyncProducer interface
-type AsyncProducer interface {
-	sarama.AsyncProducer
-}

@@ -5,7 +5,12 @@ import (
 )
 
 // Dispatcher contains a pool of worker channels to process jobs
-type Dispatcher struct {
+type Dispatcher interface {
+	Run()
+	Stop()
+}
+
+type dispatcher struct {
 	MaxWorkers int
 	WorkerPool chan chan Job
 	Workers    []*Worker
@@ -13,14 +18,19 @@ type Dispatcher struct {
 }
 
 // NewDispatcher creates a new dispatcher
-func NewDispatcher(engine *trading_engine.TradingEngine, maxWorkers int) *Dispatcher {
+func NewDispatcher(engine *trading_engine.TradingEngine, maxWorkers int) Dispatcher {
 	pool := make(chan chan Job, maxWorkers)
 	workers := make([]*Worker, 0, maxWorkers)
-	return &Dispatcher{WorkerPool: pool, MaxWorkers: maxWorkers, Engine: engine, Workers: workers}
+	return &dispatcher{
+		WorkerPool: pool,
+		MaxWorkers: maxWorkers,
+		Engine:     engine,
+		Workers:    workers,
+	}
 }
 
 // Run the dispatcher
-func (d *Dispatcher) Run() {
+func (d *dispatcher) Run() {
 	// starting n number of workers
 	for i := 0; i < d.MaxWorkers; i++ {
 		worker := NewWorker(d.Engine, d.WorkerPool)
@@ -31,7 +41,7 @@ func (d *Dispatcher) Run() {
 	go d.dispatch()
 }
 
-func (d *Dispatcher) dispatch() {
+func (d *dispatcher) dispatch() {
 	for {
 		select {
 		case job := <-JobQueue:
@@ -48,7 +58,7 @@ func (d *Dispatcher) dispatch() {
 }
 
 // Stop the dispatcher
-func (d *Dispatcher) Stop() {
+func (d *dispatcher) Stop() {
 	for i := 0; i < d.MaxWorkers; i++ {
 		d.Workers[i].Stop()
 	}

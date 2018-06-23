@@ -72,7 +72,7 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 	}
 
 	// process each order by the trading engine and forward trades to the trades channel
-	processOrders := func(engine *trading_engine.TradingEngine, orders <-chan trading_engine.Order, tradeChan chan<- []trading_engine.Trade, n int) {
+	processOrders := func(engine trading_engine.TradingEngine, orders <-chan trading_engine.Order, tradeChan chan<- []trading_engine.Trade, n int) {
 		for order := range orders {
 			trades := engine.Process(order)
 			ordersCompleted++
@@ -129,10 +129,10 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 		tradesCompleted,
 		float64(ordersCompleted)/timeout,
 		float64(tradesCompleted)/timeout,
-		engine.OrderBook.PricePoints.Len(),
-		engine.OrderBook.LowestAsk,
-		engine.OrderBook.PricePoints.Len(),
-		engine.OrderBook.HighestBid,
+		engine.GetOrderBook().PricePoints.Len(),
+		engine.GetOrderBook().LowestAsk,
+		engine.GetOrderBook().PricePoints.Len(),
+		engine.GetOrderBook().HighestBid,
 		timeout,
 	)
 }

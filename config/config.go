@@ -6,12 +6,17 @@ import (
 )
 
 // Configuration structure
-type Configuration struct {
+type Configuration interface {
+	Get(string) string
+	GetInt(string) int
+}
+
+type configuration struct {
 	Defaults map[string]string
 }
 
 // Config keeps the current configuration values
-var Config = Configuration{
+var Config = configuration{
 	Defaults: map[string]string{
 		// The Kafka broker server to connect to. Defaults to "kafka:9092"
 		"KAFKA_BROKER": "kafka:9092",
@@ -43,7 +48,7 @@ var Config = Configuration{
 }
 
 // Get a configuration value from the config
-func (config *Configuration) Get(key string) string {
+func (config configuration) Get(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
 		return config.Defaults[key]
@@ -52,7 +57,7 @@ func (config *Configuration) Get(key string) string {
 }
 
 // GetInt returns an integer value for the given key
-func (config *Configuration) GetInt(key string) int {
+func (config configuration) GetInt(key string) int {
 	value, err := strconv.Atoi(config.Get(key))
 	if err != nil {
 		return 0

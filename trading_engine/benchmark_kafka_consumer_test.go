@@ -58,7 +58,7 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 
 	go receiveMessages(messages, benchmark.N)
 	go jsonDecode(messages, orders)
-	go func(engine *trading_engine.TradingEngine, orders <-chan trading_engine.Order, n int) {
+	go func(engine trading_engine.TradingEngine, orders <-chan trading_engine.Order, n int) {
 		for {
 			order := <-orders
 			trades := engine.Process(order)
@@ -88,10 +88,10 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 		tradesCompleted,
 		float64(ordersCompleted)/timeout,
 		float64(tradesCompleted)/timeout,
-		engine.OrderBook.PricePoints.Len(),
-		engine.OrderBook.LowestAsk,
-		engine.OrderBook.PricePoints.Len(),
-		engine.OrderBook.HighestBid,
+		engine.GetOrderBook().PricePoints.Len(),
+		engine.GetOrderBook().LowestAsk,
+		engine.GetOrderBook().PricePoints.Len(),
+		engine.GetOrderBook().HighestBid,
 		timeout,
 	)
 }

@@ -2,6 +2,22 @@ package trading_engine
 
 import "github.com/francoispqt/gojay"
 
+// BUY value means the user wants to buy from the market
+const BUY = 1
+
+// SELL value means the user wants to sell to the market
+const SELL = 2
+
+//LimitOrder allows the trader to start an order where the transaction will be completed
+// if the market price is at or better than the set price
+const LimitOrder = 1
+
+// MarketOrder completes the trade at the current market price
+const MarketOrder = 2
+
+// StopLossOrder @todo completes the trade until it gets to a price
+const StopLossOrder = 3
+
 // Order allows the trader to start an order where the transaction will be completed
 // if the market price is at or better than the set price
 type Order struct {
