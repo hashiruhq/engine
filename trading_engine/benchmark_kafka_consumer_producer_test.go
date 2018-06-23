@@ -30,13 +30,13 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 	consumer.Start(kafkaOrderConsumer)
 	defer consumer.Close()
 
+	messages := make(chan []byte, 10000)
+	defer close(messages)
+
 	orders := make(chan trading_engine.Order, 10000)
 	defer close(orders)
 
 	tradeChan := make(chan []trading_engine.Trade, 10000)
-
-	messages := make(chan []byte, 10000)
-	defer close(messages)
 
 	done := make(chan bool)
 	defer close(done)
@@ -64,11 +64,7 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 
 	// decode the json value for each message received into an Order Structure
 	jsonDecode := func(messages <-chan []byte, orders chan<- trading_engine.Order) {
-		for {
-			msg, more := <-messages
-			if !more {
-				return
-			}
+		for msg := range messages {
 			var order trading_engine.Order
 			order.FromJSON(msg)
 			orders <- order
@@ -77,8 +73,7 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 
 	// process each order by the trading engine and forward trades to the trades channel
 	processOrders := func(engine *trading_engine.TradingEngine, orders <-chan trading_engine.Order, tradeChan chan<- []trading_engine.Trade, n int) {
-		for {
-			order := <-orders
+		for order := range orders {
 			trades := engine.Process(order)
 			ordersCompleted++
 			tradesCompleted += len(trades)

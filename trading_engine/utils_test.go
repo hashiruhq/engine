@@ -1,13 +1,13 @@
 package trading_engine_test
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"math"
 	"math/rand"
 	"os"
 	"strconv"
+	"time"
 	"trading_engine/net"
 )
 
@@ -18,21 +18,29 @@ func generateOrdersInKafka(n int) {
 
 	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker}, kafkaOrderTopic)
 	err := producer.Start()
+
+	go func() {
+		errors := producer.Errors()
+		for err := range errors {
+			value, _ := err.Msg.Value.Encode()
+			log.Print("Error received from trades producer ", (string)(value), err)
+		}
+	}()
 	if err != nil {
 		log.Println(err)
 	}
-	defer producer.Close()
 
-	var buffer bytes.Buffer
 	for i := 0; i < n; i++ {
-		id := "ID_" + fmt.Sprintf("%d", rand.Uint32())
+		id := "ID_" + fmt.Sprintf("%d", i)
 		price := 4000100 - 3*i - int(math.Ceil(10000*rand.Float64()))
 		amount := 10001 - int(math.Ceil(10000*rand.Float64()))
 		side := int8(1 + rand.Intn(2)%2)
-		buffer.WriteString(fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": %d, "amount": %d, "side": %d, "category": 1}`, id, price, amount, side))
-		producer.Input() <- buffer.Bytes()
-		buffer.Reset()
+		producer.Input() <- ([]byte)(fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": %d, "amount": %d, "side": %d, "category": 1}`, id, price, amount, side))
 	}
+
+	time.Sleep(time.Millisecond * 300)
+
+	producer.Close()
 }
 
 // GenerateRandomRecordsInFile create N orders and stores them in the given file

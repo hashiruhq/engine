@@ -4,8 +4,8 @@ import "github.com/ryszard/goskiplist/skiplist"
 
 // PricePoint holds the records for a particular price
 type PricePoint struct {
-	SellBookEntries []*BookEntry
-	BuyBookEntries  []*BookEntry
+	SellBookEntries []BookEntry
+	BuyBookEntries  []BookEntry
 }
 
 // NewPricePoints creates a new skiplist in which to hold all price points

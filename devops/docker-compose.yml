@@ -14,7 +14,7 @@ services:
     environment:
       KAFKA_ADVERTISED_HOST_NAME: kafka
       HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
-      KAFKA_CREATE_TOPICS: trading.order.btc.eth:1:1,trading.trade.btc.eth:3:1
+      KAFKA_CREATE_TOPICS: trading.order.btc.eth:1:1,trading.trade.btc.eth:1:1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

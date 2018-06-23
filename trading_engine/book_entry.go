@@ -8,6 +8,6 @@ type BookEntry struct {
 }
 
 // NewBookEntry Creates a new book entry based on an Order to be used by the order book
-func NewBookEntry(order Order) *BookEntry {
-	return &BookEntry{Price: order.Price, Amount: order.Amount, Order: order}
+func NewBookEntry(order Order) BookEntry {
+	return BookEntry{Price: order.Price, Amount: order.Amount, Order: order}
 }

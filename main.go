@@ -95,11 +95,7 @@ func ReceiveProducerErrors(producer net.KafkaProducer) {
 // When the consumer is closed the messages channel can also be closed and we can shutdown the engine
 func ReceiveMessages(consumer net.KafkaConsumer, messages chan<- []byte) {
 	msgChan := consumer.GetMessageChan()
-	for {
-		msg, more := <-msgChan
-		if !more {
-			return
-		}
+	for msg := range msgChan {
 		consumer.MarkOffset(msg, "")
 		messages <- msg.Value
 	}

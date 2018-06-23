@@ -26,23 +26,22 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 	defer fh.Close()
 	bf := bufio.NewReader(fh)
 	decoder := json.NewDecoder(bf)
-	orders := make(chan *trading_engine.Order, 100000)
+	orders := make(chan trading_engine.Order, 10000)
 	defer close(orders)
 	done := make(chan bool)
 	defer close(done)
 
 	startTime := time.Now().UnixNano()
 	benchmark.ResetTimer()
-	go func(orders chan<- *trading_engine.Order) {
-		arr := make([]*trading_engine.Order, 0, benchmark.N)
-
+	go func(orders chan<- trading_engine.Order) {
+		arr := make([]trading_engine.Order, 0, benchmark.N)
 		for j := 0; j < benchmark.N; j++ {
 			if !decoder.More() {
 				break
 			}
 			order := trading_engine.Order{}
 			decoder.Decode(&order)
-			arr = append(arr, &order)
+			arr = append(arr, order)
 		}
 		startTime = time.Now().UnixNano()
 		benchmark.ResetTimer()
@@ -53,10 +52,10 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 
 	ordersCompleted := 0
 	tradesCompleted := 0
-	go func(orders <-chan *trading_engine.Order, n int) {
+	go func(orders <-chan trading_engine.Order, n int) {
 		for {
 			order := <-orders
-			trades := engine.Process(*order)
+			trades := engine.Process(order)
 			ordersCompleted++
 			tradesCompleted += len(trades)
 			if ordersCompleted >= n {

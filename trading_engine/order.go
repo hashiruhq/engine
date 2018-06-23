@@ -20,7 +20,7 @@ func NewOrder(id string, price, amount float64, side int8, category int8) Order 
 }
 
 // LessThan implementes the skiplist interface
-func (order *Order) LessThan(other *Order) bool {
+func (order Order) LessThan(other Order) bool {
 	return order.Price < other.Price
 }
 
@@ -47,6 +47,6 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 }
 
 // NKeys implements gojay.UnmarshalerJSONObject interface and returns the number of keys to parse
-func (order *Order) NKeys() int {
+func (order Order) NKeys() int {
 	return 5
 }

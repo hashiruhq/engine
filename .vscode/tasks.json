@@ -16,12 +16,12 @@
     {
       "label": "Go Profile: Benchmark Random Data",
       "type": "shell",
-      "command": "/usr/local/bin/go test -gcflags=-m -cpuprofile cpu.prof -memprofile mem.prof -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData"
+      "command": "/usr/local/bin/go test -cpuprofile cpu.prof -memprofile mem.prof -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData"
     },
     {
       "label": "Go Escape Analisys: Benchmark Random Data",
       "type": "shell",
-      "command": "/usr/local/bin/go test -gcflags=-m -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData"
+      "command": "/usr/local/bin/go test -gcflags='-m' -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData"
     },
     {
       "label": "Go: Benchmark Random Data",
