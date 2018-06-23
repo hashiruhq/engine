@@ -7,9 +7,9 @@ import (
 // OrderBook type
 type OrderBook struct {
 	PricePoints *skiplist.SkipList
-	LowestAsk   float64
-	HighestBid  float64
-	MarketPrice float64
+	LowestAsk   uint64
+	HighestBid  uint64
+	MarketPrice uint64
 }
 
 // NewOrderBook Creates a new empty order book for the trading engine
@@ -65,7 +65,7 @@ func (orderBook *OrderBook) processLimitBuy(order Order) []Trade {
 
 				if ok := iterator.Next(); ok {
 					if len(iterator.Value().(*PricePoint).SellBookEntries) > 0 {
-						orderBook.LowestAsk = iterator.Key().(float64)
+						orderBook.LowestAsk = iterator.Key().(uint64)
 					}
 				} else {
 					orderBook.LowestAsk = 0
@@ -119,7 +119,7 @@ func (orderBook *OrderBook) processLimitSell(order Order) []Trade {
 
 				if ok := iterator.Previous(); ok {
 					if len(iterator.Value().(*PricePoint).BuyBookEntries) > 0 {
-						orderBook.HighestBid = iterator.Key().(float64)
+						orderBook.HighestBid = iterator.Key().(uint64)
 					}
 				} else {
 					orderBook.HighestBid = 0
@@ -139,7 +139,7 @@ func (orderBook *OrderBook) processLimitSell(order Order) []Trade {
 }
 
 // Cancel an order from the order book based on the order price and ID
-func (orderBook *OrderBook) Cancel(id string, price float64) error {
+func (orderBook *OrderBook) Cancel(id string, price uint64) error {
 	// @todo implement this method
 	return nil
 }

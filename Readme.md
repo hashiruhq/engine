@@ -82,7 +82,7 @@ by the trading engine and saving generated trades back to the Kafka server.
 
 ## Further optimizations
 - Decrease the size of the Kafka message value by switching the JSON encoded order to either Protobufs or FIX formats
-- Switch Kafka Client to: https://github.com/confluentinc/confluent-kafka-go
+- Maybe Switch Kafka Client to: https://github.com/confluentinc/confluent-kafka-go
 - Optimize Kafka Producer rate
 - Use the golang profiler to see where the bottlenecks are in the code
 - Write to multiple partitions at once when generating trades

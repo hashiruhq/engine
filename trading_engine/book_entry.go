@@ -2,8 +2,8 @@ package trading_engine
 
 // BookEntry keeps minimal information about the order in the OrderBook
 type BookEntry struct {
-	Price  float64
-	Amount float64
+	Price  uint64
+	Amount uint64
 	Order  Order
 }
 

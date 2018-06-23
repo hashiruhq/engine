@@ -31,8 +31,8 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 	done := make(chan bool)
 	defer close(done)
 
-	startTime := time.Now().UnixNano()
 	benchmark.ResetTimer()
+	startTime := time.Now().UnixNano()
 	go func(orders chan<- trading_engine.Order) {
 		arr := make([]trading_engine.Order, 0, benchmark.N)
 		for j := 0; j < benchmark.N; j++ {
@@ -43,8 +43,8 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 			decoder.Decode(&order)
 			arr = append(arr, order)
 		}
-		startTime = time.Now().UnixNano()
 		benchmark.ResetTimer()
+		startTime = time.Now().UnixNano()
 		for _, order := range arr {
 			orders <- order
 		}
@@ -53,8 +53,7 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 	ordersCompleted := 0
 	tradesCompleted := 0
 	go func(orders <-chan trading_engine.Order, n int) {
-		for {
-			order := <-orders
+		for order := range orders {
 			trades := engine.Process(order)
 			ordersCompleted++
 			tradesCompleted += len(trades)
@@ -74,9 +73,9 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 			"Orders/second: %f\n"+
 			"Trades/second: %f\n"+
 			"Pending Buy: %d\n"+
-			"Lowest Ask: %f\n"+
+			"Lowest Ask: %d\n"+
 			"Pending Sell: %d\n"+
-			"Highest Bid: %f\n"+
+			"Highest Bid: %d\n"+
 			"Duration (seconds): %f\n\n",
 		ordersCompleted,
 		tradesCompleted,

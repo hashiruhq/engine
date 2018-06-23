@@ -11,6 +11,6 @@ type PricePoint struct {
 // NewPricePoints creates a new skiplist in which to hold all price points
 func NewPricePoints() *skiplist.SkipList {
 	return skiplist.NewCustomMap(func(l, r interface{}) bool {
-		return l.(float64) < r.(float64)
+		return l.(uint64) < r.(uint64)
 	})
 }

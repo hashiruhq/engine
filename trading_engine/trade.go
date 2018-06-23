@@ -8,13 +8,13 @@ import (
 type Trade struct {
 	TakerOrderID string
 	MakerOrderID string
-	Amount       float64
-	Price        float64
+	Amount       uint64
+	Price        uint64
 	// Date         time.Time `json:"created_at"`
 }
 
 // NewTrade Creates a new trade between the taker order and the maker order
-func NewTrade(takerOrder string, makerOrder string, amount float64, price float64) Trade {
+func NewTrade(takerOrder string, makerOrder string, amount, price uint64) Trade {
 	return Trade{
 		TakerOrderID: takerOrder,
 		MakerOrderID: makerOrder,
@@ -42,9 +42,9 @@ func (trade *Trade) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 	case "maker_order_id":
 		return dec.String(&trade.MakerOrderID)
 	case "price":
-		return dec.Float(&trade.Price)
+		return dec.Uint64(&trade.Price)
 	case "amount":
-		return dec.Float(&trade.Amount)
+		return dec.Uint64(&trade.Amount)
 	}
 	return nil
 }
@@ -53,8 +53,8 @@ func (trade *Trade) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 func (trade *Trade) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.StringKey("taker_order_id", trade.TakerOrderID)
 	enc.StringKey("maker_order_id", trade.MakerOrderID)
-	enc.FloatKey("price", trade.Price)
-	enc.FloatKey("amount", trade.Amount)
+	enc.Uint64Key("price", trade.Price)
+	enc.Uint64Key("amount", trade.Amount)
 }
 
 // IsNil checks if the trade is empty
