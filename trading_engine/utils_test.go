@@ -19,13 +19,13 @@ func generateOrdersInKafka(n int) {
 	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker}, kafkaOrderTopic)
 	err := producer.Start()
 
-	go func() {
+	go func(producer net.KafkaProducer) {
 		errors := producer.Errors()
 		for err := range errors {
 			value, _ := err.Msg.Value.Encode()
 			log.Print("Error received from trades producer ", (string)(value), err)
 		}
-	}()
+	}(producer)
 	if err != nil {
 		log.Println(err)
 	}

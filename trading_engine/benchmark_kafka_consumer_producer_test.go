@@ -121,9 +121,9 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 			"Orders/second: %f\n"+
 			"Trades Generated/second: %f\n"+
 			"Pending Buy: %d\n"+
-			"Lowest Ask: %f\n"+
+			"Lowest Ask: %d\n"+
 			"Pending Sell: %d\n"+
-			"Highest Bid: %f\n"+
+			"Highest Bid: %d\n"+
 			"Duration (seconds): %f\n\n",
 		ordersCompleted,
 		tradesCompleted,
