@@ -1,0 +1,11 @@
+# Changelog
+
+## Version 0.1.0
+
+- Connect to a single Apache Kafka order topic with a single partition and load orders
+- Process each order and publish trades to another topic with multiple partitions
+- Can only process limit orders
+- In case of a crash the current market state is lost
+- Trades that fail to be saved in Kafka are not resent
+- Benchmark - Process loaded orders: 620k/second
+- Benchmark - Load orders and publish trades: 230k/s
