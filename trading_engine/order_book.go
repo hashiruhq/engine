@@ -30,21 +30,17 @@ func (orderBook *OrderBook) processLimitBuy(order Order) []Trade {
 	var trades []Trade
 	if orderBook.LowestAsk <= order.Price && orderBook.LowestAsk != 0 {
 		iterator := orderBook.PricePoints.Seek(orderBook.LowestAsk)
-		defer func() {
-			if iterator != nil {
-				iterator.Close()
-			}
-		}()
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
+			defer iterator.Close()
 			for order.Price >= orderBook.LowestAsk {
 				pricePoint := iterator.Value().(*PricePoint)
 				for index := 0; index < len(pricePoint.SellBookEntries); index++ {
 					sellEntry := &pricePoint.SellBookEntries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
 					if sellEntry.Amount >= order.Amount {
-						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, order.Amount, order.Price))
+						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, order.Amount, sellEntry.Order.Price))
 						sellEntry.Amount -= order.Amount
 						if sellEntry.Amount == 0 {
 							orderBook.removeBookEntry(sellEntry)
@@ -88,17 +84,17 @@ func (orderBook *OrderBook) processLimitSell(order Order) []Trade {
 	var trades []Trade
 	if orderBook.HighestBid >= order.Price && orderBook.HighestBid != 0 {
 		iterator := orderBook.PricePoints.Seek(orderBook.HighestBid)
-		defer iterator.Close()
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
+			defer iterator.Close()
 			for order.Price <= orderBook.HighestBid {
 				pricePoint := iterator.Value().(*PricePoint)
 				for index := 0; index < len(pricePoint.BuyBookEntries); index++ {
 					buyEntry := &pricePoint.BuyBookEntries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
 					if buyEntry.Amount >= order.Amount {
-						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, order.Amount, order.Price))
+						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, order.Amount, buyEntry.Order.Price))
 						buyEntry.Amount -= order.Amount
 						if buyEntry.Amount == 0 {
 							orderBook.removeBookEntry(buyEntry)

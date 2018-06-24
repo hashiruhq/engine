@@ -21,6 +21,19 @@ const StopLossOrder = 3
 // Order allows the trader to start an order where the transaction will be completed
 // if the market price is at or better than the set price
 type Order struct {
+	// Optional:
+	// Amount of coins to buy/sell with the order
+	// - The amount must be greater than the base_min_amount for the product and no larger than the base_max_amount.
+	Amount uint64
+
+	// Optional:
+	// The price to pay for one unit in the market
+	// - The price must be specified in quote_increment product units.
+	// - The quote increment is the smallest unit of price. For the BTC-USD product,
+	//   the quote increment is 0.01 or 1 penny. Prices less than 1 penny will not be accepted,
+	//   and no fractional penny prices will be accepted. Not required for market orders.
+	Price uint64
+
 	//******************************************
 	// Common fields
 	//******************************************
@@ -38,8 +51,34 @@ type Order struct {
 	// Base and Quote symbols as lowercase 3-4 letter words. Ex: btc, usd, eth
 	BaseCurrency  string
 	QuoteCurrency string
-	// Prevent self trade (unclear yet)
-	PreventSelfTrade string
+	// FUTURE FIELD
+	// Prevent self trade
+	//
+	// Self-trading is not allowed on the trading engine. Two orders from the same user will not fill one another.
+	// When placing an order, you can specify the self-trade prevention behavior.
+	//
+	// DECREMENT AND CANCEL
+	// The default behavior is decrement and cancel. When two orders from the same user cross, the smaller order
+	// will be canceled and the larger order size will be decremented by the smaller order size. If the two orders
+	// are the same size, both will be canceled.
+	//
+	// CANCEL OLDEST
+	// Cancel the older (resting) order in full. The new order continues to execute.
+	// CANCEL NEWEST
+	// Cancel the newer (taking) order in full. The old resting order remains on the order book.
+
+	// CANCEL BOTH
+	// Immediately cancel both orders.
+
+	// NOTES FOR MARKET ORDERS
+	// When a market order using dc self-trade prevention encounters an open limit order, the behavior depends on
+	// which fields for the market order message were specified. If funds and size are specified for a buy order,
+	// then size for the market order will be decremented internally within the matching engine and funds will
+	// remain unchanged. The intent is to offset your target size without limiting your buying power. If size is
+	// not specified, then funds will be decremented. For a market sell, the size will be decremented when
+	// encountering existing limit orders.
+	// PreventSelfTrade string
+
 	// Stop flag. Requires `StopPrice`` to be defined.
 	// Stop orders become active and wait to trigger based on the movement of the last trade price.
 	// THere are 2 types of stop orders: 1=loss 2=entry
@@ -52,15 +91,13 @@ type Order struct {
 
 	//*****************************************
 	// Market Order Fields
+	// - Requires the Amount field from above
 	// - At lease one of Amount or Funds fields should be set
 	// - Funds limit how much your quote currency account balance is used and
 	//   Amount limits the amount of coins that will be transacted
 	// - Market orders are always considered takers and should always fill immediately
 	//*****************************************
 
-	// Amount of coins to buy/sell with the order
-	// - The amount must be greater than the base_min_amount for the product and no larger than the base_max_amount.
-	Amount uint64
 	// Maximum total funds to use for the order
 	// - The funds field is optionally used for market orders. When specified it indicates how much of the product
 	//   quote currency to buy or sell. For example, a market buy for BTC-USD with funds specified as 150.00 will
@@ -72,15 +109,9 @@ type Order struct {
 
 	//*****************************************
 	// Limit Order
-	// - uses the Amount field from above
+	// - Requires the Amount field from above
+	// - Requires the Price field from above
 	//*****************************************
-
-	// The price to pay for one unit in the market
-	// - The price must be specified in quote_increment product units.
-	// - The quote increment is the smallest unit of price. For the BTC-USD product,
-	//   the quote increment is 0.01 or 1 penny. Prices less than 1 penny will not be accepted,
-	//   and no fractional penny prices will be accepted. Not required for market orders.
-	Price uint64
 
 	// FUTURE PROPERTY
 	//
