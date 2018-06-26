@@ -6,27 +6,32 @@ import (
 	"github.com/spf13/viper"
 )
 
+// ConsumerConfig structure
 type ConsumerConfig struct {
 	Name   string
 	Hosts  []string
 	Topics []string
 }
 
+// ProducerConfig structure
 type ProducerConfig struct {
 	Hosts  []string
 	Topics []string
 }
 
+// BrokersConfig structure
 type BrokersConfig struct {
 	Consumers map[string]ConsumerConfig
 	Producers map[string]ProducerConfig
 }
 
+// TopicConfig structure
 type TopicConfig struct {
 	Broker string
 	Topic  string
 }
 
+// MarketConfig structure
 type MarketConfig struct {
 	Base  string
 	Quote string
@@ -39,6 +44,7 @@ type MarketConfig struct {
 	Publish TopicConfig
 }
 
+// ServerConfig structure
 type ServerConfig struct {
 	Markets map[string]MarketConfig
 	Brokers BrokersConfig
