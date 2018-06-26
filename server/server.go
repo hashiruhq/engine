@@ -15,7 +15,7 @@ type Server interface {
 }
 
 type server struct {
-	config       ServerConfig
+	config       Config
 	consumers    map[string]net.KafkaConsumer
 	producers    map[string]net.KafkaProducer
 	markets      map[string]MarketEngine
@@ -23,7 +23,7 @@ type server struct {
 }
 
 // NewServer constructor
-func NewServer(config ServerConfig) Server {
+func NewServer(config Config) Server {
 	// init producers
 	producers := make(map[string]net.KafkaProducer, len(config.Brokers.Producers))
 	for key, brokerCfg := range config.Brokers.Producers {

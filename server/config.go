@@ -44,15 +44,15 @@ type MarketConfig struct {
 	Publish TopicConfig
 }
 
-// ServerConfig structure
-type ServerConfig struct {
+// Config structure
+type Config struct {
 	Markets map[string]MarketConfig
 	Brokers BrokersConfig
 }
 
 // LoadConfig Load server configuration from the yaml file
-func LoadConfig(viperConf *viper.Viper) ServerConfig {
-	var config ServerConfig
+func LoadConfig(viperConf *viper.Viper) Config {
+	var config Config
 
 	err := viperConf.Unmarshal(&config)
 	if err != nil {

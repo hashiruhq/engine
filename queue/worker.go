@@ -1,15 +1,14 @@
 package queue
 
 import (
-	"trading_engine/config"
 	"trading_engine/trading_engine"
 )
 
 var (
 	// MaxWorkers represents maximum number of workers to start
-	MaxWorkers = config.Config.GetInt("MAX_WORKERS")
+	MaxWorkers = 10
 	// MaxQueue contains the maximum number of elements in the queue
-	MaxQueue = config.Config.GetInt("MAX_QUEUE")
+	MaxQueue = 1000
 )
 
 // Job structure to process
