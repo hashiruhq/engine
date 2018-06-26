@@ -9,9 +9,9 @@ import (
 type OrderBook interface {
 	Process(Order) []Trade
 	Cancel(id string) error
-	// GetHighestBid() uint64
-	// GetLowestAsk() uint64
-	// GetMarket(level int8)
+	GetHighestBid() uint64
+	GetLowestAsk() uint64
+	GetMarket() *skiplist.SkipList
 }
 
 type orderBook struct {
@@ -30,6 +30,21 @@ func NewOrderBook() OrderBook {
 		HighestBid:  0,
 		MarketPrice: 0,
 	}
+}
+
+// GetHighestBid returns the highest bid of the current market
+func (book orderBook) GetHighestBid() uint64 {
+	return book.HighestBid
+}
+
+// GetLowestAsk returns the lowest ask of the current market
+func (book orderBook) GetLowestAsk() uint64 {
+	return book.LowestAsk
+}
+
+// GetMarket returns the list of price points for the market
+func (book orderBook) GetMarket() *skiplist.SkipList {
+	return book.PricePoints
 }
 
 // Process a new received order and return a list of trades make

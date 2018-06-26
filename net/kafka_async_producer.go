@@ -6,15 +6,14 @@ import (
 
 // KafkaAsyncProducer structure
 type kafkaAsyncProducer struct {
-	input    chan []byte
-	topic    string
+	// input    chan *sarama.ProducerMessage
 	producer sarama.AsyncProducer
 	config   *sarama.Config
 	brokers  []string
 }
 
 // NewKafkaAsyncProducer returns a new producer
-func NewKafkaAsyncProducer(brokers []string, topic string) KafkaProducer {
+func NewKafkaAsyncProducer(brokers []string) KafkaProducer {
 	config := sarama.NewConfig()
 	// config.ChannelBufferSize = 10000
 	config.Producer.Return.Successes = false
@@ -25,9 +24,8 @@ func NewKafkaAsyncProducer(brokers []string, topic string) KafkaProducer {
 	config.Producer.Compression = sarama.CompressionSnappy
 	return &kafkaAsyncProducer{
 		brokers: brokers,
-		topic:   topic,
 		config:  config,
-		input:   make(chan []byte),
+		// input:   make(chan *sarama.ProducerMessage),
 	}
 }
 
@@ -35,13 +33,13 @@ func NewKafkaAsyncProducer(brokers []string, topic string) KafkaProducer {
 func (conn *kafkaAsyncProducer) Start() error {
 	producer, err := sarama.NewAsyncProducer(conn.brokers, conn.config)
 	conn.producer = producer
-	go conn.dispatch()
+	// go conn.dispatch()
 	return err
 }
 
 // Input a new message to the producer
-func (conn *kafkaAsyncProducer) Input() chan<- []byte {
-	return conn.input
+func (conn *kafkaAsyncProducer) Input() chan<- *sarama.ProducerMessage {
+	return conn.producer.Input()
 }
 
 // Errors returns the error channel
@@ -53,17 +51,14 @@ func (conn *kafkaAsyncProducer) Errors() <-chan *sarama.ProducerError {
 func (conn *kafkaAsyncProducer) Close() error {
 	if conn.producer != nil {
 		err := conn.producer.Close()
-		close(conn.input)
+		// close(conn.input)
 		return err
 	}
 	return nil
 }
 
-func (conn *kafkaAsyncProducer) dispatch() {
-	for msg := range conn.input {
-		conn.producer.Input() <- &sarama.ProducerMessage{
-			Topic: conn.topic,
-			Value: sarama.ByteEncoder(msg),
-		}
-	}
-}
+// func (conn *kafkaAsyncProducer) dispatch() {
+// 	for msg := range conn.input {
+// 		conn.producer.Input() <- msg
+// 	}
+// }

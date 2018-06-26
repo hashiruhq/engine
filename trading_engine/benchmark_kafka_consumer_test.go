@@ -19,8 +19,8 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 	ordersCompleted := 0
 	tradesCompleted := 0
 
-	consumer := net.NewKafkaPartitionConsumer([]string{kafkaBroker}, []string{kafkaOrderTopic})
-	consumer.Start(kafkaOrderConsumer)
+	consumer := net.NewKafkaPartitionConsumer(kafkaOrderConsumer, []string{kafkaBroker}, []string{kafkaOrderTopic})
+	consumer.Start()
 	defer consumer.Close()
 
 	orders := make(chan trading_engine.Order, 10000)
@@ -88,10 +88,10 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 		tradesCompleted,
 		float64(ordersCompleted)/timeout,
 		float64(tradesCompleted)/timeout,
-		engine.GetOrderBook().PricePoints.Len(),
-		engine.GetOrderBook().LowestAsk,
-		engine.GetOrderBook().PricePoints.Len(),
-		engine.GetOrderBook().HighestBid,
+		engine.GetOrderBook().GetMarket().Len(),
+		engine.GetOrderBook().GetLowestAsk(),
+		engine.GetOrderBook().GetMarket().Len(),
+		engine.GetOrderBook().GetHighestBid(),
 		timeout,
 	)
 }

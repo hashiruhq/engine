@@ -10,25 +10,26 @@ import (
 
 type kafkaPartitionConsumer struct {
 	config   *cluster.Config
+	name     string
 	brokers  []string
 	topics   []string
 	consumer *cluster.Consumer
 }
 
 // NewKafkaPartitionConsumer return a new Kafka consumer
-func NewKafkaPartitionConsumer(brokers []string, topics []string) KafkaConsumer {
+func NewKafkaPartitionConsumer(name string, brokers []string, topics []string) KafkaConsumer {
 	config := cluster.NewConfig()
 	config.Consumer.Return.Errors = false
 	config.Group.Return.Notifications = false
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 	// config.Net.KeepAlive = time.Duration(30) * time.Second
 	config.ChannelBufferSize = 10000
-	return &kafkaPartitionConsumer{brokers: brokers, topics: topics, config: config}
+	return &kafkaPartitionConsumer{name: name, brokers: brokers, topics: topics, config: config}
 }
 
 // Start the consumer
-func (conn *kafkaPartitionConsumer) Start(name string) error {
-	consumer, err := cluster.NewConsumer(conn.brokers, name, conn.topics, conn.config)
+func (conn *kafkaPartitionConsumer) Start() error {
+	consumer, err := cluster.NewConsumer(conn.brokers, conn.name, conn.topics, conn.config)
 	conn.consumer = consumer
 	if err == nil {
 		go handleErrors(consumer)

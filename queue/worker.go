@@ -18,8 +18,13 @@ type Job struct {
 }
 
 // Worker contains information about the worker pool and job channel
-type Worker struct {
-	Engine     *trading_engine.TradingEngine
+type Worker interface {
+	Start()
+	Stop()
+}
+
+type worker struct {
+	Engine     trading_engine.TradingEngine
 	WorkerPool chan chan Job
 	JobChannel chan Job
 	quit       chan bool
@@ -29,8 +34,8 @@ type Worker struct {
 var JobQueue chan Job = make(chan Job, MaxQueue)
 
 // NewWorker creates a new worker for the given worker pool
-func NewWorker(engine *trading_engine.TradingEngine, workerPool chan chan Job) Worker {
-	return Worker{
+func NewWorker(engine trading_engine.TradingEngine, workerPool chan chan Job) Worker {
+	return &worker{
 		Engine:     engine,
 		WorkerPool: workerPool,
 		JobChannel: make(chan Job),
@@ -40,7 +45,7 @@ func NewWorker(engine *trading_engine.TradingEngine, workerPool chan chan Job) W
 
 // Start method starts the run loop for the worker, listening for a quit channel in
 // case we need to stop it
-func (w Worker) Start() {
+func (w worker) Start() {
 	go func() {
 		for {
 			// register the current worker into the worker queue.
@@ -60,7 +65,7 @@ func (w Worker) Start() {
 }
 
 // Stop signals the worker to stop listening for work requests.
-func (w Worker) Stop() {
+func (w worker) Stop() {
 	go func() {
 		w.quit <- true
 	}()

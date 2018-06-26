@@ -1,0 +1,42 @@
+markets:
+  btc_usd:
+    base: btc
+    quote: usd
+    quote_increments: 0.01
+    base_min: 0.0001
+    base_max: 10000
+    listen: 
+      broker: requests
+      topic: engine.orders.btc.usd
+    publish: 
+      broker: events
+      topic: engine.events.btc.usd
+  eth_usd:
+    base: eth
+    quote: usd
+    quote_increments: 0.01
+    base_min: 0.0001
+    base_max: 10000
+    listen: 
+      broker: requests
+      topic: engine.orders.eth.usd
+    publish: 
+      broker: events
+      topic: engine.events.eth.usd
+
+brokers:
+  consumers:
+    requests: 
+      name: trading_engine_test
+      hosts: 
+        - kafka:9092
+      topics:
+        - engine.orders.btc.usd
+        - engine.orders.eth.usd
+  producers:
+    events: 
+      hosts: 
+        - kafka:9092
+      topics: 
+        - engine.events.btc.usd
+        - engine.events.eth.usd

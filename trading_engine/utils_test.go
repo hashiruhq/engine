@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 	"trading_engine/net"
+
+	"github.com/Shopify/sarama"
 )
 
 func generateOrdersInKafka(n int) {
@@ -16,7 +18,7 @@ func generateOrdersInKafka(n int) {
 	kafkaBroker := "kafka:9092"
 	kafkaOrderTopic := "trading.order.btc.eth"
 
-	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker}, kafkaOrderTopic)
+	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker})
 	err := producer.Start()
 
 	go func(producer net.KafkaProducer) {
@@ -35,7 +37,10 @@ func generateOrdersInKafka(n int) {
 		price := 4000100 - 3*i - int(math.Ceil(10000*rand.Float64()))
 		amount := 10001 - int(math.Ceil(10000*rand.Float64()))
 		side := int8(1 + rand.Intn(2)%2)
-		producer.Input() <- ([]byte)(fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": %d, "amount": %d, "side": %d, "category": 1}`, id, price, amount, side))
+		producer.Input() <- &sarama.ProducerMessage{
+			Topic: kafkaOrderTopic,
+			Value: sarama.ByteEncoder(([]byte)(fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": %d, "amount": %d, "side": %d, "category": 1}`, id, price, amount, side))),
+		}
 	}
 
 	time.Sleep(time.Millisecond * 300)

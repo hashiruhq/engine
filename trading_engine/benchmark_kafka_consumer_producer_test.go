@@ -7,6 +7,8 @@ import (
 	"time"
 	"trading_engine/net"
 	"trading_engine/trading_engine"
+
+	"github.com/Shopify/sarama"
 )
 
 func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
@@ -22,12 +24,12 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 	tradesCompleted := 0
 
 	// start the producer service to send new trades to
-	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker}, kafkaTradeTopic)
+	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker})
 	producer.Start()
 
 	// start the consumer service and listen for new orders
-	consumer := net.NewKafkaPartitionConsumer([]string{kafkaBroker}, []string{kafkaOrderTopic})
-	consumer.Start(kafkaOrderConsumer)
+	consumer := net.NewKafkaPartitionConsumer(kafkaOrderConsumer, []string{kafkaBroker}, []string{kafkaOrderTopic})
+	consumer.Start()
 	defer consumer.Close()
 
 	messages := make(chan []byte, 10000)
@@ -93,7 +95,10 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 		for trades := range tradeChan {
 			for _, trade := range trades {
 				rawTrade, _ := trade.ToJSON() // @todo thread error on encoding json object (low priority)
-				producer.Input() <- rawTrade
+				producer.Input() <- &sarama.ProducerMessage{
+					Topic: kafkaTradeTopic,
+					Value: sarama.ByteEncoder(rawTrade),
+				}
 			}
 		}
 		if closeChan {
@@ -129,10 +134,10 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 		tradesCompleted,
 		float64(ordersCompleted)/timeout,
 		float64(tradesCompleted)/timeout,
-		engine.GetOrderBook().PricePoints.Len(),
-		engine.GetOrderBook().LowestAsk,
-		engine.GetOrderBook().PricePoints.Len(),
-		engine.GetOrderBook().HighestBid,
+		engine.GetOrderBook().GetMarket().Len(),
+		engine.GetOrderBook().GetLowestAsk(),
+		engine.GetOrderBook().GetMarket().Len(),
+		engine.GetOrderBook().GetHighestBid(),
 		timeout,
 	)
 }

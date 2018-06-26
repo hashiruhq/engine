@@ -13,14 +13,14 @@ type Dispatcher interface {
 type dispatcher struct {
 	MaxWorkers int
 	WorkerPool chan chan Job
-	Workers    []*Worker
-	Engine     *trading_engine.TradingEngine
+	Workers    []Worker
+	Engine     trading_engine.TradingEngine
 }
 
 // NewDispatcher creates a new dispatcher
-func NewDispatcher(engine *trading_engine.TradingEngine, maxWorkers int) Dispatcher {
+func NewDispatcher(engine trading_engine.TradingEngine, maxWorkers int) Dispatcher {
 	pool := make(chan chan Job, maxWorkers)
-	workers := make([]*Worker, 0, maxWorkers)
+	workers := make([]Worker, 0, maxWorkers)
 	return &dispatcher{
 		WorkerPool: pool,
 		MaxWorkers: maxWorkers,
@@ -35,7 +35,7 @@ func (d *dispatcher) Run() {
 	for i := 0; i < d.MaxWorkers; i++ {
 		worker := NewWorker(d.Engine, d.WorkerPool)
 		worker.Start()
-		d.Workers = append(d.Workers, &worker)
+		d.Workers = append(d.Workers, worker)
 	}
 
 	go d.dispatch()
