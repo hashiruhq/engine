@@ -91,6 +91,13 @@ by the trading engine and saving generated trades back to the Kafka server.
 
 ## Resources
 
+Architecture Design
+- https://martinfowler.com/articles/lmax.html
+- https://web.archive.org/web/20110314042933/http://howtohft.wordpress.com/
+- http://blog.bitfinex.com/announcements/introducing-hive/
+- https://web.archive.org/web/20110310171841/http://www.quantcup.org/home/spec
+- https://web.archive.org/web/20110315000556/http://drdobbs.com:80/high-performance-computing/210604448
+
 Trading Engine
 - Matcher: https://github.com/fmstephe/matching_engine/blob/master/matcher/matcher.go
 - Order book: https://github.com/hookercookerman/trading_engine/blob/master/trading_engine/order_book.go
