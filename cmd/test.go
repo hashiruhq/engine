@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"math"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -54,10 +53,10 @@ func test_gen_orders(timeout, delay int) {
 			for {
 				topicIndex := rand.Intn(maxTopics)
 				id := "ID_" + fmt.Sprintf("%d", index)
-				price := 1 + 3*index + int(math.Ceil(10000*rand.Float64()))
-				amount := 10001 - int(math.Ceil(10000*rand.Float64()))
+				price := 1 + float64(index) + 10000*rand.Float64()
+				amount := 10001 - 10000*rand.Float64()
 				side := int8(1 + rand.Intn(2)%2)
-				order := fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": %d, "amount": %d, "side": %d, "category": 1}`, id, price, amount, side)
+				order := fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": %.8f, "amount": %.8f, "side": %d, "category": 1}`, id, price, amount, side)
 				producer.Input() <- &sarama.ProducerMessage{
 					Topic: topics[topicIndex],
 					Value: sarama.ByteEncoder(([]byte)(order)),

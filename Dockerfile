@@ -1,9 +1,21 @@
-FROM golang
-WORKDIR /go/src/trading_engine
-COPY . .
-RUN go install ./...
-ENTRYPOINT /go/bin/trading_engine
+FROM golang:1.10.3 as build
+RUN mkdir -p /go/src/trading_engine
+WORKDIR /go/src/trading_engine/
 
-# FROM scratch
-# COPY --from=0 /go/bin/trading_engine /trading_engine
-# ENTRYPOINT /go/bin/trading_engine
+COPY . .
+RUN go get -v -d ./...
+# RUN go install ./...
+
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo --ldflags "-s -w" -o /usr/bin/trading_engine
+
+FROM alpine:3.7
+
+COPY --from=build /usr/bin/trading_engine /root/
+COPY --from=build /go/src/trading_engine/.engine.yml /root/
+
+EXPOSE 6060
+WORKDIR /root/
+
+RUN ls -al /root
+
+CMD ["./trading_engine", "server"]

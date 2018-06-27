@@ -1,6 +1,13 @@
 version: '3.2'
 services:
   # Kafka Cluster with Zookeeper
+  prometheus: 
+    image: quay.io/prometheus/prometheus
+    ports:
+      - "9090:9090"
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
@@ -19,6 +26,11 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+  trading_engine:
+    build: 
+      context: .
+    image: trading_engine:local
+    
   # kafka_second:
   #   image: wurstmeister/kafka
   #   ports:

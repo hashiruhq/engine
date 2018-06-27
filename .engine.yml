@@ -1,3 +1,6 @@
+server: 
+  profilling: true
+
 markets:
   btc_usd:
     base: btc

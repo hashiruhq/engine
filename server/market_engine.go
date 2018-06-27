@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"time"
+	"trading_engine/conv"
 	"trading_engine/net"
 	"trading_engine/trading_engine"
 
@@ -81,7 +82,14 @@ func (mkt *marketEngine) PrintStats() {
 		tradeCount := mkt.tradesOut - lastTradeCount
 		lastOrderCount = mkt.ordersIn
 		lastTradeCount = mkt.tradesOut
-		log.Printf("Market: %s \nOrders/second: %f\nTrades/second: %f\n", mkt.publishTopic, float64(orderCount)/10, float64(tradeCount)/10)
+		log.Printf(
+			"Market: %s\nOrders/second: %f\nTrades/second: %f\nHighest Bid: %.8f\nLowest Ask: %.8f\n",
+			mkt.publishTopic,
+			float64(orderCount)/10,
+			float64(tradeCount)/10,
+			conv.FromUnits(mkt.engine.GetOrderBook().GetHighestBid(), trading_engine.PricePrecision),
+			conv.FromUnits(mkt.engine.GetOrderBook().GetLowestAsk(), trading_engine.PricePrecision),
+		)
 	}
 }
 

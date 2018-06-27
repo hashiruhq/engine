@@ -1,6 +1,10 @@
 package trading_engine
 
-import "github.com/francoispqt/gojay"
+import (
+	"trading_engine/conv"
+
+	"github.com/francoispqt/gojay"
+)
 
 // BUY value means the user wants to buy from the market
 const BUY = 1
@@ -17,6 +21,17 @@ const MarketOrder = 2
 
 // StopLossOrder @todo completes the trade until it gets to a price
 const StopLossOrder = 3
+
+// PricePrecision - The maximum precision of the price for an item in the market
+// Max Price: 184467440737.09551615
+const PricePrecision = 8
+
+// AmountPrecision - The maximum precision of the amount for an item in the market
+// Max Amount: 184467440737.09551615
+const AmountPrecision = 8
+
+// FundsPrecision - the precision for the provided funds
+const FundsPrecision = 8
 
 // Order allows the trader to start an order where the transaction will be completed
 // if the market price is at or better than the set price
@@ -153,9 +168,21 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 	case "type":
 		return dec.Int8(&order.Type)
 	case "price":
-		return dec.Uint64(&order.Price)
+		var price float64
+		err := dec.Float(&price)
+		if err != nil {
+			return err
+		}
+		order.Price = conv.ToUnits(price, PricePrecision)
+		return nil
 	case "amount":
-		return dec.Uint64(&order.Amount)
+		var amount float64
+		err := dec.Float(&amount)
+		if err != nil {
+			return err
+		}
+		order.Amount = conv.ToUnits(amount, AmountPrecision)
+		return nil
 	}
 	return nil
 }
@@ -163,4 +190,18 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 // NKeys implements gojay.UnmarshalerJSONObject interface and returns the number of keys to parse
 func (order Order) NKeys() int {
 	return 5
+}
+
+// MarshalJSONObject implement gojay.MarshalerJSONObject interface
+func (order Order) MarshalJSONObject(enc *gojay.Encoder) {
+	enc.StringKey("id", order.ID)
+	enc.IntKey("side", int(order.Side))
+	enc.IntKey("type", int(order.Type))
+	enc.FloatKey("price", conv.FromUnits(order.Price, PricePrecision))
+	enc.FloatKey("amount", conv.FromUnits(order.Amount, AmountPrecision))
+}
+
+// IsNil checks if the order is empty
+func (order *Order) IsNil() bool {
+	return order == nil
 }

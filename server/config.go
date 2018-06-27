@@ -44,10 +44,16 @@ type MarketConfig struct {
 	Publish TopicConfig
 }
 
+// ServerConfig structure
+type ServerConfig struct {
+	Profilling bool
+}
+
 // Config structure
 type Config struct {
 	Markets map[string]MarketConfig
 	Brokers BrokersConfig
+	Server  ServerConfig
 }
 
 // LoadConfig Load server configuration from the yaml file

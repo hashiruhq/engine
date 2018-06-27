@@ -1,6 +1,8 @@
 package trading_engine
 
 import (
+	"trading_engine/conv"
+
 	"github.com/francoispqt/gojay"
 )
 
@@ -42,9 +44,21 @@ func (trade *Trade) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 	case "maker_order_id":
 		return dec.String(&trade.MakerOrderID)
 	case "price":
-		return dec.Uint64(&trade.Price)
+		var price float64
+		err := dec.Float(&price)
+		if err != nil {
+			return err
+		}
+		trade.Price = conv.ToUnits(price, PricePrecision)
+		return nil
 	case "amount":
-		return dec.Uint64(&trade.Amount)
+		var amount float64
+		err := dec.Float(&amount)
+		if err != nil {
+			return err
+		}
+		trade.Amount = conv.ToUnits(amount, AmountPrecision)
+		return nil
 	}
 	return nil
 }
@@ -53,8 +67,8 @@ func (trade *Trade) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 func (trade *Trade) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.StringKey("taker_order_id", trade.TakerOrderID)
 	enc.StringKey("maker_order_id", trade.MakerOrderID)
-	enc.Uint64Key("price", trade.Price)
-	enc.Uint64Key("amount", trade.Amount)
+	enc.FloatKey("price", conv.FromUnits(trade.Price, PricePrecision))
+	enc.FloatKey("amount", conv.FromUnits(trade.Amount, AmountPrecision))
 }
 
 // IsNil checks if the trade is empty

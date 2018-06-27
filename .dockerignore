@@ -1,0 +1,7 @@
+.vscode
+.gitignore
+CHANGELOG
+Readme.md
+docker-compose.yml
+devops/
+.git

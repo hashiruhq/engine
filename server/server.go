@@ -2,11 +2,16 @@ package server
 
 import (
 	"log"
+	"net/http"
+	// import http profilling when the server profilling configuration is set
+	// _ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 	"trading_engine/net"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // Server interface
@@ -72,6 +77,7 @@ func (srv *server) Listen() {
 
 	go srv.ReceiveMessages()
 
+	srv.StartProfilling(srv.config.Server.Profilling)
 	srv.stopOnSignal()
 }
 
@@ -117,6 +123,15 @@ func (srv *server) ReceiveMessages() {
 				srv.markets[market].Process(msg)
 			}
 		}(key, srv.consumers[key])
+	}
+}
+
+func (srv server) StartProfilling(start bool) {
+	if start {
+		go func() {
+			http.Handle("/metrics", prometheus.Handler())
+			log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
+		}()
 	}
 }
 
