@@ -6,7 +6,6 @@ import (
 
 // KafkaAsyncProducer structure
 type kafkaAsyncProducer struct {
-	// input    chan *sarama.ProducerMessage
 	producer sarama.AsyncProducer
 	config   *sarama.Config
 	brokers  []string
@@ -15,7 +14,7 @@ type kafkaAsyncProducer struct {
 // NewKafkaAsyncProducer returns a new producer
 func NewKafkaAsyncProducer(brokers []string) KafkaProducer {
 	config := sarama.NewConfig()
-	// config.ChannelBufferSize = 10000
+	config.ChannelBufferSize = 10000
 	config.Producer.Return.Successes = false
 	config.Producer.Retry.Max = 5
 	config.Producer.Return.Errors = true
@@ -25,7 +24,6 @@ func NewKafkaAsyncProducer(brokers []string) KafkaProducer {
 	return &kafkaAsyncProducer{
 		brokers: brokers,
 		config:  config,
-		// input:   make(chan *sarama.ProducerMessage),
 	}
 }
 
@@ -33,7 +31,6 @@ func NewKafkaAsyncProducer(brokers []string) KafkaProducer {
 func (conn *kafkaAsyncProducer) Start() error {
 	producer, err := sarama.NewAsyncProducer(conn.brokers, conn.config)
 	conn.producer = producer
-	// go conn.dispatch()
 	return err
 }
 
@@ -51,14 +48,7 @@ func (conn *kafkaAsyncProducer) Errors() <-chan *sarama.ProducerError {
 func (conn *kafkaAsyncProducer) Close() error {
 	if conn.producer != nil {
 		err := conn.producer.Close()
-		// close(conn.input)
 		return err
 	}
 	return nil
 }
-
-// func (conn *kafkaAsyncProducer) dispatch() {
-// 	for msg := range conn.input {
-// 		conn.producer.Input() <- msg
-// 	}
-// }

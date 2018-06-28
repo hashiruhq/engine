@@ -20,12 +20,14 @@ func init() {
 	testCmd.Flags().StringVarP(&testCase, "case", "c", "gen_orders", "Generate orders in the configured consumers.")
 	testCmd.Flags().IntVarP(&timeout, "timeout", "t", 10, "The timeout until the generator should exit")
 	testCmd.Flags().IntVarP(&delay, "delay", "d", 0, "The delay between orders")
+	testCmd.Flags().IntVarP(&topicCount, "topic_count", "", 0, "The maximum number of topics to generate orders for. Default: all topics configured.")
 	rootCmd.AddCommand(testCmd)
 }
 
 var testCase string
 var timeout int
 var delay int
+var topicCount int
 var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Test the trading engine by generating fake orders",
@@ -33,12 +35,12 @@ var testCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		switch testCase {
 		case "gen_orders":
-			test_gen_orders(timeout, delay)
+			test_gen_orders(timeout, delay, topicCount)
 		}
 	},
 }
 
-func test_gen_orders(timeout, delay int) {
+func test_gen_orders(timeout, delay, topicCount int) {
 	rand.Seed(42)
 	// load server configuration from server
 	cfg := server.LoadConfig(viper.GetViper())
@@ -49,6 +51,10 @@ func test_gen_orders(timeout, delay int) {
 		producer.Start()
 		go func(producer net.KafkaProducer, topics []string) {
 			maxTopics := len(topics)
+			if topicCount > 0 {
+				maxTopics = topicCount
+			}
+
 			index := 0
 			for {
 				topicIndex := rand.Intn(maxTopics)

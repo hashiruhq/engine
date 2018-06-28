@@ -19,7 +19,7 @@ test:
 	go test
 
 coverage-test:
-	go test -coverprofile=coverage.out
+	go test trading_engine/trading_engine -coverprofile=coverage.out
 	go tool cover -func=coverage.out
 	go tool cover -html=coverage.out
 	rm coverage.out

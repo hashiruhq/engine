@@ -46,7 +46,14 @@ type MarketConfig struct {
 
 // ServerConfig structure
 type ServerConfig struct {
-	Profilling bool
+	Profilling ProfillingConfig
+}
+
+// ProfillingConfig structure
+type ProfillingConfig struct {
+	Enabled bool
+	Host    string
+	Port    string
 }
 
 // Config structure

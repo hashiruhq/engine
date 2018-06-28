@@ -8,6 +8,13 @@ services:
     restart: always
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  grafana:
+    image: grafana/grafana
+    ports: 
+      - "3000:3000"
+    restart: always
+    volumes:
+      - grafana:/var/lib/grafana
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
@@ -24,6 +31,7 @@ services:
       HOSTNAME_COMMAND: "echo 'kafka'"
       KAFKA_CREATE_TOPICS: trading.order.btc.eth:1:1,trading.trade.btc.eth:3:1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LOG_RETENTION_HOURS_PER_TOPIC: 1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   trading_engine:
@@ -63,3 +71,5 @@ services:
     environment:
       ZK_HOSTS: zookeeper:2181
     restart: always
+volumes:
+  grafana:

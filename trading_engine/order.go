@@ -148,6 +148,10 @@ func NewOrder(id string, price, amount uint64, side int8, category int8) Order {
 	return Order{ID: id, Price: price, Amount: amount, Side: side, Type: category}
 }
 
+//***************************
+// Interface Implementations
+//***************************
+
 // LessThan implementes the skiplist interface
 func (order Order) LessThan(other Order) bool {
 	return order.Price < other.Price
@@ -167,6 +171,12 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 		return dec.Int8(&order.Side)
 	case "type":
 		return dec.Int8(&order.Type)
+	case "stop":
+		return dec.Int8(&order.Stop)
+	case "base":
+		return dec.String(&order.BaseCurrency)
+	case "quote":
+		return dec.String(&order.QuoteCurrency)
 	case "price":
 		var price float64
 		err := dec.Float(&price)
@@ -174,7 +184,6 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 			return err
 		}
 		order.Price = conv.ToUnits(price, PricePrecision)
-		return nil
 	case "amount":
 		var amount float64
 		err := dec.Float(&amount)
@@ -182,23 +191,41 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 			return err
 		}
 		order.Amount = conv.ToUnits(amount, AmountPrecision)
-		return nil
+	case "stop_price":
+		var price float64
+		err := dec.Float(&price)
+		if err != nil {
+			return err
+		}
+		order.StopPrice = conv.ToUnits(price, PricePrecision)
+	case "funds":
+		var funds float64
+		err := dec.Float(&funds)
+		if err != nil {
+			return err
+		}
+		order.Funds = conv.ToUnits(funds, FundsPrecision)
 	}
 	return nil
 }
 
 // NKeys implements gojay.UnmarshalerJSONObject interface and returns the number of keys to parse
 func (order Order) NKeys() int {
-	return 5
+	return 10
 }
 
 // MarshalJSONObject implement gojay.MarshalerJSONObject interface
 func (order Order) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.StringKey("id", order.ID)
+	enc.StringKey("base", order.BaseCurrency)
+	enc.StringKey("quote", order.QuoteCurrency)
+	enc.IntKey("stop", int(order.Stop))
 	enc.IntKey("side", int(order.Side))
 	enc.IntKey("type", int(order.Type))
 	enc.FloatKey("price", conv.FromUnits(order.Price, PricePrecision))
 	enc.FloatKey("amount", conv.FromUnits(order.Amount, AmountPrecision))
+	enc.FloatKey("stop_price", conv.FromUnits(order.StopPrice, PricePrecision))
+	enc.FloatKey("funds", conv.FromUnits(order.Funds, FundsPrecision))
 }
 
 // IsNil checks if the order is empty

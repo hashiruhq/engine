@@ -2,8 +2,6 @@ package server
 
 import (
 	"log"
-	"time"
-	"trading_engine/conv"
 	"trading_engine/net"
 	"trading_engine/trading_engine"
 
@@ -26,9 +24,6 @@ type marketEngine struct {
 	trades       chan []trading_engine.Trade
 	producer     net.KafkaProducer
 	publishTopic string
-
-	ordersIn  uint64
-	tradesOut uint64
 }
 
 // NewMarketEngine open a new market
@@ -37,10 +32,10 @@ func NewMarketEngine(producer net.KafkaProducer, topic string) MarketEngine {
 		producer:     producer,
 		publishTopic: topic,
 		engine:       trading_engine.NewTradingEngine(),
-		inputs:       make(chan *sarama.ConsumerMessage, 1000),
-		orders:       make(chan trading_engine.Order, 10000),
-		trades:       make(chan []trading_engine.Trade, 10000),
-		messages:     make(chan []byte, 10000),
+		inputs:       make(chan *sarama.ConsumerMessage, 10000),
+		orders:       make(chan trading_engine.Order, 20000),
+		trades:       make(chan []trading_engine.Trade, 20000),
+		messages:     make(chan []byte, 20000),
 	}
 }
 
@@ -56,8 +51,6 @@ func (mkt *marketEngine) Start() {
 	go mkt.ProcessOrder()
 	// publish trades to the kafka server
 	go mkt.PublishTrades()
-	// print stats every 10 seconds
-	go mkt.PrintStats()
 }
 
 // Process a new message from the consumer
@@ -71,26 +64,6 @@ func (mkt *marketEngine) Close() {
 	close(mkt.messages)
 	close(mkt.orders)
 	close(mkt.trades)
-}
-
-func (mkt *marketEngine) PrintStats() {
-	var lastOrderCount uint64
-	var lastTradeCount uint64
-	for {
-		time.Sleep(time.Duration(10) * time.Second)
-		orderCount := mkt.ordersIn - lastOrderCount
-		tradeCount := mkt.tradesOut - lastTradeCount
-		lastOrderCount = mkt.ordersIn
-		lastTradeCount = mkt.tradesOut
-		log.Printf(
-			"Market: %s\nOrders/second: %f\nTrades/second: %f\nHighest Bid: %.8f\nLowest Ask: %.8f\n",
-			mkt.publishTopic,
-			float64(orderCount)/10,
-			float64(tradeCount)/10,
-			conv.FromUnits(mkt.engine.GetOrderBook().GetHighestBid(), trading_engine.PricePrecision),
-			conv.FromUnits(mkt.engine.GetOrderBook().GetLowestAsk(), trading_engine.PricePrecision),
-		)
-	}
 }
 
 // ReceiveProducerErrors listens for error messages trades that have not been published
@@ -112,7 +85,8 @@ func (mkt *marketEngine) ReceiveProducerErrors() {
 // When the consumer is closed the messages channel can also be closed and we can shutdown the engine
 func (mkt *marketEngine) ReceiveMessages() {
 	for msg := range mkt.inputs {
-		mkt.ordersIn++
+		// Monitor: Increment the number of messages that has been received by the market
+		messagesQueued.WithLabelValues(mkt.publishTopic).Inc()
 		mkt.messages <- msg.Value
 	}
 }
@@ -125,6 +99,9 @@ func (mkt *marketEngine) DecodeMessage() {
 	for msg := range mkt.messages {
 		var order trading_engine.Order
 		order.FromJSON(msg)
+		messagesQueued.WithLabelValues(mkt.publishTopic).Dec()
+		// Monitor: Increment the number of orders that are waiting to be processed
+		ordersQueued.WithLabelValues(mkt.publishTopic).Inc()
 		mkt.orders <- order
 	}
 }
@@ -134,8 +111,15 @@ func (mkt *marketEngine) DecodeMessage() {
 // Message flow is unidirectional from the orders channel to the trades channel
 func (mkt *marketEngine) ProcessOrder() {
 	for order := range mkt.orders {
+		// Process each order and generate trades
 		generatedTrades := mkt.engine.Process(order)
-		if len(generatedTrades) > 0 {
+		// Monitor: Update order count for monitoring with prometheus
+		engineOrderCount.WithLabelValues(mkt.publishTopic).Inc()
+		ordersQueued.WithLabelValues(mkt.publishTopic).Dec()
+		tradeCount := len(generatedTrades)
+		if tradeCount > 0 {
+			tradesQueued.WithLabelValues(mkt.publishTopic).Add(float64(tradeCount))
+			// send trades for storage
 			mkt.trades <- generatedTrades
 		}
 	}
@@ -150,7 +134,11 @@ func (mkt *marketEngine) PublishTrades() {
 				Topic: mkt.publishTopic,
 				Value: sarama.ByteEncoder(rawTrade),
 			}
-			mkt.tradesOut++
 		}
+
+		// Monitor: Update the number of trades processed after sending them back to Kafka
+		tradeCount := float64(len(completedTrades))
+		tradesQueued.WithLabelValues(mkt.publishTopic).Sub(tradeCount)
+		engineTradeCount.WithLabelValues(mkt.publishTopic).Add(tradeCount)
 	}
 }

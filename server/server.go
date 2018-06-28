@@ -27,6 +27,52 @@ type server struct {
 	topic2market map[string]string
 }
 
+var (
+	engineOrderCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "engine_order_count",
+		Help: "Trading engine order count",
+	}, []string{
+		// Which market are the orders from?
+		"market",
+	})
+	engineTradeCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "engine_trade_count",
+		Help: "Trading engine trade count",
+	}, []string{
+		// Which market are the trades from?
+		"market",
+	})
+	messagesQueued = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "engine_message_queue_count",
+		Help: "Number of messages from Apache Kafka received and waiting to be processed.",
+	}, []string{
+		// Which market are the orders from?
+		"market",
+	})
+	ordersQueued = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "engine_order_queue_count",
+		Help: "Number of orders waiting to be processed.",
+	}, []string{
+		// Which market are the orders from?
+		"market",
+	})
+	tradesQueued = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "engine_trade_queue_count",
+		Help: "Number of trades waiting to be processed.",
+	}, []string{
+		// Which market are the trades from?
+		"market",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(engineOrderCount)
+	prometheus.MustRegister(engineTradeCount)
+	prometheus.MustRegister(messagesQueued)
+	prometheus.MustRegister(ordersQueued)
+	prometheus.MustRegister(tradesQueued)
+}
+
 // NewServer constructor
 func NewServer(config Config) Server {
 	// init producers
@@ -126,11 +172,11 @@ func (srv *server) ReceiveMessages() {
 	}
 }
 
-func (srv server) StartProfilling(start bool) {
-	if start {
+func (srv server) StartProfilling(config ProfillingConfig) {
+	if config.Enabled {
 		go func() {
 			http.Handle("/metrics", prometheus.Handler())
-			log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
+			log.Println(http.ListenAndServe(config.Host+":"+config.Port, nil))
 		}()
 	}
 }
