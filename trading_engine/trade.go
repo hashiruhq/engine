@@ -44,21 +44,13 @@ func (trade *Trade) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 	case "maker_order_id":
 		return dec.String(&trade.MakerOrderID)
 	case "price":
-		var price float64
-		err := dec.Float(&price)
-		if err != nil {
-			return err
-		}
-		trade.Price = conv.ToUnits(price, PricePrecision)
-		return nil
+		var amount string
+		dec.String(&amount)
+		trade.Price = conv.ToUnits(amount, PricePrecision)
 	case "amount":
-		var amount float64
-		err := dec.Float(&amount)
-		if err != nil {
-			return err
-		}
+		var amount string
+		dec.String(&amount)
 		trade.Amount = conv.ToUnits(amount, AmountPrecision)
-		return nil
 	}
 	return nil
 }
@@ -67,8 +59,8 @@ func (trade *Trade) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 func (trade *Trade) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.StringKey("taker_order_id", trade.TakerOrderID)
 	enc.StringKey("maker_order_id", trade.MakerOrderID)
-	enc.FloatKey("price", conv.FromUnits(trade.Price, PricePrecision))
-	enc.FloatKey("amount", conv.FromUnits(trade.Amount, AmountPrecision))
+	enc.StringKey("price", conv.FromUnits(trade.Price, PricePrecision))
+	enc.StringKey("amount", conv.FromUnits(trade.Amount, AmountPrecision))
 }
 
 // IsNil checks if the trade is empty

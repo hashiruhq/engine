@@ -1,67 +1,63 @@
 package trading_engine
 
-import "testing"
+import (
+	"testing"
 
-func TestOrderNew(t *testing.T) {
-	// new order for 1.0 and 120 units
-	order := NewOrder("TEST_1", 100000000, 12000000000, 1, 2)
-	if order.Amount != 12000000000 {
-		t.Errorf("Order amount incorrect, got: %d, want: %d.", order.Amount, 12000000000)
-	}
-	if order.Price != 100000000 {
-		t.Errorf("Order price incorrect, got: %d, want: %d.", order.Price, 100000000)
-	}
+	. "github.com/smartystreets/goconvey/convey"
+)
 
-	if order.Side != 1 {
-		t.Errorf("Order price incorrect, got: %d, want: %d.", order.Side, 1)
-	}
-
-	if order.Type != 2 {
-		t.Errorf("Order price incorrect, got: %d, want: %d.", order.Type, 2)
-	}
+func TestOrderCreation(t *testing.T) {
+	Convey("Should be able to create a new order", t, func() {
+		order := NewOrder("TEST_1", 100000000, 12000000000, 1, 2)
+		So(order.Amount, ShouldEqual, 12000000000)
+		So(order.Price, ShouldEqual, 100000000)
+		So(order.Side, ShouldEqual, 1)
+		So(order.Type, ShouldEqual, 2)
+	})
 }
 
-func TestOrderLessThan(t *testing.T) {
-	order1 := NewOrder("TEST_1", 100000000, 12000000000, 1, 2)
-	order2 := NewOrder("TEST_2", 110000000, 12000000000, 1, 2)
-
-	less := order1.LessThan(order2)
-	if !less {
-		t.Errorf("Abnormal order comparison, got: %v, want: %v.", less, true)
-	}
+func TestOrderComparisonByPrice(t *testing.T) {
+	Convey("Should be able to compare two orders by price", t, func() {
+		order1 := NewOrder("TEST_1", 100000000, 12000000000, 1, 2)
+		order2 := NewOrder("TEST_2", 110000000, 12000000000, 1, 2)
+		So(order1.LessThan(order2), ShouldBeTrue)
+	})
 }
 
-func TestOrderFromJson(t *testing.T) {
-	var order Order
-	json := []byte(`{"base": "sym", "quote": "tst", "id":"TST_1", "price": 1312213.00010201, "amount": 8483828.29993942, "side": 1, "type": 1}`)
+func TestOrderLoadFromJson(t *testing.T) {
+	Convey("Should be able to load an order from json", t, func() {
+		var order Order
+		json := []byte(`{
+			"base": "sym",
+			"quote": "tst",
+			"id":"TST_1",
+			"price": "1312213.00010201",
+			"amount": "8483828.29993942",
+			"side": 1,
+			"type": 1,
+			"stop": 1,
+			"stop_price": "13132311.00010201",
+			"funds": "101000101.33232313"
+		}`)
+		order.FromJSON(json)
+		So(order.IsNil(), ShouldBeFalse)
+		So(order.Price, ShouldEqual, 131221300010201)
+		So(order.Amount, ShouldEqual, 848382829993942)
+		So(order.Funds, ShouldEqual, 10100010133232313)
+		So(order.ID, ShouldEqual, "TST_1")
+		So(order.Side, ShouldEqual, 1)
+		So(order.Type, ShouldEqual, 1)
+		So(order.BaseCurrency, ShouldEqual, "sym")
+		So(order.QuoteCurrency, ShouldEqual, "tst")
+	})
+}
 
-	order.FromJSON(json)
-
-	if order.Price != 131221300010201 {
-		t.Errorf("Failed to load order price from json, got: %v, want: %v.", order.Amount, 131221300010201)
-	}
-
-	if order.Amount != 848382829993942 {
-		t.Errorf("Failed to load order amount from json, got: %v, want: %v.", order.Amount, 848382829993942)
-	}
-
-	if order.ID != "TST_1" {
-		t.Errorf("Failed to load order id from json, got: %q, want: %q.", order.ID, "TST_1")
-	}
-
-	if order.Side != 1 {
-		t.Errorf("Failed to load order side from json, got: %v, want: %v.", order.Side, 1)
-	}
-
-	if order.Type != 1 {
-		t.Errorf("Failed to load order type from json, got: %v, want: %v.", order.Type, 1)
-	}
-
-	if order.BaseCurrency != "sym" {
-		t.Errorf("Failed to load order base from json, got: %q, want: %q.", order.BaseCurrency, "sym")
-	}
-
-	if order.QuoteCurrency != "tst" {
-		t.Errorf("Failed to load order quote from json, got: %q, want: %q.", order.QuoteCurrency, "tst")
-	}
+func TestOrderConvertToJson(t *testing.T) {
+	Convey("Should be able to convert an order to json string", t, func() {
+		var order Order
+		json := `{"id":"TST_1","base":"sym","quote":"tst","stop":1,"side":1,"type":1,"price":"1312213.00010201","amount":"8483828.29993942","stop_price":"13132311.00010201","funds":"101000101.33232313"}`
+		order.FromJSON([]byte(json))
+		bytes, _ := order.ToJSON()
+		So(string(bytes), ShouldEqual, json)
+	})
 }

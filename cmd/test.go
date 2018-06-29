@@ -62,7 +62,7 @@ func test_gen_orders(timeout, delay, topicCount int) {
 				price := 1 + float64(index) + 10000*rand.Float64()
 				amount := 10001 - 10000*rand.Float64()
 				side := int8(1 + rand.Intn(2)%2)
-				order := fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": %.8f, "amount": %.8f, "side": %d, "category": 1}`, id, price, amount, side)
+				order := fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": "%.8f", "amount": "%.8f", "side": %d, "category": 1}`, id, price, amount, side)
 				producer.Input() <- &sarama.ProducerMessage{
 					Topic: topics[topicIndex],
 					Value: sarama.ByteEncoder(([]byte)(order)),

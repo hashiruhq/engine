@@ -162,6 +162,11 @@ func (order *Order) FromJSON(msg []byte) error {
 	return gojay.Unsafe.Unmarshal(msg, order)
 }
 
+// ToJSON converts an order to a byte string
+func (order *Order) ToJSON() ([]byte, error) {
+	return gojay.Marshal(order)
+}
+
 // UnmarshalJSONObject implement gojay.UnmarshalerJSONObject interface
 func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 	switch key {
@@ -178,33 +183,21 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 	case "quote":
 		return dec.String(&order.QuoteCurrency)
 	case "price":
-		var price float64
-		err := dec.Float(&price)
-		if err != nil {
-			return err
-		}
-		order.Price = conv.ToUnits(price, PricePrecision)
+		var amount string
+		dec.String(&amount)
+		order.Price = conv.ToUnits(amount, PricePrecision)
 	case "amount":
-		var amount float64
-		err := dec.Float(&amount)
-		if err != nil {
-			return err
-		}
+		var amount string
+		dec.String(&amount)
 		order.Amount = conv.ToUnits(amount, AmountPrecision)
 	case "stop_price":
-		var price float64
-		err := dec.Float(&price)
-		if err != nil {
-			return err
-		}
-		order.StopPrice = conv.ToUnits(price, PricePrecision)
+		var amount string
+		dec.String(&amount)
+		order.StopPrice = conv.ToUnits(amount, PricePrecision)
 	case "funds":
-		var funds float64
-		err := dec.Float(&funds)
-		if err != nil {
-			return err
-		}
-		order.Funds = conv.ToUnits(funds, FundsPrecision)
+		var amount string
+		dec.String(&amount)
+		order.Funds = conv.ToUnits(amount, FundsPrecision)
 	}
 	return nil
 }
@@ -222,10 +215,10 @@ func (order Order) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.IntKey("stop", int(order.Stop))
 	enc.IntKey("side", int(order.Side))
 	enc.IntKey("type", int(order.Type))
-	enc.FloatKey("price", conv.FromUnits(order.Price, PricePrecision))
-	enc.FloatKey("amount", conv.FromUnits(order.Amount, AmountPrecision))
-	enc.FloatKey("stop_price", conv.FromUnits(order.StopPrice, PricePrecision))
-	enc.FloatKey("funds", conv.FromUnits(order.Funds, FundsPrecision))
+	enc.StringKey("price", conv.FromUnits(order.Price, PricePrecision))
+	enc.StringKey("amount", conv.FromUnits(order.Amount, AmountPrecision))
+	enc.StringKey("stop_price", conv.FromUnits(order.StopPrice, PricePrecision))
+	enc.StringKey("funds", conv.FromUnits(order.Funds, FundsPrecision))
 }
 
 // IsNil checks if the order is empty
