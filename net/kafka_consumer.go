@@ -4,9 +4,13 @@ import (
 	"log"
 
 	"github.com/Shopify/sarama"
-
 	cluster "github.com/bsm/sarama-cluster"
+	metrics "github.com/rcrowley/go-metrics"
 )
+
+func init() {
+	metrics.UseNilMetrics = true
+}
 
 type kafkaPartitionConsumer struct {
 	config   *cluster.Config

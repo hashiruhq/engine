@@ -2,7 +2,12 @@ package net
 
 import (
 	"github.com/Shopify/sarama"
+	metrics "github.com/rcrowley/go-metrics"
 )
+
+func init() {
+	metrics.UseNilMetrics = true
+}
 
 // KafkaAsyncProducer structure
 type kafkaAsyncProducer struct {

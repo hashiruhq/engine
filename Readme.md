@@ -115,6 +115,7 @@ Communication
 - Unix Domain Socket: https://gist.github.com/hakobe/6f70d69b8c5243117787fd488ae7fbf2
 
 Performance
+- Great presentation on how to use go profilling tools: https://www.youtube.com/watch?v=N3PWzBeLX2M
 - https://blog.golang.org/profiling-go-programs
 - https://github.com/golang/go/wiki/Performance
 - https://www.quora.com/How-does-one-become-a-low-latency-programmer

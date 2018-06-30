@@ -111,3 +111,17 @@ func (book *orderBook) removeBookEntry(bookEntry *BookEntry) {
 		}
 	}
 }
+
+func (book *orderBook) removeBuyBookEntry(bookEntry *BookEntry, pricePoint *PricePoint, index int) {
+	pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries[:index], pricePoint.BuyBookEntries[index+1:]...)
+	if len(pricePoint.BuyBookEntries) == 0 && len(pricePoint.SellBookEntries) == 0 {
+		book.PricePoints.Delete(bookEntry.Price)
+	}
+}
+
+func (book *orderBook) removeSellBookEntry(bookEntry *BookEntry, pricePoint *PricePoint, index int) {
+	pricePoint.SellBookEntries = append(pricePoint.SellBookEntries[:index], pricePoint.SellBookEntries[index+1:]...)
+	if len(pricePoint.BuyBookEntries) == 0 && len(pricePoint.SellBookEntries) == 0 {
+		book.PricePoints.Delete(bookEntry.Price)
+	}
+}

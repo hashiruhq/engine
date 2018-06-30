@@ -1,7 +1,7 @@
 package trading_engine
 
 func (book *orderBook) processLimitBuy(order Order) []Trade {
-	var trades []Trade
+	trades := make([]Trade, 0, 1)
 	if book.LowestAsk <= order.Price && book.LowestAsk != 0 {
 		iterator := book.PricePoints.Seek(book.LowestAsk)
 
@@ -17,7 +17,8 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, order.Amount, sellEntry.Order.Price))
 						sellEntry.Amount -= order.Amount
 						if sellEntry.Amount == 0 {
-							book.removeBookEntry(sellEntry)
+							// book.removeBookEntry(sellEntry)
+							book.removeSellBookEntry(sellEntry, pricePoint, index)
 						}
 						return trades
 					}
@@ -27,8 +28,9 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 					if sellEntry.Amount < order.Amount {
 						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, sellEntry.Amount, sellEntry.Price))
 						order.Amount -= sellEntry.Amount
+						// book.removeBookEntry(sellEntry)
+						book.removeSellBookEntry(sellEntry, pricePoint, index)
 						index--
-						book.removeBookEntry(sellEntry)
 						continue
 					}
 				}
@@ -55,7 +57,7 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 }
 
 func (book *orderBook) processLimitSell(order Order) []Trade {
-	var trades []Trade
+	trades := make([]Trade, 0, 1)
 	if book.HighestBid >= order.Price && book.HighestBid != 0 {
 		iterator := book.PricePoints.Seek(book.HighestBid)
 
@@ -71,7 +73,8 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, order.Amount, buyEntry.Order.Price))
 						buyEntry.Amount -= order.Amount
 						if buyEntry.Amount == 0 {
-							book.removeBookEntry(buyEntry)
+							book.removeBuyBookEntry(buyEntry, pricePoint, index)
+							// book.removeBookEntry(buyEntry)
 						}
 						return trades
 					}
@@ -81,7 +84,8 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 					if buyEntry.Amount < order.Amount {
 						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, buyEntry.Amount, buyEntry.Price))
 						order.Amount -= buyEntry.Amount
-						book.removeBookEntry(buyEntry)
+						// book.removeBookEntry(buyEntry)
+						book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						index--
 						continue
 					}

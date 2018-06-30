@@ -12,7 +12,6 @@ type Trade struct {
 	MakerOrderID string
 	Amount       uint64
 	Price        uint64
-	// Date         time.Time `json:"created_at"`
 }
 
 // NewTrade Creates a new trade between the taker order and the maker order
@@ -22,7 +21,6 @@ func NewTrade(takerOrder string, makerOrder string, amount, price uint64) Trade 
 		MakerOrderID: makerOrder,
 		Amount:       amount,
 		Price:        price,
-		// Date:         time.Now(), // do not generate the timestamp in the trading engine to increase performance
 	}
 }
 
