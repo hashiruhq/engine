@@ -147,6 +147,7 @@
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
+          "legendFormat": "Orders",
           "refId": "A"
         }
       ],
@@ -231,6 +232,7 @@
           "expr": "sum(rate(engine_trade_count{}[1m]))",
           "format": "time_series",
           "intervalFactor": 1,
+          "legendFormat": "Trades",
           "refId": "A"
         }
       ],
@@ -477,7 +479,7 @@
           "expr": "engine_message_queue_count{}",
           "format": "time_series",
           "intervalFactor": 1,
-          "legendFormat": "",
+          "legendFormat": "Queued Messages - {{market}}",
           "refId": "B"
         }
       ],
@@ -561,6 +563,7 @@
           "expr": "engine_order_queue_count{}",
           "format": "time_series",
           "intervalFactor": 1,
+          "legendFormat": "Queued Orders - {{market}}",
           "refId": "B"
         }
       ],
@@ -644,6 +647,7 @@
           "expr": "engine_trade_queue_count",
           "format": "time_series",
           "intervalFactor": 1,
+          "legendFormat": "Queued trades - {{market}}",
           "refId": "B"
         }
       ],
@@ -807,21 +811,23 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "go_memstats_stack_sys_bytes{}",
+          "expr": "rate(process_cpu_seconds_total{}[15s])",
           "format": "time_series",
           "intervalFactor": 1,
+          "legendFormat": "CPU Seconds Total",
           "refId": "A"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "go_memstats_stack_sys_bytes",
+      "title": "Engine CPU Usage",
       "tooltip": {
         "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
+      "transparent": false,
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -833,7 +839,7 @@
       "yaxes": [
         {
           "decimals": null,
-          "format": "decbytes",
+          "format": "none",
           "label": null,
           "logBase": 1,
           "max": null,
@@ -891,21 +897,23 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "go_memstats_alloc_bytes{}",
+          "expr": "rate(go_memstats_alloc_bytes_total{}[15s])",
           "format": "time_series",
           "intervalFactor": 1,
+          "legendFormat": "Used Memory - {{job}}",
           "refId": "A"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "go_memstats_alloc_bytes",
+      "title": "Engine Memory Usage",
       "tooltip": {
         "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
+      "transparent": false,
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -977,5 +985,5 @@
   "timezone": "",
   "title": "Main Dashboard",
   "uid": "7MZaiGvmz",
-  "version": 2
+  "version": 3
 }

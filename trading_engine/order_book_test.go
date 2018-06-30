@@ -106,7 +106,7 @@ func TestOrderBookProcessing(t *testing.T) {
 		})
 
 		Convey("I should be able to cancel a sell order", func() {
-			err := book.Cancel("TEST_14")
+			_, err := book.Cancel("TEST_14")
 			So(err, ShouldBeNil)
 			SkipSo(book.GetMarket().Len(), ShouldBeZeroValue)
 		})

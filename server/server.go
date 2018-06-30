@@ -165,7 +165,7 @@ func (srv *server) ReceiveMessages() {
 		go func(key string, consumer net.KafkaConsumer) {
 			for msg := range consumer.GetMessageChan() {
 				market := srv.topic2market[msg.Topic]
-				consumer.MarkOffset(msg, "")
+				// consumer.MarkOffset(msg, "")
 				srv.markets[market].Process(msg)
 			}
 		}(key, srv.consumers[key])

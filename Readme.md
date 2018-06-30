@@ -28,12 +28,12 @@ The engine will maintain two lists of orders. Buy orders and Sell orders.
 It should then listen for new orders and try to satisfy them against these lists.
 
 The engine should support the following actions:
-- Fill a new buy/sell order or add it to the list if it can't be filled yet
+- Done: Fill a new buy/sell order or add it to the list if it can't be filled yet
 - Cancel an existing order and remove it from the lists
 - Listen for new incomming commands/orders
 - Send every trade made to an external system
 - Handle over 1.000.000 trades/second
-- 100% test converage
+- Done: 100% test converage
 - Fully tested with historical data
 
 ### Questions/Improvements
@@ -51,17 +51,19 @@ The engine should support the following actions:
 
 This bechmark checks the performance of executing orders after they are available in memory.
 
-> Total Orders: 1000000\
-> Total Trades: 997065\
-> Orders/second: 614837.504596\
-> Trades/second: 613032.956520\
-> Pending Buy: 3022\
-> Lowest Ask: 7950529.000000\
-> Pending Sell: 3022\
-> Highest Bid: 7007034.000000\
-> Duration (seconds): 1.626446\
-> \
-> 1000000 &nbsp; &nbsp; &nbsp; 1626 ns/op &nbsp; &nbsp; &nbsp; 622 B/op &nbsp; &nbsp; &nbsp; 6 allocs/op
+```
+Total Orders: 1000000
+Total Trades: 996903
+Orders/second: 667924.145191
+Trades/second: 665855.584113
+Pending Buy: 2838
+Lowest Ask: 9940629
+Pending Sell: 2838
+Highest Bid: 7007361
+Duration (seconds): 1.497176
+
+ 1000000	      1497 ns/op	     642 B/op	       6 allocs/op
+```
 
 ### Consumer and Producer
 
@@ -69,17 +71,19 @@ The following benchmark refers to consuming orders from a Kafka server, processi
 by the trading engine and saving generated trades back to the Kafka server.
 
 
-> Total Orders: 300000 \
-> Total Trades Generated: 295126 \
-> Orders/second: 248929.396155 \
-> Trades Generated/second: 244885.123232 \
-> Pending Buy: 3970 \
-> Lowest Ask: 3967957 \
-> Pending Sell: 3970 \
-> Highest Bid: 3706215 \
-> Duration (seconds): 1.205161 \
-> \
-> 300000 &nbsp; &nbsp; &nbsp; 4043 ns/op &nbsp; &nbsp; &nbsp; 2437 B/op &nbsp; &nbsp; &nbsp; 22 allocs/op
+```
+Total Orders: 300000
+Total Trades Generated: 295126
+Orders/second: 248929.396155
+Trades Generated/second: 244885.123232
+Pending Buy: 3970
+Lowest Ask: 3967957
+Pending Sell: 3970
+Highest Bid: 3706215
+Duration (seconds): 1.205161
+
+ 300000          4043 ns/op       2437 B/op       22 allocs/op
+```
 
 ## Further optimizations
 - Decrease the size of the Kafka message value by switching the JSON encoded order to either Protobufs or FIX formats
@@ -105,7 +109,6 @@ Trading Engine
 - https://www.investopedia.com/university/intro-to-order-types/ 
 
 Golang Docs
-- https://gobyexample.com/goroutines
 - https://www.apress.com/gp/book/9781484226919
 
 Communication
@@ -124,6 +127,8 @@ Performance
 - FS buffering: https://zensrc.wordpress.com/2016/06/15/golang-buffer-vs-non-buffer-in-io/
 - Fwd: https://blog.kintoandar.com/2016/08/fwd-the-little-forwarder-that-could.html
 
+Testing
+- Mock sarama producers: https://medium.com/@Oskarr3/implementing-cqrs-using-kafka-and-sarama-library-in-golang-da7efa3b77fe
 
 Algorithms
 - http://igoro.com/archive/skip-lists-are-fascinating/
