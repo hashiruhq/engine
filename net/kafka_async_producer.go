@@ -19,7 +19,7 @@ type kafkaAsyncProducer struct {
 // NewKafkaAsyncProducer returns a new producer
 func NewKafkaAsyncProducer(brokers []string) KafkaProducer {
 	config := sarama.NewConfig()
-	config.ChannelBufferSize = 10000
+	config.ChannelBufferSize = 20000
 	config.Producer.Return.Successes = false
 	config.Producer.Retry.Max = 5
 	config.Producer.Return.Errors = true

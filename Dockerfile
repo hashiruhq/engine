@@ -4,7 +4,6 @@ WORKDIR /go/src/trading_engine/
 
 COPY . .
 RUN go get -v -d ./...
-# RUN go install ./...
 
 RUN CGO_ENABLED=0 go build -a -installsuffix cgo --ldflags "-s -w" -o /usr/bin/trading_engine
 
@@ -15,7 +14,5 @@ COPY --from=build /go/src/trading_engine/.engine.yml /root/
 
 EXPOSE 6060
 WORKDIR /root/
-
-RUN ls -al /root
 
 CMD ["./trading_engine", "server"]

@@ -61,3 +61,22 @@ func TestOrderConvertToJson(t *testing.T) {
 		So(string(bytes), ShouldEqual, json)
 	})
 }
+
+func BenchmarkOrderJsonFrom(b *testing.B) {
+	var order Order
+	json := []byte(`{"id":"TST_1","base":"sym","quote":"tst","stop":1,"side":1,"type":1,"price":"1312213.00010201","amount":"8483828.29993942","stop_price":"13132311.00010201","funds":"101000101.33232313"}`)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		order.FromJSON(json)
+	}
+}
+
+func BenchmarkOrderJsonTo(b *testing.B) {
+	var order Order
+	json := []byte(`{"id":"TST_1","base":"sym","quote":"tst","stop":1,"side":1,"type":1,"price":"1312213.00010201","amount":"8483828.29993942","stop_price":"13132311.00010201","funds":"101000101.33232313"}`)
+	order.FromJSON(json)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		order.ToJSON()
+	}
+}

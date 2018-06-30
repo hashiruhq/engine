@@ -18,7 +18,7 @@ scrape_configs:
       #   labels:
       #     group: 'production'
 
-      - targets: ['docker.for.mac.host.internal:6060']
+      - targets: ['trading_engine:6060']
         labels:
           group: 'dev'
   - job_name: 'docker'

@@ -17,7 +17,6 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, order.Amount, sellEntry.Order.Price))
 						sellEntry.Amount -= order.Amount
 						if sellEntry.Amount == 0 {
-							// book.removeBookEntry(sellEntry)
 							book.removeSellBookEntry(sellEntry, pricePoint, index)
 						}
 						return trades
@@ -28,7 +27,6 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 					if sellEntry.Amount < order.Amount {
 						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, sellEntry.Amount, sellEntry.Price))
 						order.Amount -= sellEntry.Amount
-						// book.removeBookEntry(sellEntry)
 						book.removeSellBookEntry(sellEntry, pricePoint, index)
 						index--
 						continue
@@ -48,7 +46,7 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 	}
 
 	// if there are no more ordes just add the buy order to the list
-	book.addBookEntry(BookEntry{Price: order.Price, Amount: order.Amount, Order: order})
+	book.addBuyBookEntry(BookEntry{Price: order.Price, Amount: order.Amount, Order: order})
 	if book.HighestBid < order.Price || book.HighestBid == 0 {
 		book.HighestBid = order.Price
 	}
@@ -74,7 +72,6 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 						buyEntry.Amount -= order.Amount
 						if buyEntry.Amount == 0 {
 							book.removeBuyBookEntry(buyEntry, pricePoint, index)
-							// book.removeBookEntry(buyEntry)
 						}
 						return trades
 					}
@@ -84,7 +81,6 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 					if buyEntry.Amount < order.Amount {
 						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, buyEntry.Amount, buyEntry.Price))
 						order.Amount -= buyEntry.Amount
-						// book.removeBookEntry(buyEntry)
 						book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						index--
 						continue
@@ -104,7 +100,7 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 	}
 
 	// if there are no more ordes just add the buy order to the list
-	book.addBookEntry(BookEntry{Price: order.Price, Amount: order.Amount, Order: order})
+	book.addSellBookEntry(BookEntry{Price: order.Price, Amount: order.Amount, Order: order})
 	if book.LowestAsk > order.Price || book.LowestAsk == 0 {
 		book.LowestAsk = order.Price
 	}

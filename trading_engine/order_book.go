@@ -64,53 +64,82 @@ func (book *orderBook) Cancel(id string) error {
 // Add a new book entry in the order book
 // If the price point already exists then the book entry is simply added at the end of the pricepoint
 // If the price point does not exist yet it will be created
-func (book *orderBook) addBookEntry(bookEntry BookEntry) {
-	var pricePoint *PricePoint
+// func (book *orderBook) addBookEntry(bookEntry BookEntry) {
+// 	var pricePoint *PricePoint
+// 	price := bookEntry.Price
+// 	if value, ok := book.PricePoints.Get(price); ok {
+// 		pricePoint = value.(*PricePoint)
+// 	} else {
+// 		pricePoint = &PricePoint{
+// 			BuyBookEntries:  []BookEntry{},
+// 			SellBookEntries: []BookEntry{},
+// 		}
+// 		book.PricePoints.Set(price, pricePoint)
+// 	}
+
+// 	if bookEntry.Order.Side == BUY {
+// 		pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries, bookEntry)
+// 	} else {
+// 		pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
+// 	}
+// }
+
+func (book *orderBook) addBuyBookEntry(bookEntry BookEntry) {
 	price := bookEntry.Price
 	if value, ok := book.PricePoints.Get(price); ok {
-		pricePoint = value.(*PricePoint)
-	} else {
-		pricePoint = &PricePoint{
-			BuyBookEntries:  []BookEntry{},
-			SellBookEntries: []BookEntry{},
-		}
-		book.PricePoints.Set(price, pricePoint)
-	}
-
-	if bookEntry.Order.Side == BUY {
+		pricePoint := value.(*PricePoint)
 		pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries, bookEntry)
-	} else {
-		pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
+		return
 	}
+	pricePoint := &PricePoint{
+		BuyBookEntries:  []BookEntry{bookEntry},
+		SellBookEntries: []BookEntry{},
+	}
+	book.PricePoints.Set(price, pricePoint)
+}
+
+func (book *orderBook) addSellBookEntry(bookEntry BookEntry) {
+	price := bookEntry.Price
+	if value, ok := book.PricePoints.Get(price); ok {
+		pricePoint := value.(*PricePoint)
+		pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
+		return
+	}
+	pricePoint := &PricePoint{
+		BuyBookEntries:  []BookEntry{},
+		SellBookEntries: []BookEntry{bookEntry},
+	}
+	book.PricePoints.Set(price, pricePoint)
 }
 
 // Remove a book entry from the order book
-// The method will also remove the price point entry if the
-func (book *orderBook) removeBookEntry(bookEntry *BookEntry) {
-	if value, ok := book.PricePoints.Get(bookEntry.Price); ok {
-		pricePoint := value.(*PricePoint)
-		if bookEntry.Order.Side == BUY {
-			for i := range pricePoint.BuyBookEntries {
-				buyEntry := &pricePoint.BuyBookEntries[i]
-				if buyEntry == bookEntry {
-					pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries[:i], pricePoint.BuyBookEntries[i+1:]...)
-					break
-				}
-			}
-		} else {
-			for i := range pricePoint.SellBookEntries {
-				sellEntry := &pricePoint.SellBookEntries[i]
-				if bookEntry == sellEntry {
-					pricePoint.SellBookEntries = append(pricePoint.SellBookEntries[:i], pricePoint.SellBookEntries[i+1:]...)
-					break
-				}
-			}
-		}
-		if len(pricePoint.BuyBookEntries) == 0 && len(pricePoint.SellBookEntries) == 0 {
-			book.PricePoints.Delete(bookEntry.Price)
-		}
-	}
-}
+// The method will also remove the price point entry if both book entry lists are empty
+
+// func (book *orderBook) removeBookEntry(bookEntry *BookEntry) {
+// 	if value, ok := book.PricePoints.Get(bookEntry.Price); ok {
+// 		pricePoint := value.(*PricePoint)
+// 		if bookEntry.Order.Side == BUY {
+// 			for i := range pricePoint.BuyBookEntries {
+// 				buyEntry := &pricePoint.BuyBookEntries[i]
+// 				if buyEntry == bookEntry {
+// 					pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries[:i], pricePoint.BuyBookEntries[i+1:]...)
+// 					break
+// 				}
+// 			}
+// 		} else {
+// 			for i := range pricePoint.SellBookEntries {
+// 				sellEntry := &pricePoint.SellBookEntries[i]
+// 				if bookEntry == sellEntry {
+// 					pricePoint.SellBookEntries = append(pricePoint.SellBookEntries[:i], pricePoint.SellBookEntries[i+1:]...)
+// 					break
+// 				}
+// 			}
+// 		}
+// 		if len(pricePoint.BuyBookEntries) == 0 && len(pricePoint.SellBookEntries) == 0 {
+// 			book.PricePoints.Delete(bookEntry.Price)
+// 		}
+// 	}
+// }
 
 func (book *orderBook) removeBuyBookEntry(bookEntry *BookEntry, pricePoint *PricePoint, index int) {
 	pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries[:index], pricePoint.BuyBookEntries[index+1:]...)

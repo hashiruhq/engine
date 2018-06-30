@@ -58,13 +58,15 @@ func TestOrderBookProcessing(t *testing.T) {
 		// BUY          SELL
 		// 1.20 120      -
 		// 1.11 20
-		Convey("Add another buy order with a higher price", func() {
+		Convey("Add two another buy orders with a higher price", func() {
 			trades := book.Process(NewOrder("TEST_6", uint64(120000000), uint64(12000000000), 1, 1))
+			So(len(trades), ShouldEqual, 0)
+			trades = book.Process(NewOrder("TEST_6_1", uint64(120000000), uint64(1000000000), 1, 1))
 			So(len(trades), ShouldEqual, 0)
 		})
 		// ORDER: SELL 1.30 10
 		// BUY          SELL
-		// 1.20 120     1.30 10
+		// 1.20 130     1.30 10
 		// 1.11 20
 		Convey("Add two sell orders at the same price without matching", func() {
 			trades := book.Process(NewOrder("TEST_7", uint64(130000000), uint64(1000000000), 2, 1))
@@ -74,7 +76,7 @@ func TestOrderBookProcessing(t *testing.T) {
 		})
 		// ORDER: SELL 1.40 20
 		// BUY          SELL
-		// 1.20 120     -
+		// 1.20 130     -
 		// 1.11 20
 		Convey("Add a buy order that clears the sell side of the order book", func() {
 			trades := book.Process(NewOrder("TEST_8", uint64(140000000), uint64(2000000000), 1, 1))
@@ -84,8 +86,8 @@ func TestOrderBookProcessing(t *testing.T) {
 		// BUY          SELL
 		// -            -
 		Convey("Add a sell order that clears the buy side of the order book", func() {
-			trades := book.Process(NewOrder("TEST_9", uint64(100000000), uint64(14000000000), 2, 1))
-			So(len(trades), ShouldEqual, 2)
+			trades := book.Process(NewOrder("TEST_9", uint64(100000000), uint64(15000000000), 2, 1))
+			So(len(trades), ShouldEqual, 3)
 			So(book.GetMarket().Len(), ShouldEqual, 0)
 		})
 		Convey("Lowest ask price should be updated", func() {

@@ -29,7 +29,7 @@
       ],
       "datasource": "Prometheus",
       "decimals": 2,
-      "format": "percentunit",
+      "format": "percent",
       "gauge": {
         "maxValue": 100,
         "minValue": 0,
@@ -80,7 +80,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "avg(rate(go_memstats_alloc_bytes_total{job=\"trading-engine\"}[10s]))/sum(engine_daemon_engine_memory_bytes{job=\"docker\"})",
+          "expr": "100*avg(rate(go_memstats_alloc_bytes_total{}[10s]))/sum(engine_daemon_engine_memory_bytes{job=\"docker\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -964,7 +964,7 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
@@ -995,5 +995,5 @@
   "timezone": "",
   "title": "Main Dashboard",
   "uid": "7MZaiGvmz",
-  "version": 3
+  "version": 2
 }

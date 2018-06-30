@@ -27,7 +27,7 @@ func NewKafkaPartitionConsumer(name string, brokers []string, topics []string) K
 	config.Group.Return.Notifications = false
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 	// config.Net.KeepAlive = time.Duration(30) * time.Second
-	config.ChannelBufferSize = 10000
+	config.ChannelBufferSize = 20000
 	return &kafkaPartitionConsumer{name: name, brokers: brokers, topics: topics, config: config}
 }
 
