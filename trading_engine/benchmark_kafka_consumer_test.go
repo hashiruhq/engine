@@ -48,7 +48,7 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 		msgChan := consumer.GetMessageChan()
 		for j := 0; j < n; j++ {
 			msg := <-msgChan
-			consumer.MarkOffset(msg, "")
+			// consumer.MarkOffset(msg, "")
 			messages <- msg.Value
 		}
 	}
