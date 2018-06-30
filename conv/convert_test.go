@@ -39,6 +39,8 @@ func TestConvertFromUnits(t *testing.T) {
 			So(conv.FromUnits(100000000, 8), ShouldEqual, "1.00000000")
 			So(conv.FromUnits(1, 8), ShouldEqual, "0.00000001")
 			So(conv.FromUnits(1278543132023424178, 8), ShouldEqual, "12785431320.23424178")
+			// max uint value
+			So(conv.FromUnits(18446744073709551615, 8), ShouldEqual, "184467440737.09551615")
 		})
 	})
 }
