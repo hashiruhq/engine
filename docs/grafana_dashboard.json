@@ -474,12 +474,6 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(engine_message_queue_count{}[1m])",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "A"
-        },
-        {
           "expr": "engine_message_queue_count{}",
           "format": "time_series",
           "intervalFactor": 1,
@@ -564,12 +558,6 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(engine_order_queue_count{}[1m])",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "A"
-        },
-        {
           "expr": "engine_order_queue_count{}",
           "format": "time_series",
           "intervalFactor": 1,
@@ -652,12 +640,6 @@
       "stack": false,
       "steppedLine": false,
       "targets": [
-        {
-          "expr": "rate(engine_trade_queue_count{}[1m])",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "A"
-        },
         {
           "expr": "engine_trade_queue_count",
           "format": "time_series",
@@ -964,7 +946,7 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
