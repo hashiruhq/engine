@@ -33,6 +33,17 @@ const AmountPrecision = 8
 // FundsPrecision - the precision for the provided funds
 const FundsPrecision = 8
 
+// EventTypeNewOrder - the type of an event with new order
+// See other order fields for what can be sent
+const EventTypeNewOrder = 1
+
+// EventTypeCancelOrder - the type of an event for cancel order
+// Only the event type and the id should be set
+const EventTypeCancelOrder = 2
+
+// EventTypeBackupMarket - the type of an event for backup
+const EventTypeBackupMarket = 3
+
 // Order allows the trader to start an order where the transaction will be completed
 // if the market price is at or better than the set price
 type Order struct {
@@ -54,6 +65,12 @@ type Order struct {
 	//******************************************
 	// The id of the order
 	ID string
+
+	// The event type signals what operation can be executed on the market engine
+	// 1 = New Order
+	// 2 = Cancel Order
+	// 3 = Backup Market
+	EventType int8
 
 	// User Order ID: An id defined by the user to identity the order
 	// UserOrderId string
@@ -144,8 +161,8 @@ type Order struct {
 }
 
 // NewOrder create a new order
-func NewOrder(id string, price, amount uint64, side int8, category int8) Order {
-	return Order{ID: id, Price: price, Amount: amount, Side: side, Type: category}
+func NewOrder(id string, price, amount uint64, side int8, category int8, eventType int8) Order {
+	return Order{ID: id, Price: price, Amount: amount, Side: side, Type: category, EventType: eventType}
 }
 
 //***************************
@@ -178,6 +195,8 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 		return dec.Int8(&order.Type)
 	case "stop":
 		return dec.Int8(&order.Stop)
+	case "event_type":
+		return dec.Int8(&order.EventType)
 	case "base":
 		return dec.String(&order.BaseCurrency)
 	case "quote":
@@ -204,7 +223,7 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 
 // NKeys implements gojay.UnmarshalerJSONObject interface and returns the number of keys to parse
 func (order Order) NKeys() int {
-	return 10
+	return 11
 }
 
 // MarshalJSONObject implement gojay.MarshalerJSONObject interface
@@ -215,6 +234,7 @@ func (order Order) MarshalJSONObject(enc *gojay.Encoder) {
 	enc.IntKey("stop", int(order.Stop))
 	enc.IntKey("side", int(order.Side))
 	enc.IntKey("type", int(order.Type))
+	enc.IntKey("event_type", int(order.EventType))
 	enc.StringKey("price", conv.FromUnits(order.Price, PricePrecision))
 	enc.StringKey("amount", conv.FromUnits(order.Amount, AmountPrecision))
 	enc.StringKey("stop_price", conv.FromUnits(order.StopPrice, PricePrecision))
@@ -222,6 +242,6 @@ func (order Order) MarshalJSONObject(enc *gojay.Encoder) {
 }
 
 // IsNil checks if the order is empty
-func (order *Order) IsNil() bool {
-	return order == nil
+func (order Order) IsNil() bool {
+	return order.EventType == 0 && order.ID == "" && order.Amount == 0
 }

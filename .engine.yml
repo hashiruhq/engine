@@ -11,6 +11,8 @@ markets:
     quote_increments: 0.01
     base_min: 0.0001
     base_max: 10000
+    backup:
+      interval: 15
     listen: 
       broker: requests
       topic: engine.orders.btc.usd
@@ -23,6 +25,8 @@ markets:
     quote_increments: 0.01
     base_min: 0.0001
     base_max: 10000
+    backup:
+      interval: 15
     listen: 
       broker: requests
       topic: engine.orders.eth.usd

@@ -2,6 +2,7 @@ package net
 
 import (
 	"log"
+	"time"
 
 	"github.com/Shopify/sarama"
 	cluster "github.com/bsm/sarama-cluster"
@@ -17,6 +18,8 @@ type kafkaPartitionConsumer struct {
 	name     string
 	brokers  []string
 	topics   []string
+	client   *cluster.Client
+	inputs   chan *sarama.ConsumerMessage
 	consumer *cluster.Consumer
 }
 
@@ -28,7 +31,13 @@ func NewKafkaPartitionConsumer(name string, brokers []string, topics []string) K
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 	// config.Net.KeepAlive = time.Duration(30) * time.Second
 	config.ChannelBufferSize = 20000
-	return &kafkaPartitionConsumer{name: name, brokers: brokers, topics: topics, config: config}
+	return &kafkaPartitionConsumer{
+		name:    name,
+		brokers: brokers,
+		topics:  topics,
+		config:  config,
+		inputs:  make(chan *sarama.ConsumerMessage, 20000),
+	}
 }
 
 // Start the consumer
@@ -36,15 +45,16 @@ func (conn *kafkaPartitionConsumer) Start() error {
 	consumer, err := cluster.NewConsumer(conn.brokers, conn.name, conn.topics, conn.config)
 	conn.consumer = consumer
 	if err == nil {
-		go handleErrors(consumer)
-		go handleNotifications(consumer)
+		go conn.handleMessages()
+		go conn.handleErrors()
+		go conn.handleNotifications()
 	}
 	return err
 }
 
 // GetMessageChan returns the message channel
 func (conn *kafkaPartitionConsumer) GetMessageChan() <-chan *sarama.ConsumerMessage {
-	return conn.consumer.Messages()
+	return conn.inputs
 }
 
 // MarkOffset for the given message
@@ -52,19 +62,49 @@ func (conn *kafkaPartitionConsumer) MarkOffset(msg *sarama.ConsumerMessage, meta
 	conn.consumer.MarkOffset(msg, meta)
 }
 
-// Close the consumer connection
-func (conn *kafkaPartitionConsumer) Close() error {
-	return conn.consumer.Close()
+// ResetOffset will allow you to reset the Apache Kafka offset to any value you want
+// Backwards or Forwards
+func (conn *kafkaPartitionConsumer) ResetOffset(topic string, partition int32, offset int64, meta string) (err error) {
+	consumer, err := cluster.NewConsumer(conn.brokers, conn.name, conn.topics, conn.config)
+	if err != nil {
+		return
+	}
+	log.Println("Resetting offsets")
+	time.Sleep(time.Second)
+	consumer.MarkPartitionOffset(topic, partition, offset, meta)
+	consumer.CommitOffsets()
+	consumer.ResetPartitionOffset(topic, partition, offset, meta)
+	consumer.CommitOffsets()
+	time.Sleep(time.Second)
+
+	err = consumer.Close()
+	if err != nil {
+		return
+	}
+	return nil
 }
 
-func handleErrors(consumer *cluster.Consumer) {
-	for err := range consumer.Errors() {
+// Close the consumer connection
+func (conn *kafkaPartitionConsumer) Close() error {
+	err := conn.consumer.Close()
+	close(conn.inputs)
+	return err
+}
+
+func (conn *kafkaPartitionConsumer) handleMessages() {
+	for msg := range conn.consumer.Messages() {
+		conn.inputs <- msg
+	}
+}
+
+func (conn *kafkaPartitionConsumer) handleErrors() {
+	for err := range conn.consumer.Errors() {
 		log.Printf("Error: %s\n", err.Error())
 	}
 }
 
-func handleNotifications(consumer *cluster.Consumer) {
-	for ntf := range consumer.Notifications() {
+func (conn *kafkaPartitionConsumer) handleNotifications() {
+	for ntf := range conn.consumer.Notifications() {
 		log.Printf("Rebalanced: %+v\n", ntf)
 	}
 }

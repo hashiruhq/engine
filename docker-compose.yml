@@ -41,6 +41,8 @@ services:
     ports: 
       - 6060:6060
     image: trading_engine:local
+    volumes:
+      - ./backups:/root/backups
     
   # kafka_second:
   #   image: wurstmeister/kafka

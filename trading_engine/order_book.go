@@ -8,9 +8,11 @@ import (
 // Defines what constitudes an order book and how we can interact with it
 type OrderBook interface {
 	Process(Order) []Trade
-	Cancel(id string) (*BookEntry, error)
+	Cancel(id string) *BookEntry
 	GetHighestBid() uint64
 	GetLowestAsk() uint64
+	Load(Market) error
+	Backup() Market
 	GetMarket() *skiplist.SkipList
 }
 
@@ -18,7 +20,6 @@ type orderBook struct {
 	PricePoints *skiplist.SkipList
 	LowestAsk   uint64
 	HighestBid  uint64
-	MarketPrice uint64
 	OpenOrders  map[string]uint64
 }
 
@@ -29,7 +30,6 @@ func NewOrderBook() OrderBook {
 		PricePoints: pricePoints,
 		LowestAsk:   0,
 		HighestBid:  0,
-		MarketPrice: 0,
 		OpenOrders:  make(map[string]uint64),
 	}
 }
@@ -66,7 +66,7 @@ func (book *orderBook) Process(order Order) []Trade {
 }
 
 // Cancel an order from the order book based on the order price and ID
-func (book *orderBook) Cancel(id string) (*BookEntry, error) {
+func (book *orderBook) Cancel(id string) *BookEntry {
 	// @todo implement this method
 	if price, ok := book.OpenOrders[id]; ok {
 		if value, ok := book.PricePoints.Get(price); ok {
@@ -75,19 +75,19 @@ func (book *orderBook) Cancel(id string) (*BookEntry, error) {
 				if pricePoint.BuyBookEntries[i].Order.ID == id {
 					bookEntry := pricePoint.BuyBookEntries[i]
 					book.removeBuyBookEntry(&bookEntry, pricePoint, i)
-					return &bookEntry, nil
+					return &bookEntry
 				}
 			}
 			for i := 0; i < len(pricePoint.SellBookEntries); i++ {
 				if pricePoint.SellBookEntries[i].Order.ID == id {
 					bookEntry := pricePoint.SellBookEntries[i]
-					book.removeBuyBookEntry(&bookEntry, pricePoint, i)
-					return &bookEntry, nil
+					book.removeSellBookEntry(&bookEntry, pricePoint, i)
+					return &bookEntry
 				}
 			}
 		}
 	}
-	return nil, nil
+	return nil
 }
 
 // Add a new book entry in the order book

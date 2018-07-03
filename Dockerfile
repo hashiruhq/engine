@@ -13,6 +13,7 @@ COPY --from=build /usr/bin/trading_engine /root/
 COPY --from=build /go/src/trading_engine/.engine.yml /root/
 
 EXPOSE 6060
+RUN mkdir -p /root/backups
 WORKDIR /root/
 
 CMD ["./trading_engine", "server"]

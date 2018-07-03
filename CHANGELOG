@@ -1,5 +1,26 @@
 # Changelog
 
+## Version 1.1.0
+
+- Configurable file system backup support
+- Autoload from backups on start if found
+
+## Version 1.0.0
+
+- 100% test coverage for the trading engine
+- Improved consumer/producer performance
+- Improved performance in the trade engine
+- Improved conversion from floats to unsigned integers
+- Added support for metrics and remote performance checks
+
+## Version 0.2.0
+
+- Added multi market support
+
+## Version 0.1.1
+
+- Bug: Orders should be at the price of the maker instead of the taker
+
 ## Version 0.1.0
 
 - Connect to a single Apache Kafka order topic with a single partition and load orders

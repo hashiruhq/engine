@@ -91,7 +91,12 @@ func NewServer(config Config) Server {
 	topic2market := make(map[string]string, len(config.Markets))
 	markets := make(map[string]MarketEngine)
 	for key, marketCfg := range config.Markets {
-		markets[key] = NewMarketEngine(producers[marketCfg.Publish.Broker], marketCfg.Publish.Topic)
+		marketEngineConfig := MarketEngineConfig{
+			config:   marketCfg,
+			producer: producers[marketCfg.Publish.Broker],
+			consumer: consumers[marketCfg.Listen.Broker],
+		}
+		markets[key] = NewMarketEngine(marketEngineConfig)
 		topic2market[marketCfg.Listen.Topic] = key
 	}
 
@@ -111,9 +116,16 @@ func (srv *server) Listen() {
 		producer.Start()
 	}
 
-	// start all markets
+	// start all markets and listen for incomming events
+	// if a backup file is found then the market will automatically reload the data from that file
+	// and reset the consumer partition offset to continue from the last point
 	for _, market := range srv.markets {
 		market.Start()
+	}
+
+	// load last market snapshot from the backup files and update offset for the trading engine consumer
+	for _, market := range srv.markets {
+		market.LoadMarketFromBackup()
 	}
 
 	// start all consumers
@@ -121,6 +133,7 @@ func (srv *server) Listen() {
 		consumer.Start()
 	}
 
+	// listen for messages and ditribute them to the correct markets
 	go srv.ReceiveMessages()
 
 	srv.StartProfilling(srv.config.Server.Profilling)
@@ -161,20 +174,25 @@ func (srv *server) stopOnSignal() {
 }
 
 func (srv *server) ReceiveMessages() {
+	// for every consumer we have to connect to
 	for key := range srv.consumers {
+		// listen for incomming events and fwd them to the correct market
 		go func(key string, consumer net.KafkaConsumer) {
 			for msg := range consumer.GetMessageChan() {
 				market := srv.topic2market[msg.Topic]
-				// consumer.MarkOffset(msg, "")
+				// send the message for processing by the specific market
 				srv.markets[market].Process(msg)
 			}
+			log.Println("Closing consumer processor. Message channel closed")
 		}(key, srv.consumers[key])
 	}
 }
 
+// StartProfilling enables the engine to be pulled for metrics by prometheus or golang profilling
 func (srv server) StartProfilling(config ProfillingConfig) {
 	if config.Enabled {
 		go func() {
+			log.Printf("Starting profilling server and listening %s:%s", config.Host, config.Port)
 			http.Handle("/metrics", prometheus.Handler())
 			log.Println(http.ListenAndServe(config.Host+":"+config.Port, nil))
 		}()

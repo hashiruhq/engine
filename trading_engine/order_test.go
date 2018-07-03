@@ -8,7 +8,7 @@ import (
 
 func TestOrderCreation(t *testing.T) {
 	Convey("Should be able to create a new order", t, func() {
-		order := NewOrder("TEST_1", 100000000, 12000000000, 1, 2)
+		order := NewOrder("TEST_1", 100000000, 12000000000, 1, 2, 1)
 		So(order.Amount, ShouldEqual, 12000000000)
 		So(order.Price, ShouldEqual, 100000000)
 		So(order.Side, ShouldEqual, 1)
@@ -18,8 +18,8 @@ func TestOrderCreation(t *testing.T) {
 
 func TestOrderComparisonByPrice(t *testing.T) {
 	Convey("Should be able to compare two orders by price", t, func() {
-		order1 := NewOrder("TEST_1", 100000000, 12000000000, 1, 2)
-		order2 := NewOrder("TEST_2", 110000000, 12000000000, 1, 2)
+		order1 := NewOrder("TEST_1", 100000000, 12000000000, 1, 2, 1)
+		order2 := NewOrder("TEST_2", 110000000, 12000000000, 1, 2, 1)
 		So(order1.LessThan(order2), ShouldBeTrue)
 	})
 }
@@ -55,7 +55,7 @@ func TestOrderLoadFromJson(t *testing.T) {
 func TestOrderConvertToJson(t *testing.T) {
 	Convey("Should be able to convert an order to json string", t, func() {
 		var order Order
-		json := `{"id":"TST_1","base":"sym","quote":"tst","stop":1,"side":1,"type":1,"price":"1312213.00010201","amount":"8483828.29993942","stop_price":"13132311.00010201","funds":"101000101.33232313"}`
+		json := `{"id":"TST_1","base":"sym","quote":"tst","stop":1,"side":1,"type":1,"event_type":1,"price":"1312213.00010201","amount":"8483828.29993942","stop_price":"13132311.00010201","funds":"101000101.33232313"}`
 		order.FromJSON([]byte(json))
 		bytes, _ := order.ToJSON()
 		So(string(bytes), ShouldEqual, json)
@@ -64,7 +64,7 @@ func TestOrderConvertToJson(t *testing.T) {
 
 func BenchmarkOrderJsonFrom(b *testing.B) {
 	var order Order
-	json := []byte(`{"id":"TST_1","base":"sym","quote":"tst","stop":1,"side":1,"type":1,"price":"1312213.00010201","amount":"8483828.29993942","stop_price":"13132311.00010201","funds":"101000101.33232313"}`)
+	json := []byte(`{"id":"TST_1","base":"sym","quote":"tst","stop":1,"side":1,"type":1,"event_type":1,"price":"1312213.00010201","amount":"8483828.29993942","stop_price":"13132311.00010201","funds":"101000101.33232313"}`)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		order.FromJSON(json)
@@ -73,7 +73,7 @@ func BenchmarkOrderJsonFrom(b *testing.B) {
 
 func BenchmarkOrderJsonTo(b *testing.B) {
 	var order Order
-	json := []byte(`{"id":"TST_1","base":"sym","quote":"tst","stop":1,"side":1,"type":1,"price":"1312213.00010201","amount":"8483828.29993942","stop_price":"13132311.00010201","funds":"101000101.33232313"}`)
+	json := []byte(`{"id":"TST_1","base":"sym","quote":"tst","stop":1,"side":1,"type":1,"event_type":1,"price":"1312213.00010201","amount":"8483828.29993942","stop_price":"13132311.00010201","funds":"101000101.33232313"}`)
 	order.FromJSON(json)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

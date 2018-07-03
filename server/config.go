@@ -40,8 +40,15 @@ type MarketConfig struct {
 	BaseMin         float64 `mapstructure:"base_min"`
 	BaseMax         float64 `mapstructure:"base_max"`
 
+	Backup MarketBackupConfig
+
 	Listen  TopicConfig
 	Publish TopicConfig
+}
+
+// MarketBackupConfig structure
+type MarketBackupConfig struct {
+	Interval int
 }
 
 // ServerConfig structure
