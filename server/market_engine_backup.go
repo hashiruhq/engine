@@ -10,18 +10,18 @@ import (
 // BackupMarket saves the given snapshot of the order book as JSON into the backups folder with the name of the market pair
 // - It first saves into a temporary file before moving the file to the final localtion
 func (mkt *marketEngine) BackupMarket(market trading_engine.Market) error {
-	file := "/root/backups/" + mkt.name + ".json.tmp"
+	file := mkt.config.config.Backup.Path + ".tmp"
 	rawMarket, _ := market.ToJSON()
 	ioutil.WriteFile(file, rawMarket, 0644)
-	os.Rename("/root/backups/"+mkt.name+".json.tmp", "/root/backups/"+mkt.name+".json")
+	os.Rename(mkt.config.config.Backup.Path+".tmp", mkt.config.config.Backup.Path)
 	return nil
 }
 
 // LoadMarketFromBackup from a backup file and update the order book with the given data
 // - Also reset the Kafka partition offset to the one from the backup and replay the orders to recreate the latest state
 func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
-	log.Printf("Loading market %s from backup", mkt.name)
-	file := "/root/backups/" + mkt.name + ".json"
+	log.Printf("Loading market %s from backup file: %s", mkt.name, mkt.config.config.Backup.Path)
+	file := mkt.config.config.Backup.Path
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
 		return

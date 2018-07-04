@@ -136,7 +136,7 @@ func (srv *server) Listen() {
 	// listen for messages and ditribute them to the correct markets
 	go srv.ReceiveMessages()
 
-	srv.StartProfilling(srv.config.Server.Profilling)
+	srv.StartProfilling(srv.config.Server.Monitoring)
 	srv.stopOnSignal()
 }
 
@@ -189,7 +189,7 @@ func (srv *server) ReceiveMessages() {
 }
 
 // StartProfilling enables the engine to be pulled for metrics by prometheus or golang profilling
-func (srv server) StartProfilling(config ProfillingConfig) {
+func (srv server) StartProfilling(config MonitoringConfig) {
 	if config.Enabled {
 		go func() {
 			log.Printf("Starting profilling server and listening %s:%s", config.Host, config.Port)

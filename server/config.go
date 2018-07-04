@@ -49,15 +49,16 @@ type MarketConfig struct {
 // MarketBackupConfig structure
 type MarketBackupConfig struct {
 	Interval int
+	Path     string
 }
 
 // ServerConfig structure
 type ServerConfig struct {
-	Profilling ProfillingConfig
+	Monitoring MonitoringConfig
 }
 
-// ProfillingConfig structure
-type ProfillingConfig struct {
+// MonitoringConfig structure
+type MonitoringConfig struct {
 	Enabled bool
 	Host    string
 	Port    string

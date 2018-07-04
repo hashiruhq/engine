@@ -20,14 +20,14 @@ export KAFKA_TRADE_TOPIC=trading.trade.btc.eth
 
 # fix the path to the kafka server in configs
 
-cd /srv/go/src
-wget -O trading_engine.zip https://data.cloud.around25.net/s/pYEJhmJHNR2p1MS/download
-unzip trading_engine.zip
-go get -v -d ./...
-go build ./...
-go install ./...
-
-go test -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData$
+# cd /srv/go/src
+# wget -O trading_engine.zip https://data.cloud.around25.net/s/pYEJhmJHNR2p1MS/download
+# unzip trading_engine.zip
+# go get -v -d ./...
+# go build ./...
+# go install ./...
+# 
+# go test -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData$
 
 
 mkdir /srv/trading_engine/linux_amd64
