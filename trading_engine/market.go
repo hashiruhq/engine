@@ -70,5 +70,5 @@ func (market Market) MarshalJSONObject(enc *gojay.Encoder) {
 
 // IsNil checks if the market is empty
 func (market *Market) IsNil() bool {
-	return len(market.BuyOrders) == 0 && len(market.SellOrders) == 0
+	return market.Topic == "" && market.Partition == 0 && market.Offset == 0 && len(market.BuyOrders) == 0 && len(market.SellOrders) == 0
 }

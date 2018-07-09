@@ -133,8 +133,25 @@ Duration (seconds): 1.205161
 - Fwd: https://blog.kintoandar.com/2016/08/fwd-the-little-forwarder-that-could.html
 - Effective kafka topic partitioning: https://blog.newrelic.com/2018/03/13/effective-strategies-kafka-topic-partitioning/
 
+**Benchmarking**
+- https://godoc.org/github.com/codahale/hdrhistogram
+- https://github.com/tylertreat/bench
+
 **Testing**
 - Mock sarama producers: https://medium.com/@Oskarr3/implementing-cqrs-using-kafka-and-sarama-library-in-golang-da7efa3b77fe
 
 **Algorithms**
 - http://igoro.com/archive/skip-lists-are-fascinating/
+
+
+## Testing
+
+**Create flame chart out of active server**
+```
+go-torch -u http://127.0.0.1:6060
+```
+
+**Start GoConvey**
+```
+goconvey .
+```
