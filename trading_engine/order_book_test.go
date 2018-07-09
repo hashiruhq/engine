@@ -110,5 +110,18 @@ func TestOrderBookProcessing(t *testing.T) {
 			So(bookEntry, ShouldNotBeNil)
 			So(book.GetMarket().Len(), ShouldBeZeroValue)
 		})
+
+		Convey("I should be able to cancel a buy order", func() {
+			book.Process(NewOrder("TEST_15", uint64(110000000), uint64(800000000), 1, 1, 1))
+			bookEntry := book.Cancel("TEST_15")
+			So(bookEntry, ShouldNotBeNil)
+			So(book.GetMarket().Len(), ShouldBeZeroValue)
+		})
+
+		Convey("I should be able to cancel an invalid order", func() {
+			bookEntry := book.Cancel("INVALID_1")
+			So(bookEntry, ShouldBeNil)
+			So(book.GetMarket().Len(), ShouldBeZeroValue)
+		})
 	})
 }
