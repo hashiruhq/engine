@@ -95,30 +95,35 @@ Duration (seconds): 1.205161
 
 ## Resources
 
-Architecture Design
+**Architecture Design**
 - https://martinfowler.com/articles/lmax.html
 - https://web.archive.org/web/20110314042933/http://howtohft.wordpress.com/
 - http://blog.bitfinex.com/announcements/introducing-hive/
 - https://web.archive.org/web/20110310171841/http://www.quantcup.org/home/spec
 - https://web.archive.org/web/20110315000556/http://drdobbs.com:80/high-performance-computing/210604448
 
-Trading Engine
-- Matcher: https://github.com/fmstephe/matching_engine/blob/master/matcher/matcher.go
+**Trading Engine**
+- * Matcher: https://github.com/fmstephe/matching_engine/blob/master/matcher/matcher.go
 - Order book: https://github.com/hookercookerman/trading_engine/blob/master/trading_engine/order_book.go
 - https://github.com/bloq/cpptrade#summary
-- https://www.investopedia.com/university/intro-to-order-types/ 
+- * https://www.investopedia.com/university/intro-to-order-types/ 
+- * https://github.com/IanLKaplan/matchingEngine/wiki/Market-Order-Matching-Engines
+- * https://medium.com/@Oskarr3/implementing-cqrs-using-kafka-and-sarama-library-in-golang-da7efa3b77fe
+- https://hackernoon.com/a-blockchain-experiment-with-apache-kafka-97ee0ab6aefc
 
-Golang Docs
+**Golang Docs**
 - https://www.apress.com/gp/book/9781484226919
 
-Communication
+**Communication**
 - Apache Kafka: https://godoc.org/github.com/Shopify/sarama
 - Alternative Kafka Client: https://github.com/confluentinc/confluent-kafka-go
 - JSON Decoder IO Reader: https://golang.org/pkg/encoding/json/#Decoder.Decode
 - Unix Domain Socket: https://gist.github.com/hakobe/6f70d69b8c5243117787fd488ae7fbf2
 
-Performance
+**Performance**
 - Great presentation on how to use go profilling tools: https://www.youtube.com/watch?v=N3PWzBeLX2M
+- LMAX disruptor: https://lmax-exchange.github.io/disruptor/
+  - https://dzone.com/articles/using-apache-kafka-for-real-time-event-processing
 - https://blog.golang.org/profiling-go-programs
 - https://github.com/golang/go/wiki/Performance
 - https://www.quora.com/How-does-one-become-a-low-latency-programmer
@@ -126,9 +131,10 @@ Performance
 - https://engineering.linkedin.com/kafka/benchmarking-apache-kafka-2-million-writes-second-three-cheap-machines
 - FS buffering: https://zensrc.wordpress.com/2016/06/15/golang-buffer-vs-non-buffer-in-io/
 - Fwd: https://blog.kintoandar.com/2016/08/fwd-the-little-forwarder-that-could.html
+- Effective kafka topic partitioning: https://blog.newrelic.com/2018/03/13/effective-strategies-kafka-topic-partitioning/
 
-Testing
+**Testing**
 - Mock sarama producers: https://medium.com/@Oskarr3/implementing-cqrs-using-kafka-and-sarama-library-in-golang-da7efa3b77fe
 
-Algorithms
+**Algorithms**
 - http://igoro.com/archive/skip-lists-are-fascinating/

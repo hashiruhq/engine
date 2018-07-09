@@ -26,8 +26,8 @@ type kafkaPartitionConsumer struct {
 // NewKafkaPartitionConsumer return a new Kafka consumer
 func NewKafkaPartitionConsumer(name string, brokers []string, topics []string) KafkaConsumer {
 	config := cluster.NewConfig()
-	config.Consumer.Return.Errors = false
-	config.Group.Return.Notifications = false
+	config.Consumer.Return.Errors = true
+	config.Group.Return.Notifications = true
 	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 	// config.Net.KeepAlive = time.Duration(30) * time.Second
 	config.ChannelBufferSize = 20000

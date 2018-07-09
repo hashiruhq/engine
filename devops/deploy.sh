@@ -1,20 +1,19 @@
 #!/bin/bash 
 
-mkdir /srv/go
-mkdir /srv/go/src
-mkdir /srv/go/bin
-mkdir /srv/go/pkg
+mkdir -p /root/trading_engine/
+cd /root/trading_engine/
 
-sudo add-apt-repository ppa:gophers/archive -y
-sudo apt-get update -y
-sudo apt-get install -y golang-1.10-go unzip
+# mkdir /srv/go
+# mkdir /srv/go/src
+# mkdir /srv/go/bin
+# mkdir /srv/go/pkg
 
-export PATH=/usr/lib/go-1.10/bin:$PATH
-export GOPATH=/srv/go
-export KAFKA_BROKER=46.101.168.89:9092
-export KAFKA_ORDER_TOPIC=trading.order.btc.eth
-export KAFKA_ORDER_CONSUMER=trading_engine_btc_eth
-export KAFKA_TRADE_TOPIC=trading.trade.btc.eth
+# sudo add-apt-repository ppa:gophers/archive -y
+# sudo apt-get update -y
+# sudo apt-get install -y golang-1.10-go unzip
+
+# export PATH=/usr/lib/go-1.10/bin:$PATH
+# export GOPATH=/srv/go
 
 # update the new ip in the docker-compose file
 
@@ -30,8 +29,8 @@ export KAFKA_TRADE_TOPIC=trading.trade.btc.eth
 # go test -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData$
 
 
-mkdir /srv/trading_engine/linux_amd64
-cd /srv/trading_engine/linux_amd64
+# mkdir /srv/trading_engine/linux_amd64
+# cd /srv/trading_engine/linux_amd64
 wget -O trading_engine https://data.cloud.around25.net/s/xTDVDaLzPesymmV/download
 chmod +x trading_engine
 
@@ -40,8 +39,7 @@ chmod +x trading_engine
 Description=Trading Engine
 
 [Service]
-Environment='CATALINA_OPTS=-Dappserver.home=/var/lib/archiva/apache-tomcat-current -Dappserver.base=/var/lib/archiva/apache-tomcat-current'
-ExecStart=/srv/trading_engine/linux_amd64/trading_engine
+ExecStart=/root/trading_engine/trading_engine
 
 [Install]
 WantedBy=multi-user.target

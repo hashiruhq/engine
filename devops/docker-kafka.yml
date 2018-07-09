@@ -1,0 +1,28 @@
+version: '3.2'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    restart: always
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    restart: always
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: "10.0.1.42"
+      # HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
+      # HOSTNAME_COMMAND: "echo 'kafka.engine.democlient.info'"
+      # KAFKA_CREATE_TOPICS: engine.orders.btc.usd:1:1,engine.orders.eth.usd:1:1,engine.events.btc.usd:3:1,engine.events.eth.usd:3:1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LOG_RETENTION_HOURS_PER_TOPIC: 3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+  kafka_manager:
+    image: sheepkiller/kafka-manager
+    ports:
+      - "9000:9000"
+    environment:
+      ZK_HOSTS: zookeeper:2181
+    restart: always

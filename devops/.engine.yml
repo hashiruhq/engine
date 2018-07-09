@@ -1,0 +1,54 @@
+server: 
+  monitoring: 
+    enabled: true
+    host: 0.0.0.0
+    port: 6060
+
+markets:
+  btc_usd:
+    base: btc
+    quote: usd
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 15
+      path: /root/backups/btc.usd.json
+    listen: 
+      broker: requests
+      topic: engine.orders.btc.usd
+    publish: 
+      broker: events
+      topic: engine.events.btc.usd
+  eth_usd:
+    base: eth
+    quote: usd
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 15
+      path: /root/backups/btc.usd.json
+    listen: 
+      broker: requests
+      topic: engine.orders.eth.usd
+    publish: 
+      broker: events
+      topic: engine.events.eth.usd
+
+brokers:
+  consumers:
+    requests: 
+      name: trading_engine_test
+      hosts: 
+        - kafka.engine.democlient.info:9092
+      topics:
+        - engine.orders.btc.usd
+        - engine.orders.eth.usd
+  producers:
+    events: 
+      hosts: 
+        - kafka.engine.democlient.info:9092
+      topics: 
+        - engine.events.btc.usd
+        - engine.events.eth.usd
