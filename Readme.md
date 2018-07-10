@@ -124,6 +124,11 @@ Duration (seconds): 1.205161
 - Great presentation on how to use go profilling tools: https://www.youtube.com/watch?v=N3PWzBeLX2M
 - LMAX disruptor: https://lmax-exchange.github.io/disruptor/
   - https://dzone.com/articles/using-apache-kafka-for-real-time-event-processing
+  - 
+- https://www.youtube.com/watch?v=DJ4d_PZ6Gns
+  - Use a ring buffer instead of channels
+  - Understand the internals of the code you call
+  - 
 - https://blog.golang.org/profiling-go-programs
 - https://github.com/golang/go/wiki/Performance
 - https://www.quora.com/How-does-one-become-a-low-latency-programmer
@@ -133,18 +138,12 @@ Duration (seconds): 1.205161
 - Fwd: https://blog.kintoandar.com/2016/08/fwd-the-little-forwarder-that-could.html
 - Effective kafka topic partitioning: https://blog.newrelic.com/2018/03/13/effective-strategies-kafka-topic-partitioning/
 
-**Benchmarking**
-- https://godoc.org/github.com/codahale/hdrhistogram
-- https://github.com/tylertreat/bench
-
-**Testing**
-- Mock sarama producers: https://medium.com/@Oskarr3/implementing-cqrs-using-kafka-and-sarama-library-in-golang-da7efa3b77fe
-
 **Algorithms**
 - http://igoro.com/archive/skip-lists-are-fascinating/
 
 
 ## Testing
+
 
 **Create flame chart out of active server**
 ```
@@ -155,3 +154,12 @@ go-torch -u http://127.0.0.1:6060
 ```
 goconvey .
 ```
+
+### Testing References
+
+**Benchmarking**
+- https://godoc.org/github.com/codahale/hdrhistogram
+- https://github.com/tylertreat/bench
+
+**Testing**
+- Mock sarama producers: https://medium.com/@Oskarr3/implementing-cqrs-using-kafka-and-sarama-library-in-golang-da7efa3b77fe
