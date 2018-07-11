@@ -1,6 +1,7 @@
 package trading_engine
 
-import "github.com/ryszard/goskiplist/skiplist"
+// import "github.com/ryszard/goskiplist/skiplist"
+// import "trading_engine/skiplist"
 
 // PricePoint holds the records for a particular price
 type PricePoint struct {
@@ -9,8 +10,8 @@ type PricePoint struct {
 }
 
 // NewPricePoints creates a new skiplist in which to hold all price points
-func NewPricePoints() *skiplist.SkipList {
-	return skiplist.NewCustomMap(func(l, r interface{}) bool {
-		return l.(uint64) < r.(uint64)
+func NewPricePoints() *SkipList {
+	return NewCustomMap(func(l, r uint64) bool {
+		return l < r
 	})
 }

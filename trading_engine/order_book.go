@@ -1,9 +1,5 @@
 package trading_engine
 
-import (
-	"github.com/ryszard/goskiplist/skiplist"
-)
-
 // OrderBook interface
 // Defines what constitudes an order book and how we can interact with it
 type OrderBook interface {
@@ -13,11 +9,11 @@ type OrderBook interface {
 	GetLowestAsk() uint64
 	Load(Market) error
 	Backup() Market
-	GetMarket() *skiplist.SkipList
+	GetMarket() *SkipList
 }
 
 type orderBook struct {
-	PricePoints *skiplist.SkipList
+	PricePoints *SkipList
 	LowestAsk   uint64
 	HighestBid  uint64
 	OpenOrders  map[string]uint64
@@ -53,7 +49,7 @@ func (book orderBook) GetLowestAsk() uint64 {
 }
 
 // GetMarket returns the list of price points for the market
-func (book orderBook) GetMarket() *skiplist.SkipList {
+func (book orderBook) GetMarket() *SkipList {
 	return book.PricePoints
 }
 
@@ -70,7 +66,7 @@ func (book *orderBook) Cancel(id string) *BookEntry {
 	// @todo implement this method
 	if price, ok := book.OpenOrders[id]; ok {
 		if value, ok := book.PricePoints.Get(price); ok {
-			pricePoint := value.(*PricePoint)
+			pricePoint := value
 			for i := 0; i < len(pricePoint.BuyBookEntries); i++ {
 				if pricePoint.BuyBookEntries[i].Order.ID == id {
 					bookEntry := pricePoint.BuyBookEntries[i]
@@ -97,7 +93,7 @@ func (book *orderBook) Cancel(id string) *BookEntry {
 func (book *orderBook) addBuyBookEntry(bookEntry BookEntry) {
 	price := bookEntry.Price
 	if value, ok := book.PricePoints.Get(price); ok {
-		pricePoint := value.(*PricePoint)
+		pricePoint := value
 		pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries, bookEntry)
 		return
 	}
@@ -112,7 +108,7 @@ func (book *orderBook) addBuyBookEntry(bookEntry BookEntry) {
 func (book *orderBook) addSellBookEntry(bookEntry BookEntry) {
 	price := bookEntry.Price
 	if value, ok := book.PricePoints.Get(price); ok {
-		pricePoint := value.(*PricePoint)
+		pricePoint := value
 		pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
 		return
 	}

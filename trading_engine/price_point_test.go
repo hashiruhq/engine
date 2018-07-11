@@ -19,8 +19,7 @@ func TestPricePointCreation(t *testing.T) {
 			Convey("And the order added should be the same as the one retrieved", func() {
 				value, ok := pricePoints.Get(uint64(100000000))
 				So(ok, ShouldBeTrue)
-				point, _ := value.(*PricePoint)
-				entry := point.BuyBookEntries[0]
+				entry := value.BuyBookEntries[0]
 				So(entry.Price, ShouldEqual, 100000000)
 			})
 		})

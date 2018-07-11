@@ -1,7 +1,7 @@
 package trading_engine
 
 func (book *orderBook) processLimitBuy(order Order) []Trade {
-	trades := make([]Trade, 0, 1)
+	trades := make([]Trade, 0, 0)
 	if book.LowestAsk <= order.Price && book.LowestAsk != 0 {
 		iterator := book.PricePoints.Seek(book.LowestAsk)
 
@@ -9,7 +9,7 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 		if iterator != nil {
 			defer iterator.Close()
 			for order.Price >= book.LowestAsk {
-				pricePoint := iterator.Value().(*PricePoint)
+				pricePoint := iterator.Value()
 				for index := 0; index < len(pricePoint.SellBookEntries); index++ {
 					sellEntry := &pricePoint.SellBookEntries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
@@ -34,8 +34,8 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 				}
 
 				if ok := iterator.Next(); ok {
-					if len(iterator.Value().(*PricePoint).SellBookEntries) > 0 {
-						book.LowestAsk = iterator.Key().(uint64)
+					if len(iterator.Value().SellBookEntries) > 0 {
+						book.LowestAsk = iterator.Key()
 					}
 				} else {
 					book.LowestAsk = 0
@@ -55,7 +55,7 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 }
 
 func (book *orderBook) processLimitSell(order Order) []Trade {
-	trades := make([]Trade, 0, 1)
+	trades := make([]Trade, 0, 0)
 	if book.HighestBid >= order.Price && book.HighestBid != 0 {
 		iterator := book.PricePoints.Seek(book.HighestBid)
 
@@ -63,7 +63,7 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 		if iterator != nil {
 			defer iterator.Close()
 			for order.Price <= book.HighestBid {
-				pricePoint := iterator.Value().(*PricePoint)
+				pricePoint := iterator.Value()
 				for index := 0; index < len(pricePoint.BuyBookEntries); index++ {
 					buyEntry := &pricePoint.BuyBookEntries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
@@ -88,8 +88,8 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 				}
 
 				if ok := iterator.Previous(); ok {
-					if len(iterator.Value().(*PricePoint).BuyBookEntries) > 0 {
-						book.HighestBid = iterator.Key().(uint64)
+					if len(iterator.Value().BuyBookEntries) > 0 {
+						book.HighestBid = iterator.Key()
 					}
 				} else {
 					book.HighestBid = 0

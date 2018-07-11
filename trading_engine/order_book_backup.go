@@ -30,7 +30,7 @@ func (book *orderBook) Backup() Market {
 		if iterator != nil {
 			defer iterator.Close()
 			for {
-				pricePoint := iterator.Value().(*PricePoint)
+				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.SellBookEntries {
 					market.SellOrders = append(market.SellOrders, entry)
 				}
@@ -46,7 +46,7 @@ func (book *orderBook) Backup() Market {
 		if iterator != nil {
 			defer iterator.Close()
 			for {
-				pricePoint := iterator.Value().(*PricePoint)
+				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.BuyBookEntries {
 					market.BuyOrders = append(market.BuyOrders, entry)
 				}
