@@ -99,6 +99,7 @@ func (book *orderBook) addBuyBookEntry(bookEntry BookEntry) {
 	if value, ok := book.PricePoints.Get(price); ok {
 		pricePoint := value.(*PricePoint)
 		pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries, bookEntry)
+		book.AddOpenOrder(bookEntry.Order.ID, price)
 		return
 	}
 	pricePoint := &PricePoint{
@@ -114,6 +115,7 @@ func (book *orderBook) addSellBookEntry(bookEntry BookEntry) {
 	if value, ok := book.PricePoints.Get(price); ok {
 		pricePoint := value.(*PricePoint)
 		pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
+		book.AddOpenOrder(bookEntry.Order.ID, price)
 		return
 	}
 	pricePoint := &PricePoint{

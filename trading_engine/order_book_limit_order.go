@@ -7,7 +7,6 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
-			defer iterator.Close()
 			for order.Price >= book.LowestAsk {
 				pricePoint := iterator.Value().(*PricePoint)
 				for index := 0; index < len(pricePoint.SellBookEntries); index++ {
@@ -19,6 +18,7 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 						if sellEntry.Amount == 0 {
 							book.removeSellBookEntry(sellEntry, pricePoint, index)
 						}
+						iterator.Close()
 						return trades
 					}
 
@@ -42,6 +42,7 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 					break
 				}
 			}
+			iterator.Close()
 		}
 	}
 
@@ -61,7 +62,6 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
-			defer iterator.Close()
 			for order.Price <= book.HighestBid {
 				pricePoint := iterator.Value().(*PricePoint)
 				for index := 0; index < len(pricePoint.BuyBookEntries); index++ {
@@ -73,6 +73,7 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 						if buyEntry.Amount == 0 {
 							book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						}
+						iterator.Close()
 						return trades
 					}
 
@@ -96,6 +97,7 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 					break
 				}
 			}
+			iterator.Close()
 		}
 	}
 
