@@ -2,89 +2,41 @@ package trading_engine_test
 
 import (
 	"bufio"
-	"encoding/json"
-	"fmt"
+	"log"
 	"math/rand"
 	"os"
 	"testing"
-	"time"
 	"trading_engine/trading_engine"
 )
 
-func BenchmarkWithRandomData(benchmark *testing.B) {
+var arr []trading_engine.Order = make([]trading_engine.Order, 0, 1000000)
+
+func init() {
 	rand.Seed(42)
-	engine := trading_engine.NewTradingEngine()
-
 	testFile := "/Users/cosmin/Incubator/go/src/trading_engine/priv/data/market.txt"
-
-	// GenerateRandomRecordsInFile(&testFile, 2*benchmark.N)
-
+	// GenerateRandomRecordsInFile(&testFile, 2000000)
 	fh, err := os.Open(testFile)
 	if err != nil {
 		panic(err.Error())
 	}
 	defer fh.Close()
 	bf := bufio.NewReader(fh)
-	decoder := json.NewDecoder(bf)
-	orders := make(chan trading_engine.Order, 10000)
-	defer close(orders)
-	done := make(chan bool)
-	defer close(done)
-
-	benchmark.ResetTimer()
-	startTime := time.Now().UnixNano()
-	go func(orders chan<- trading_engine.Order) {
-		arr := make([]trading_engine.Order, 0, benchmark.N)
-		for j := 0; j < benchmark.N; j++ {
-			if !decoder.More() {
-				break
-			}
-			order := trading_engine.Order{}
-			decoder.Decode(&order)
-			arr = append(arr, order)
+	for j := 0; j < 2000000; j++ {
+		msg, _, err := bf.ReadLine()
+		if err != nil {
+			log.Fatalln(err)
 		}
-		benchmark.ResetTimer()
-		startTime = time.Now().UnixNano()
-		for _, order := range arr {
-			orders <- order
-		}
-	}(orders)
+		order := trading_engine.Order{}
+		order.FromJSON([]byte(msg))
+		arr = append(arr, order)
+	}
+}
 
-	ordersCompleted := 0
-	tradesCompleted := 0
-	go func(orders <-chan trading_engine.Order, n int) {
-		for order := range orders {
-			trades := engine.Process(order)
-			ordersCompleted++
-			tradesCompleted += len(trades)
-			if ordersCompleted >= n {
-				done <- true
-				return
-			}
-		}
-	}(orders, benchmark.N)
-
-	<-done
-	endTime := time.Now().UnixNano()
-	timeout := (float64)(float64(time.Nanosecond) * float64(endTime-startTime) / float64(time.Second))
-	fmt.Printf(
-		"Total Orders: %d\n"+
-			"Total Trades: %d\n"+
-			"Orders/second: %f\n"+
-			"Trades/second: %f\n"+
-			"Pending Buy: %d\n"+
-			"Lowest Ask: %d\n"+
-			"Pending Sell: %d\n"+
-			"Highest Bid: %d\n"+
-			"Duration (seconds): %f\n\n",
-		ordersCompleted,
-		tradesCompleted,
-		float64(ordersCompleted)/timeout,
-		float64(tradesCompleted)/timeout,
-		engine.GetOrderBook().GetMarket().Len(),
-		engine.GetOrderBook().GetLowestAsk(),
-		engine.GetOrderBook().GetMarket().Len(),
-		engine.GetOrderBook().GetHighestBid(),
-		timeout,
-	)
+func BenchmarkWithRandomData(benchmark *testing.B) {
+	// startTime := time.Now().UnixNano()
+	engine := trading_engine.NewTradingEngine()
+	for j := 0; j < benchmark.N; j++ {
+		engine.Process(arr[j])
+	}
+	// utils.PrintOrderLogs(engine, benchmark.N, startTime)
 }

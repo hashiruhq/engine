@@ -18,7 +18,10 @@ func TestTradingEngineCreation(t *testing.T) {
 			trade := trades[0]
 			So(trade.Amount, ShouldEqual, 12000000000)
 			So(trade.Price, ShouldEqual, 100000000)
-			So(tradingEngine.GetOrderBook().GetMarket().Len(), ShouldEqual, 1)
+
+			state := tradingEngine.GetOrderBook().GetMarket()
+			So(state[0].Len(), ShouldEqual, 0)
+			So(state[1].Len(), ShouldEqual, 1)
 		})
 		Convey("I should be able to process events on the trading engine", func() {
 			tradingEngine.ProcessEvent(trading_engine.NewOrder("EVENT_1", uint64(110000000), uint64(12000000000), 2, 1, trading_engine.EventTypeNewOrder))

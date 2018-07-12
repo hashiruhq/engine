@@ -16,6 +16,9 @@ func ToUnits(amounts string, precision uint8) uint64 {
 			dec = 10*dec + uint64(bytes[i]-48) // ascii char for 0
 		}
 	}
+	if !start {
+		i = 1
+	}
 	for i-pointPos <= int(precision) {
 		dec *= 10
 		i++

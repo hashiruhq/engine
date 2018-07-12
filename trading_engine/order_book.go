@@ -9,11 +9,12 @@ type OrderBook interface {
 	GetLowestAsk() uint64
 	Load(Market) error
 	Backup() Market
-	GetMarket() *SkipList
+	GetMarket() []*SkipList
 }
 
 type orderBook struct {
-	PricePoints *SkipList
+	BuyEntries  *SkipList
+	SellEntries *SkipList
 	LowestAsk   uint64
 	HighestBid  uint64
 	OpenOrders  map[string]uint64
@@ -21,11 +22,11 @@ type orderBook struct {
 
 // NewOrderBook Creates a new empty order book for the trading engine
 func NewOrderBook() OrderBook {
-	pricePoints := NewPricePoints()
 	return &orderBook{
-		PricePoints: pricePoints,
 		LowestAsk:   0,
 		HighestBid:  0,
+		BuyEntries:  NewPricePoints(),
+		SellEntries: NewPricePoints(),
 		OpenOrders:  make(map[string]uint64),
 	}
 }
@@ -49,8 +50,9 @@ func (book orderBook) GetLowestAsk() uint64 {
 }
 
 // GetMarket returns the list of price points for the market
-func (book orderBook) GetMarket() *SkipList {
-	return book.PricePoints
+// @todo Add sell entries
+func (book orderBook) GetMarket() []*SkipList {
+	return []*SkipList{book.BuyEntries, book.SellEntries}
 }
 
 // Process a new received order and return a list of trades make
@@ -62,24 +64,30 @@ func (book *orderBook) Process(order Order) []Trade {
 }
 
 // Cancel an order from the order book based on the order price and ID
+//
+// @todo This method does not properly implement the cancelation of an order
+// - Improve this by also calculating the new LowestAsk and HighestBid after the order is removed
 func (book *orderBook) Cancel(id string) *BookEntry {
-	// @todo implement this method
-	if price, ok := book.OpenOrders[id]; ok {
-		if value, ok := book.PricePoints.Get(price); ok {
-			pricePoint := value
-			for i := 0; i < len(pricePoint.BuyBookEntries); i++ {
-				if pricePoint.BuyBookEntries[i].Order.ID == id {
-					bookEntry := pricePoint.BuyBookEntries[i]
-					book.removeBuyBookEntry(&bookEntry, pricePoint, i)
-					return &bookEntry
-				}
+	price, ok := book.OpenOrders[id]
+	if !ok {
+		return nil
+	}
+
+	if pricePoint, ok := book.BuyEntries.Get(price); ok {
+		for i := 0; i < len(pricePoint.Entries); i++ {
+			if pricePoint.Entries[i].Order.ID == id {
+				bookEntry := pricePoint.Entries[i]
+				book.removeBuyBookEntry(&bookEntry, pricePoint, i)
+				return &bookEntry
 			}
-			for i := 0; i < len(pricePoint.SellBookEntries); i++ {
-				if pricePoint.SellBookEntries[i].Order.ID == id {
-					bookEntry := pricePoint.SellBookEntries[i]
-					book.removeSellBookEntry(&bookEntry, pricePoint, i)
-					return &bookEntry
-				}
+		}
+	}
+	if pricePoint, ok := book.SellEntries.Get(price); ok {
+		for i := 0; i < len(pricePoint.Entries); i++ {
+			if pricePoint.Entries[i].Order.ID == id {
+				bookEntry := pricePoint.Entries[i]
+				book.removeSellBookEntry(&bookEntry, pricePoint, i)
+				return &bookEntry
 			}
 		}
 	}
@@ -92,33 +100,27 @@ func (book *orderBook) Cancel(id string) *BookEntry {
 
 func (book *orderBook) addBuyBookEntry(bookEntry BookEntry) {
 	price := bookEntry.Price
-	if value, ok := book.PricePoints.Get(price); ok {
-		pricePoint := value
-		pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries, bookEntry)
+	if pricePoint, ok := book.BuyEntries.Get(price); ok {
+		pricePoint.Entries = append(pricePoint.Entries, bookEntry)
 		book.AddOpenOrder(bookEntry.Order.ID, price)
 		return
 	}
-	pricePoint := &PricePoint{
-		BuyBookEntries:  []BookEntry{bookEntry},
-		SellBookEntries: []BookEntry{},
-	}
-	book.PricePoints.Set(price, pricePoint)
+	book.BuyEntries.Set(price, &PricePoint{
+		Entries: []BookEntry{bookEntry},
+	})
 	book.AddOpenOrder(bookEntry.Order.ID, price)
 }
 
 func (book *orderBook) addSellBookEntry(bookEntry BookEntry) {
 	price := bookEntry.Price
-	if value, ok := book.PricePoints.Get(price); ok {
-		pricePoint := value
-		pricePoint.SellBookEntries = append(pricePoint.SellBookEntries, bookEntry)
+	if pricePoint, ok := book.SellEntries.Get(price); ok {
+		pricePoint.Entries = append(pricePoint.Entries, bookEntry)
 		book.AddOpenOrder(bookEntry.Order.ID, price)
 		return
 	}
-	pricePoint := &PricePoint{
-		BuyBookEntries:  []BookEntry{},
-		SellBookEntries: []BookEntry{bookEntry},
-	}
-	book.PricePoints.Set(price, pricePoint)
+	book.SellEntries.Set(price, &PricePoint{
+		Entries: []BookEntry{bookEntry},
+	})
 	book.AddOpenOrder(bookEntry.Order.ID, price)
 }
 
@@ -127,16 +129,16 @@ func (book *orderBook) addSellBookEntry(bookEntry BookEntry) {
 
 func (book *orderBook) removeBuyBookEntry(bookEntry *BookEntry, pricePoint *PricePoint, index int) {
 	book.RemoveOpenOrder(bookEntry.Order.ID)
-	pricePoint.BuyBookEntries = append(pricePoint.BuyBookEntries[:index], pricePoint.BuyBookEntries[index+1:]...)
-	if len(pricePoint.BuyBookEntries) == 0 && len(pricePoint.SellBookEntries) == 0 {
-		book.PricePoints.Delete(bookEntry.Price)
+	pricePoint.Entries = append(pricePoint.Entries[:index], pricePoint.Entries[index+1:]...)
+	if len(pricePoint.Entries) == 0 {
+		book.BuyEntries.Delete(bookEntry.Price)
 	}
 }
 
 func (book *orderBook) removeSellBookEntry(bookEntry *BookEntry, pricePoint *PricePoint, index int) {
 	book.RemoveOpenOrder(bookEntry.Order.ID)
-	pricePoint.SellBookEntries = append(pricePoint.SellBookEntries[:index], pricePoint.SellBookEntries[index+1:]...)
-	if len(pricePoint.BuyBookEntries) == 0 && len(pricePoint.SellBookEntries) == 0 {
-		book.PricePoints.Delete(bookEntry.Price)
+	pricePoint.Entries = append(pricePoint.Entries[:index], pricePoint.Entries[index+1:]...)
+	if len(pricePoint.Entries) == 0 {
+		book.SellEntries.Delete(bookEntry.Price)
 	}
 }

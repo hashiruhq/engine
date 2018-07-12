@@ -15,7 +15,10 @@
 package trading_engine
 
 import (
+	"log"
+	"math"
 	"math/rand"
+	"time"
 )
 
 // TODO(ryszard):
@@ -27,7 +30,10 @@ import (
 // times is a concern, 1/2 is a better value for p.
 const p = 0.5
 
+// const SKIPLIST_MAXLEVEL = 32
+// const SKIPLIST_BRANCH = 4
 const DefaultMaxLevel = 32
+const DefaultProbability float64 = 1 / math.E
 
 // A node is a container for key-value pairs that are stored in a skip
 // list.
@@ -73,10 +79,13 @@ func (n *node) hasPrevious() bool {
 //		// do something with i.Key() and i.Value()
 //	}
 type SkipList struct {
-	lessThan func(l, r uint64) bool
-	header   *node
-	footer   *node
-	length   int
+	lessThan    func(l, r uint64) bool
+	header      *node
+	footer      *node
+	length      int
+	randSource  rand.Source
+	probability float64
+	probTable   []float64
 	// MaxLevel determines how many items the SkipList can store
 	// efficiently (2^MaxLevel).
 	//
@@ -90,6 +99,24 @@ type SkipList struct {
 	// standard linked list and will not have any of the nice
 	// properties of skip lists (probably not what you want).
 	MaxLevel int
+}
+
+// SetProbability changes the current P value of the list.
+// It doesn't alter any existing data, only changes how future insert heights are calculated.
+func (list *SkipList) SetProbability(newProbability float64) {
+	list.probability = newProbability
+	list.probTable = probabilityTable(list.probability, list.MaxLevel)
+}
+
+// probabilityTable calculates in advance the probability of a new node having a given level.
+// probability is in [0, 1], MaxLevel is (0, 64]
+// Returns a table of floating point probabilities that each level should be included during an insert.
+func probabilityTable(probability float64, MaxLevel int) (table []float64) {
+	for i := 1; i <= MaxLevel; i++ {
+		prob := math.Pow(probability, float64(i-1))
+		table = append(table, prob)
+	}
+	return table
 }
 
 // Len returns the length of s.
@@ -176,7 +203,7 @@ func (i *iter) Seek(key uint64) (ok bool) {
 	// If the target key occurs before the current key, we cannot take advantage
 	// of the heretofore spent traversal cost to find it; resetting back to the
 	// beginning is the safest choice.
-	if current.key != 0 && list.lessThan(key, current.key) {
+	if current.key != 0 && key < current.key {
 		current = list.header
 	}
 
@@ -221,7 +248,7 @@ func (i *rangeIterator) Next() bool {
 
 	next := i.current.next()
 
-	if !i.list.lessThan(next.key, i.upperLimit) {
+	if next.key >= i.upperLimit {
 		return false
 	}
 
@@ -238,7 +265,7 @@ func (i *rangeIterator) Previous() bool {
 
 	previous := i.current.previous()
 
-	if i.list.lessThan(previous.key, i.lowerLimit) {
+	if previous.key < i.lowerLimit {
 		return false
 	}
 
@@ -249,9 +276,9 @@ func (i *rangeIterator) Previous() bool {
 }
 
 func (i *rangeIterator) Seek(key uint64) (ok bool) {
-	if i.list.lessThan(key, i.lowerLimit) {
+	if key < i.lowerLimit {
 		return
-	} else if !i.list.lessThan(key, i.upperLimit) {
+	} else if key >= i.upperLimit {
 		return
 	}
 
@@ -354,9 +381,31 @@ func (s *SkipList) effectiveMaxLevel() int {
 	return maxInt(s.level(), s.MaxLevel)
 }
 
-// Returns a new random level.
-func (s SkipList) randomLevel() (n int) {
-	for n = 0; n < s.effectiveMaxLevel() && rand.Float64() < p; n++ {
+// // Returns a new random level.
+// func (s SkipList) randomLevel() (n int) {
+// 	// level := 1
+// 	// for (rand.Int31()&0xFFFF)%SKIPLIST_BRANCH == 0 {
+// 	// 	level++
+// 	// }
+
+// 	// if level < SKIPLIST_MAXLEVEL {
+// 	// 	return level
+// 	// }
+// 	// return SKIPLIST_MAXLEVEL
+
+// 	for n = 0; n < s.effectiveMaxLevel() && float64(s.randSource.Int63())/(1<<63) < p; n++ {
+// 	}
+// 	return
+// }
+
+func (list *SkipList) randomLevel() (level int) {
+	// Our random number source only has Int63(), so we have to produce a float64 from it
+	// Reference: https://golang.org/src/math/rand/rand.go#L150
+	r := float64(list.randSource.Int63()) / (1 << 63)
+
+	level = 1
+	for level < list.MaxLevel && r < list.probTable[level] {
+		level++
 	}
 	return
 }
@@ -374,17 +423,17 @@ func (s *SkipList) Get(key uint64) (value *PricePoint, ok bool) {
 	return candidate.value, true
 }
 
-// GetGreaterOrEqual finds the node whose key is greater than or equal
-// to min. It returns its value, its actual key, and whether such a
-// node is present in the skip list.
-func (s *SkipList) GetGreaterOrEqual(min uint64) (actualKey uint64, value *PricePoint, ok bool) {
-	candidate := s.getPath(s.header, nil, min)
+// // GetGreaterOrEqual finds the node whose key is greater than or equal
+// // to min. It returns its value, its actual key, and whether such a
+// // node is present in the skip list.
+// func (s *SkipList) GetGreaterOrEqual(min uint64) (actualKey uint64, value *PricePoint, ok bool) {
+// 	candidate := s.getPath(s.header, nil, min)
 
-	if candidate != nil {
-		return candidate.key, candidate.value, true
-	}
-	return 0, nil, false
-}
+// 	if candidate != nil {
+// 		return candidate.key, candidate.value, true
+// 	}
+// 	return 0, nil, false
+// }
 
 // getPath populates update with nodes that constitute the path to the
 // node that may contain key. The candidate node will be returned. If
@@ -395,7 +444,7 @@ func (s *SkipList) getPath(current *node, update []*node, key uint64) *node {
 	depth := len(current.forward) - 1
 
 	for i := depth; i >= 0; i-- {
-		for current.forward[i] != nil && s.lessThan(current.forward[i].key, key) {
+		for current.forward[i] != nil && current.forward[i].key < key {
 			current = current.forward[i]
 		}
 		if update != nil {
@@ -408,6 +457,7 @@ func (s *SkipList) getPath(current *node, update []*node, key uint64) *node {
 // Sets set the value associated with key in s.
 func (s *SkipList) Set(key uint64, value *PricePoint) {
 	if key == 0 {
+		log.Println(value)
 		panic("goskiplist: nil keys are not supported")
 	}
 	// s.level starts from 0, so we need to allocate one.
@@ -454,7 +504,7 @@ func (s *SkipList) Set(key uint64, value *PricePoint) {
 		}
 	}
 
-	if s.footer == nil || s.lessThan(s.footer.key, key) {
+	if s.footer == nil || s.footer.key < key {
 		s.footer = newNode
 	}
 }
@@ -504,7 +554,10 @@ func NewCustomMap(lessThan func(l, r uint64) bool) *SkipList {
 		header: &node{
 			forward: []*node{nil},
 		},
-		MaxLevel: DefaultMaxLevel,
+		randSource:  rand.New(rand.NewSource(time.Now().UnixNano())),
+		MaxLevel:    DefaultMaxLevel,
+		probability: DefaultProbability,
+		probTable:   probabilityTable(DefaultProbability, DefaultMaxLevel),
 	}
 }
 
@@ -541,96 +594,96 @@ type Ordered interface {
 // 	})
 // }
 
-// Set is an ordered set data structure.
-//
-// Its elements must implement the Ordered interface. It uses a
-// SkipList for storage, and it gives you similar performance
-// guarantees.
-//
-// To iterate over a set (where s is a *Set):
-//
-//	for i := s.Iterator(); i.Next(); {
-//		// do something with i.Key().
-//		// i.Value() will be nil.
-//	}
-type Set struct {
-	skiplist SkipList
-}
-
-// NewSet returns a new Set.
-// func NewSet() *Set {
-// 	comparator := func(left, right interface{}) bool {
-// 		return left.(Ordered).LessThan(right.(Ordered))
-// 	}
-// 	return NewCustomSet(comparator)
+// // Set is an ordered set data structure.
+// //
+// // Its elements must implement the Ordered interface. It uses a
+// // SkipList for storage, and it gives you similar performance
+// // guarantees.
+// //
+// // To iterate over a set (where s is a *Set):
+// //
+// //	for i := s.Iterator(); i.Next(); {
+// //		// do something with i.Key().
+// //		// i.Value() will be nil.
+// //	}
+// type Set struct {
+// 	skiplist SkipList
 // }
 
-// NewCustomSet returns a new Set that will use lessThan as the
-// comparison function. lessThan should define a linear order on
-// elements you intend to use with the Set.
-func NewCustomSet(lessThan func(l, r uint64) bool) *Set {
-	return &Set{skiplist: SkipList{
-		lessThan: lessThan,
-		header: &node{
-			forward: []*node{nil},
-		},
-		MaxLevel: DefaultMaxLevel,
-	}}
-}
+// // NewSet returns a new Set.
+// // func NewSet() *Set {
+// // 	comparator := func(left, right interface{}) bool {
+// // 		return left.(Ordered).LessThan(right.(Ordered))
+// // 	}
+// // 	return NewCustomSet(comparator)
+// // }
 
-// NewIntSet returns a new Set that accepts int elements.
-// func NewIntSet() *Set {
-// 	return NewCustomSet(func(l, r interface{}) bool {
-// 		return l.(int) < r.(int)
-// 	})
+// // NewCustomSet returns a new Set that will use lessThan as the
+// // comparison function. lessThan should define a linear order on
+// // elements you intend to use with the Set.
+// func NewCustomSet(lessThan func(l, r uint64) bool) *Set {
+// 	return &Set{skiplist: SkipList{
+// 		lessThan: lessThan,
+// 		header: &node{
+// 			forward: []*node{nil},
+// 		},
+// 		MaxLevel: DefaultMaxLevel,
+// 	}}
 // }
 
-// // NewStringSet returns a new Set that accepts string elements.
-// func NewStringSet() *Set {
-// 	return NewCustomSet(func(l, r interface{}) bool {
-// 		return l.(string) < r.(string)
-// 	})
+// // NewIntSet returns a new Set that accepts int elements.
+// // func NewIntSet() *Set {
+// // 	return NewCustomSet(func(l, r interface{}) bool {
+// // 		return l.(int) < r.(int)
+// // 	})
+// // }
+
+// // // NewStringSet returns a new Set that accepts string elements.
+// // func NewStringSet() *Set {
+// // 	return NewCustomSet(func(l, r interface{}) bool {
+// // 		return l.(string) < r.(string)
+// // 	})
+// // }
+
+// // Add adds key to s.
+// func (s *Set) Add(key uint64) {
+// 	s.skiplist.Set(key, nil)
 // }
 
-// Add adds key to s.
-func (s *Set) Add(key uint64) {
-	s.skiplist.Set(key, nil)
-}
+// // Remove tries to remove key from the set. It returns true if key was
+// // present.
+// func (s *Set) Remove(key uint64) (ok bool) {
+// 	_, ok = s.skiplist.Delete(key)
+// 	return ok
+// }
 
-// Remove tries to remove key from the set. It returns true if key was
-// present.
-func (s *Set) Remove(key uint64) (ok bool) {
-	_, ok = s.skiplist.Delete(key)
-	return ok
-}
+// // Len returns the length of the set.
+// func (s *Set) Len() int {
+// 	return s.skiplist.Len()
+// }
 
-// Len returns the length of the set.
-func (s *Set) Len() int {
-	return s.skiplist.Len()
-}
+// // Contains returns true if key is present in s.
+// func (s *Set) Contains(key uint64) bool {
+// 	_, ok := s.skiplist.Get(key)
+// 	return ok
+// }
 
-// Contains returns true if key is present in s.
-func (s *Set) Contains(key uint64) bool {
-	_, ok := s.skiplist.Get(key)
-	return ok
-}
+// func (s *Set) Iterator() Iterator {
+// 	return s.skiplist.Iterator()
+// }
 
-func (s *Set) Iterator() Iterator {
-	return s.skiplist.Iterator()
-}
+// // Range returns an iterator that will go through all the elements of
+// // the set that are greater or equal than from, but less than to.
+// func (s *Set) Range(from, to uint64) Iterator {
+// 	return s.skiplist.Range(from, to)
+// }
 
-// Range returns an iterator that will go through all the elements of
-// the set that are greater or equal than from, but less than to.
-func (s *Set) Range(from, to uint64) Iterator {
-	return s.skiplist.Range(from, to)
-}
+// // SetMaxLevel sets MaxLevel in the underlying skip list.
+// func (s *Set) SetMaxLevel(newMaxLevel int) {
+// 	s.skiplist.MaxLevel = newMaxLevel
+// }
 
-// SetMaxLevel sets MaxLevel in the underlying skip list.
-func (s *Set) SetMaxLevel(newMaxLevel int) {
-	s.skiplist.MaxLevel = newMaxLevel
-}
-
-// GetMaxLevel returns MaxLevel fo the underlying skip list.
-func (s *Set) GetMaxLevel() int {
-	return s.skiplist.MaxLevel
-}
+// // GetMaxLevel returns MaxLevel fo the underlying skip list.
+// func (s *Set) GetMaxLevel() int {
+// 	return s.skiplist.MaxLevel
+// }

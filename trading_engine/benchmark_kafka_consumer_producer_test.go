@@ -51,7 +51,7 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 		msgChan := consumer.GetMessageChan()
 		for j := 0; j < n; j++ {
 			msg := <-msgChan
-			consumer.MarkOffset(msg, "")
+			// consumer.MarkOffset(msg, "")
 			messages <- msg.Value
 		}
 	}
@@ -69,6 +69,9 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 		for msg := range messages {
 			var order trading_engine.Order
 			order.FromJSON(msg)
+			if order.Price == 0 {
+				log.Fatalln(string(msg), order)
+			}
 			orders <- order
 		}
 	}
@@ -134,9 +137,9 @@ func BenchmarkKafkaConsumerProducer(benchmark *testing.B) {
 		tradesCompleted,
 		float64(ordersCompleted)/timeout,
 		float64(tradesCompleted)/timeout,
-		engine.GetOrderBook().GetMarket().Len(),
+		engine.GetOrderBook().GetMarket()[0].Len(),
 		engine.GetOrderBook().GetLowestAsk(),
-		engine.GetOrderBook().GetMarket().Len(),
+		engine.GetOrderBook().GetMarket()[1].Len(),
 		engine.GetOrderBook().GetHighestBid(),
 		timeout,
 	)

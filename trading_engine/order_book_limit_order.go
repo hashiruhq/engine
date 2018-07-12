@@ -3,14 +3,15 @@ package trading_engine
 func (book *orderBook) processLimitBuy(order Order) []Trade {
 	trades := make([]Trade, 0, 0)
 	if book.LowestAsk <= order.Price && book.LowestAsk != 0 {
-		iterator := book.PricePoints.Seek(book.LowestAsk)
+		iterator := book.SellEntries.Seek(book.LowestAsk)
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
 			for order.Price >= book.LowestAsk {
 				pricePoint := iterator.Value()
-				for index := 0; index < len(pricePoint.SellBookEntries); index++ {
-					sellEntry := &pricePoint.SellBookEntries[index]
+				complete := false
+				for index := 0; index < len(pricePoint.Entries); index++ {
+					sellEntry := &pricePoint.Entries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
 					if sellEntry.Amount >= order.Amount {
 						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, order.Amount, sellEntry.Order.Price))
@@ -18,8 +19,9 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 						if sellEntry.Amount == 0 {
 							book.removeSellBookEntry(sellEntry, pricePoint, index)
 						}
-						iterator.Close()
-						return trades
+
+						complete = true
+						break
 					}
 
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
@@ -33,10 +35,23 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 					}
 				}
 
-				if ok := iterator.Next(); ok {
-					if len(iterator.Value().SellBookEntries) > 0 {
-						book.LowestAsk = iterator.Key()
+				if complete {
+					if len(pricePoint.Entries) != 0 {
+						iterator.Close()
+						return trades
 					}
+					if ok := iterator.Next(); ok {
+						book.LowestAsk = iterator.Key()
+						iterator.Close()
+						return trades
+					}
+					book.LowestAsk = 0
+					iterator.Close()
+					return trades
+				}
+
+				if ok := iterator.Next(); ok {
+					book.LowestAsk = iterator.Key()
 				} else {
 					book.LowestAsk = 0
 					break
@@ -58,14 +73,15 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 func (book *orderBook) processLimitSell(order Order) []Trade {
 	trades := make([]Trade, 0, 0)
 	if book.HighestBid >= order.Price && book.HighestBid != 0 {
-		iterator := book.PricePoints.Seek(book.HighestBid)
+		iterator := book.BuyEntries.Seek(book.HighestBid)
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
 			for order.Price <= book.HighestBid {
 				pricePoint := iterator.Value()
-				for index := 0; index < len(pricePoint.BuyBookEntries); index++ {
-					buyEntry := &pricePoint.BuyBookEntries[index]
+				complete := false
+				for index := 0; index < len(pricePoint.Entries); index++ {
+					buyEntry := &pricePoint.Entries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
 					if buyEntry.Amount >= order.Amount {
 						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, order.Amount, buyEntry.Order.Price))
@@ -73,8 +89,8 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 						if buyEntry.Amount == 0 {
 							book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						}
-						iterator.Close()
-						return trades
+						complete = true
+						break
 					}
 
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
@@ -88,10 +104,23 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 					}
 				}
 
-				if ok := iterator.Previous(); ok {
-					if len(iterator.Value().BuyBookEntries) > 0 {
-						book.HighestBid = iterator.Key()
+				if complete {
+					if len(pricePoint.Entries) != 0 {
+						iterator.Close()
+						return trades
 					}
+					if ok := iterator.Previous(); ok {
+						book.HighestBid = iterator.Key()
+						iterator.Close()
+						return trades
+					}
+					book.HighestBid = 0
+					iterator.Close()
+					return trades
+				}
+
+				if ok := iterator.Previous(); ok {
+					book.HighestBid = iterator.Key()
 				} else {
 					book.HighestBid = 0
 					break

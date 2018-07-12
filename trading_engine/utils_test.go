@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 	"trading_engine/net"
+	"trading_engine/trading_engine"
 
 	"github.com/Shopify/sarama"
 )
@@ -39,7 +40,7 @@ func generateOrdersInKafka(n int) {
 		side := int8(1 + rand.Intn(2)%2)
 		producer.Input() <- &sarama.ProducerMessage{
 			Topic: kafkaOrderTopic,
-			Value: sarama.ByteEncoder(([]byte)(fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": %d, "amount": %d, "side": %d, "category": 1}`, id, price, amount, side))),
+			Value: sarama.ByteEncoder(([]byte)(fmt.Sprintf(`{"base":"eth","quote":"btc","id":"%s","price":"%d","amount":"%d","side":%d,"type":1}`, id, price, amount, side))),
 		}
 	}
 
@@ -53,7 +54,7 @@ func generateOrdersInKafka(n int) {
 // The file is opened with append and 0644 permissions
 func GenerateRandomRecordsInFile(file *string, n int) {
 	rand.Seed(42)
-	fh, err := os.OpenFile(*file, os.O_WRONLY, 0644)
+	fh, err := os.OpenFile(*file, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -63,7 +64,32 @@ func GenerateRandomRecordsInFile(file *string, n int) {
 		price := 10000100 - 3*i - int(math.Ceil(10000*rand.Float64()))
 		amount := 10001 - int(math.Ceil(10000*rand.Float64()))
 		side := int8(1 + rand.Intn(2)%2)
-		str := fmt.Sprintf(`{"base": "sym", "market": "tst", "id":"%s", "price": %d, "amount": %d, "side": %d, "category": 1}`+"\n", id, price, amount, side)
+		str := fmt.Sprintf(`{"base":"eth","quote":"btc","id":"%s","price":"%d","amount":"%d","side":%d,"type":1}`+"\n", id, price, amount, side)
 		fh.WriteString(str)
 	}
+}
+
+func PrintOrderLogs(engine trading_engine.TradingEngine, ordersCompleted int, startTime int64) {
+	endTime := time.Now().UnixNano()
+	timeout := (float64)(float64(time.Nanosecond) * float64(endTime-startTime) / float64(time.Second))
+	fmt.Printf(
+		"Total Orders: %d\n"+
+			// "Total Trades: %d\n"+
+			"Orders/second: %f\n"+
+			// "Trades/second: %f\n"+
+			"Pending Buy: %d\n"+
+			"Lowest Ask: %d\n"+
+			"Pending Sell: %d\n"+
+			"Highest Bid: %d\n"+
+			"Duration (seconds): %f\n\n",
+		ordersCompleted,
+		// tradesCompleted,
+		float64(ordersCompleted)/timeout,
+		// float64(tradesCompleted)/timeout,
+		engine.GetOrderBook().GetMarket()[0].Len(),
+		engine.GetOrderBook().GetLowestAsk(),
+		engine.GetOrderBook().GetMarket()[1].Len(),
+		engine.GetOrderBook().GetHighestBid(),
+		timeout,
+	)
 }

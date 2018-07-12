@@ -88,9 +88,9 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 		tradesCompleted,
 		float64(ordersCompleted)/timeout,
 		float64(tradesCompleted)/timeout,
-		engine.GetOrderBook().GetMarket().Len(),
+		engine.GetOrderBook().GetMarket()[0].Len(),
 		engine.GetOrderBook().GetLowestAsk(),
-		engine.GetOrderBook().GetMarket().Len(),
+		engine.GetOrderBook().GetMarket()[1].Len(),
 		engine.GetOrderBook().GetHighestBid(),
 		timeout,
 	)
