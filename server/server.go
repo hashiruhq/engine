@@ -3,6 +3,7 @@ package server
 import (
 	"log"
 	"net/http"
+
 	// import http profilling when the server profilling configuration is set
 	_ "net/http/pprof"
 	"os"

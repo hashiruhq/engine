@@ -68,6 +68,7 @@ services:
   #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   #   volumes:
   #     - /var/run/docker.sock:/var/run/docker.sock
+
   # Debug: Kafka Manager
   kafka_manager:
     image: sheepkiller/kafka-manager

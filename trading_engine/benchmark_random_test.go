@@ -9,7 +9,7 @@ import (
 	"trading_engine/trading_engine"
 )
 
-var arr []trading_engine.Order = make([]trading_engine.Order, 0, 1000000)
+var arr []trading_engine.Order = make([]trading_engine.Order, 0, 2000000)
 
 func init() {
 	rand.Seed(42)

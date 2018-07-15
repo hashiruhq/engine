@@ -87,7 +87,7 @@ func (conn *kafkaPartitionConsumer) ResetOffset(topic string, partition int32, o
 // Close the consumer connection
 func (conn *kafkaPartitionConsumer) Close() error {
 	err := conn.consumer.Close()
-	close(conn.inputs)
+	// close(conn.inputs)
 	return err
 }
 
