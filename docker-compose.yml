@@ -21,7 +21,7 @@ services:
       - "2181:2181"
     restart: always
   kafka:
-    image: wurstmeister/kafka
+    image: wurstmeister/kafka:1.1.0
     ports:
       - "9092:9092"
     restart: always
@@ -43,14 +43,5 @@ services:
     image: trading_engine:local
     volumes:
       - ./backups:/root/backups
-
-  # # Debug: Kafka Manager
-  # kafka_manager:
-  #   image: sheepkiller/kafka-manager
-  #   ports:
-  #     - "9000:9000"
-  #   environment:
-  #     ZK_HOSTS: zookeeper:2181
-  #   restart: always
 volumes:
   grafana:
