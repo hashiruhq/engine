@@ -28,7 +28,7 @@ markets:
     base_max: 10000 # not used yet
     backup:
       interval: 15
-      path: /root/backups/btc.usd.json
+      path: /root/backups/eth.usd.json
     listen: 
       broker: requests
       topic: engine.orders.eth.usd
@@ -41,14 +41,14 @@ brokers:
     requests: 
       name: trading_engine_test
       hosts: 
-        - kafka.engine.democlient.info:9092
+        - kafka:9092
       topics:
         - engine.orders.btc.usd
         - engine.orders.eth.usd
   producers:
     events: 
       hosts: 
-        - kafka.engine.democlient.info:9092
+        - kafka:9092
       topics: 
         - engine.events.btc.usd
         - engine.events.eth.usd

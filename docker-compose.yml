@@ -43,39 +43,14 @@ services:
     image: trading_engine:local
     volumes:
       - ./backups:/root/backups
-    
-  # kafka_second:
-  #   image: wurstmeister/kafka
-  #   ports:
-  #     - "9093:9092"
-  #   restart: always
-  #   environment:
-  #     KAFKA_ADVERTISED_HOST_NAME: kafka_second
-  #     # HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
-  #     HOSTNAME_COMMAND: "echo 'kafka_second'"
-  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  # kafka_third:
-  #   image: wurstmeister/kafka
-  #   ports:
-  #     - "9094:9092"
-  #   restart: always
-  #   environment:
-  #     KAFKA_ADVERTISED_HOST_NAME: kafka_third
-  #     # HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
-  #     HOSTNAME_COMMAND: "echo 'kafka_third'"
-  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
 
-  # Debug: Kafka Manager
-  kafka_manager:
-    image: sheepkiller/kafka-manager
-    ports:
-      - "9000:9000"
-    environment:
-      ZK_HOSTS: zookeeper:2181
-    restart: always
+  # # Debug: Kafka Manager
+  # kafka_manager:
+  #   image: sheepkiller/kafka-manager
+  #   ports:
+  #     - "9000:9000"
+  #   environment:
+  #     ZK_HOSTS: zookeeper:2181
+  #   restart: always
 volumes:
   grafana:
