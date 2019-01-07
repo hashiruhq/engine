@@ -21,14 +21,14 @@ services:
       - "2181:2181"
     restart: always
   kafka:
-    image: wurstmeister/kafka
+    image: wurstmeister/kafka:1.1.0
     ports:
       - "9092:9092"
     restart: always
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: "159.65.117.161"
+      KAFKA_ADVERTISED_HOST_NAME: "209.97.180.83"
       # HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
-      HOSTNAME_COMMAND: "echo '159.65.117.161'"
+      HOSTNAME_COMMAND: "echo '209.97.180.83'"
       KAFKA_CREATE_TOPICS: engine.orders.btc.usd:1:1,engine.orders.eth.usd:1:1,engine.events.btc.usd:3:1,engine.events.eth.usd:3:1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LOG_RETENTION_HOURS_PER_TOPIC: 3
