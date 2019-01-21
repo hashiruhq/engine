@@ -1,7 +1,7 @@
 package trading_engine
 
 import (
-	"trading_engine/conv"
+	"gitlab.com/around25/products/matching-engine/conv"
 
 	"github.com/francoispqt/gojay"
 )

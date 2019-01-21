@@ -2,7 +2,8 @@ package conv_test
 
 import (
 	"testing"
-	"trading_engine/conv"
+
+	"gitlab.com/around25/products/matching-engine/conv"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

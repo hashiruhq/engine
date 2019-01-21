@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"log"
-	"trading_engine/server"
+
+	"gitlab.com/around25/products/matching-engine/server"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

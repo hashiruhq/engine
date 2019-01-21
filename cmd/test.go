@@ -8,8 +8,9 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"trading_engine/net"
-	"trading_engine/server"
+
+	"gitlab.com/around25/products/matching-engine/net"
+	"gitlab.com/around25/products/matching-engine/server"
 
 	"github.com/Shopify/sarama"
 	"github.com/spf13/cobra"

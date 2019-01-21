@@ -1,7 +1,7 @@
 package queue
 
 import (
-	"trading_engine/trading_engine"
+	"gitlab.com/around25/products/matching-engine/trading_engine"
 )
 
 var (

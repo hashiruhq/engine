@@ -2,7 +2,8 @@ package trading_engine_test
 
 import (
 	"testing"
-	"trading_engine/trading_engine"
+
+	"gitlab.com/around25/products/matching-engine/trading_engine"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

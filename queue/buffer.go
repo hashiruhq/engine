@@ -2,7 +2,8 @@ package queue
 
 import (
 	"runtime"
-	"trading_engine/trading_engine"
+
+	"gitlab.com/around25/products/matching-engine/trading_engine"
 )
 
 // Buffer structure to process messages in a buffered ring

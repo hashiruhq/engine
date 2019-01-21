@@ -4,7 +4,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"trading_engine/trading_engine"
+
+	"gitlab.com/around25/products/matching-engine/trading_engine"
 )
 
 // BackupMarket saves the given snapshot of the order book as JSON into the backups folder with the name of the market pair

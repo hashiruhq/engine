@@ -2,8 +2,9 @@ package benchmarks_test
 
 import (
 	"testing"
-	"trading_engine/queue"
-	"trading_engine/trading_engine"
+
+	"gitlab.com/around25/products/matching-engine/queue"
+	"gitlab.com/around25/products/matching-engine/trading_engine"
 
 	"github.com/Shopify/sarama"
 )

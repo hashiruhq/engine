@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 	"time"
-	"trading_engine/net"
-	"trading_engine/trading_engine"
+
+	"gitlab.com/around25/products/matching-engine/net"
+	"gitlab.com/around25/products/matching-engine/trading_engine"
 )
 
 func BenchmarkKafkaConsumer(benchmark *testing.B) {
