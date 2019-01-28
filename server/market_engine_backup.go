@@ -5,12 +5,12 @@ import (
 	"log"
 	"os"
 
-	"gitlab.com/around25/products/matching-engine/trading_engine"
+	"gitlab.com/around25/products/matching-engine/engine"
 )
 
 // BackupMarket saves the given snapshot of the order book as JSON into the backups folder with the name of the market pair
 // - It first saves into a temporary file before moving the file to the final localtion
-func (mkt *marketEngine) BackupMarket(market trading_engine.Market) error {
+func (mkt *marketEngine) BackupMarket(market engine.Market) error {
 	file := mkt.config.config.Backup.Path + ".tmp"
 	rawMarket, _ := market.ToJSON()
 	ioutil.WriteFile(file, rawMarket, 0644)
@@ -28,7 +28,7 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 		return
 	}
 
-	var market trading_engine.Market
+	var market engine.Market
 	market.FromJSON(content)
 
 	// load all records from the backup into the order book
@@ -46,6 +46,6 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 	return nil
 }
 
-func (mkt *marketEngine) LoadMarket(market trading_engine.Market) {
+func (mkt *marketEngine) LoadMarket(market engine.Market) {
 	mkt.engine.LoadMarket(market)
 }

@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
+	"gitlab.com/around25/products/matching-engine/engine"
 	"gitlab.com/around25/products/matching-engine/net"
-	"gitlab.com/around25/products/matching-engine/trading_engine"
 
 	"github.com/Shopify/sarama"
 )
@@ -21,11 +21,11 @@ type MarketEngine interface {
 // marketEngine structure
 type marketEngine struct {
 	name           string
-	engine         trading_engine.TradingEngine
+	engine         engine.TradingEngine
 	inputs         chan *sarama.ConsumerMessage
-	messages       chan trading_engine.Event
-	orders         chan trading_engine.Event
-	trades         chan trading_engine.Event
+	messages       chan engine.Event
+	orders         chan engine.Event
+	trades         chan engine.Event
 	backup         chan bool
 	producer       net.KafkaProducer
 	backupProducer net.KafkaProducer
@@ -47,11 +47,11 @@ func NewMarketEngine(config MarketEngineConfig) MarketEngine {
 		consumer: config.consumer,
 		config:   config,
 		name:     config.config.Base + "_" + config.config.Quote,
-		engine:   trading_engine.NewTradingEngine(),
+		engine:   engine.NewTradingEngine(),
 		backup:   make(chan bool),
-		orders:   make(chan trading_engine.Event, 20000),
-		trades:   make(chan trading_engine.Event, 20000),
-		messages: make(chan trading_engine.Event, 20000),
+		orders:   make(chan engine.Event, 20000),
+		trades:   make(chan engine.Event, 20000),
+		messages: make(chan engine.Event, 20000),
 	}
 }
 
@@ -73,7 +73,7 @@ func (mkt *marketEngine) Start() {
 func (mkt *marketEngine) Process(msg *sarama.ConsumerMessage) {
 	// Monitor: Increment the number of messages that has been received by the market
 	messagesQueued.WithLabelValues(mkt.name).Inc()
-	mkt.messages <- trading_engine.NewEvent(msg)
+	mkt.messages <- engine.NewEvent(msg)
 }
 
 // Close the market by closing all communication channels

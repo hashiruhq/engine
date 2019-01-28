@@ -3,7 +3,7 @@ package queue
 import (
 	"runtime"
 
-	"gitlab.com/around25/products/matching-engine/trading_engine"
+	"gitlab.com/around25/products/matching-engine/engine"
 )
 
 // Buffer structure to process messages in a buffered ring
@@ -17,7 +17,7 @@ type Buffer struct {
 	padding3           [8]uint64
 	readerIndex        uint64
 	padding4           [8]uint64
-	contents           []trading_engine.Event
+	contents           []engine.Event
 	padding5           [8]uint64
 	queueSize          uint64
 	indexMask          uint64
@@ -27,12 +27,12 @@ type Buffer struct {
 func NewBuffer(queueSize uint64) *Buffer {
 	return &Buffer{
 		lastCommittedIndex: 0, nextFreeIndex: 1, readerIndex: 1, queueSize: queueSize, indexMask: queueSize - 1,
-		contents: make([]trading_engine.Event, queueSize),
+		contents: make([]engine.Event, queueSize),
 	}
 }
 
 // Write a new value to the ring buffer
-func (buffer *Buffer) Write(value trading_engine.Event) {
+func (buffer *Buffer) Write(value engine.Event) {
 	buffer.nextFreeIndex++
 	var myIndex = buffer.nextFreeIndex - 1
 	//Wait for reader to catch up, so we don't clobber a slot which it is (or will be) reading
@@ -49,7 +49,7 @@ func (buffer *Buffer) Write(value trading_engine.Event) {
 }
 
 // Read next element from the buffer
-func (buffer *Buffer) Read() trading_engine.Event {
+func (buffer *Buffer) Read() engine.Event {
 	buffer.readerIndex++
 	var myIndex = buffer.readerIndex - 1
 	//If reader has out-run writer, wait for a value to be committed

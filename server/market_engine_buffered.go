@@ -6,9 +6,9 @@ import (
 	"os"
 	"time"
 
+	"gitlab.com/around25/products/matching-engine/engine"
 	"gitlab.com/around25/products/matching-engine/net"
 	"gitlab.com/around25/products/matching-engine/queue"
-	"gitlab.com/around25/products/matching-engine/trading_engine"
 
 	"github.com/Shopify/sarama"
 )
@@ -16,7 +16,7 @@ import (
 // bufferedMarketEngine structure
 type bufferedMarketEngine struct {
 	name           string
-	engine         trading_engine.TradingEngine
+	engine         engine.TradingEngine
 	messages       *queue.Buffer
 	orders         *queue.Buffer
 	trades         *queue.Buffer
@@ -34,7 +34,7 @@ func NewBufferedMarketEngine(config MarketEngineConfig) MarketEngine {
 		consumer: config.consumer,
 		config:   config,
 		name:     config.config.Base + "_" + config.config.Quote,
-		engine:   trading_engine.NewTradingEngine(),
+		engine:   engine.NewTradingEngine(),
 		backup:   make(chan bool),
 		messages: queue.NewBuffer(1 << 15),
 		orders:   queue.NewBuffer(1 << 15),
@@ -60,7 +60,7 @@ func (mkt *bufferedMarketEngine) Start() {
 func (mkt *bufferedMarketEngine) Process(msg *sarama.ConsumerMessage) {
 	// Monitor: Increment the number of messages that has been received by the market
 	messagesQueued.WithLabelValues(mkt.name).Inc()
-	mkt.messages.Write(trading_engine.NewEvent(msg))
+	mkt.messages.Write(engine.NewEvent(msg))
 }
 
 // Close the market by closing all communication channels
@@ -170,7 +170,7 @@ func (mkt *bufferedMarketEngine) PublishTrades() {
 
 // BackupMarket saves the given snapshot of the order book as JSON into the backups folder with the name of the market pair
 // - It first saves into a temporary file before moving the file to the final localtion
-func (mkt *bufferedMarketEngine) BackupMarket(market trading_engine.Market) error {
+func (mkt *bufferedMarketEngine) BackupMarket(market engine.Market) error {
 	file := mkt.config.config.Backup.Path + ".tmp"
 	rawMarket, _ := market.ToJSON()
 	ioutil.WriteFile(file, rawMarket, 0644)
@@ -188,7 +188,7 @@ func (mkt *bufferedMarketEngine) LoadMarketFromBackup() (err error) {
 		return
 	}
 
-	var market trading_engine.Market
+	var market engine.Market
 	market.FromJSON(content)
 
 	// load all records from the backup into the order book
@@ -206,6 +206,6 @@ func (mkt *bufferedMarketEngine) LoadMarketFromBackup() (err error) {
 	return nil
 }
 
-func (mkt *bufferedMarketEngine) LoadMarket(market trading_engine.Market) {
+func (mkt *bufferedMarketEngine) LoadMarket(market engine.Market) {
 	mkt.engine.LoadMarket(market)
 }

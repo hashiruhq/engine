@@ -4,9 +4,9 @@ import (
 	"log"
 	"testing"
 
+	"gitlab.com/around25/products/matching-engine/engine"
 	"gitlab.com/around25/products/matching-engine/net"
 	"gitlab.com/around25/products/matching-engine/queue"
-	"gitlab.com/around25/products/matching-engine/trading_engine"
 
 	"github.com/Shopify/sarama"
 )
@@ -23,7 +23,7 @@ func init() {
 }
 
 func BenchmarkNetworkProcessChannels(benchmark *testing.B) {
-	engine := trading_engine.NewTradingEngine()
+	ngin := engine.NewTradingEngine()
 	ordersCompleted := 0
 	// tradesCompleted := 0
 	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker})
@@ -33,9 +33,9 @@ func BenchmarkNetworkProcessChannels(benchmark *testing.B) {
 	defer consumer.Close()
 	messages := make(chan []byte, 20000)
 	defer close(messages)
-	orders := make(chan trading_engine.Order, 20000)
+	orders := make(chan engine.Order, 20000)
 	defer close(orders)
-	tradeChan := make(chan []trading_engine.Trade, 20000)
+	tradeChan := make(chan []engine.Trade, 20000)
 	done := make(chan bool)
 	defer close(done)
 	finishTrades := make(chan bool)
@@ -57,17 +57,17 @@ func BenchmarkNetworkProcessChannels(benchmark *testing.B) {
 		}
 	}
 
-	jsonDecode := func(messages <-chan []byte, orders chan<- trading_engine.Order) {
+	jsonDecode := func(messages <-chan []byte, orders chan<- engine.Order) {
 		for msg := range messages {
-			var order trading_engine.Order
+			var order engine.Order
 			order.FromJSON(msg)
 			orders <- order
 		}
 	}
 
-	processOrders := func(engine trading_engine.TradingEngine, orders <-chan trading_engine.Order, tradeChan chan<- []trading_engine.Trade, n int) {
+	processOrders := func(ngin engine.TradingEngine, orders <-chan engine.Order, tradeChan chan<- []engine.Trade, n int) {
 		for order := range orders {
-			trades := engine.Process(order)
+			trades := ngin.Process(order)
 			ordersCompleted++
 			// tradesCompleted += len(trades)
 			if len(trades) > 0 {
@@ -81,7 +81,7 @@ func BenchmarkNetworkProcessChannels(benchmark *testing.B) {
 		}
 	}
 
-	publishTrades := func(tradeChan <-chan []trading_engine.Trade, finishTrades chan bool, closeChan bool) {
+	publishTrades := func(tradeChan <-chan []engine.Trade, finishTrades chan bool, closeChan bool) {
 		for trades := range tradeChan {
 			for _, trade := range trades {
 				rawTrade, _ := trade.ToJSON() // @todo thread error on encoding json object (low priority)
@@ -102,7 +102,7 @@ func BenchmarkNetworkProcessChannels(benchmark *testing.B) {
 	go receiveProducerErrors()
 	go receiveMessages(messages, benchmark.N)
 	go jsonDecode(messages, orders)
-	go processOrders(engine, orders, tradeChan, benchmark.N)
+	go processOrders(ngin, orders, tradeChan, benchmark.N)
 	go publishTrades(tradeChan, finishTrades, true)
 
 	<-done
@@ -112,7 +112,7 @@ func BenchmarkNetworkProcessChannels(benchmark *testing.B) {
 }
 
 func BenchmarkNetworkProcessEventRing(b *testing.B) {
-	engine := trading_engine.NewTradingEngine()
+	ngin := engine.NewTradingEngine()
 	// ordersCompleted := 0
 	// tradesCompleted := 0
 	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker})
@@ -138,7 +138,7 @@ func BenchmarkNetworkProcessEventRing(b *testing.B) {
 		for j := 0; j < n; j++ {
 			msg := <-msgChan
 			// consumer.MarkOffset(msg, "")
-			q.Write(trading_engine.NewEvent(msg))
+			q.Write(engine.NewEvent(msg))
 		}
 	}(msgQueue, b.N)
 
@@ -150,13 +150,13 @@ func BenchmarkNetworkProcessEventRing(b *testing.B) {
 		}
 	}(b.N)
 
-	go func(oq, tq *queue.Buffer, engine trading_engine.TradingEngine, n int) {
+	go func(oq, tq *queue.Buffer, ngin engine.TradingEngine, n int) {
 		for i := 0; i < n; i++ {
 			event := oq.Read()
-			event.SetTrades(engine.Process(event.Order))
+			event.SetTrades(ngin.Process(event.Order))
 			tq.Write(event)
 		}
-	}(orderQueue, tradeQueue, engine, b.N)
+	}(orderQueue, tradeQueue, ngin, b.N)
 
 	receiveProducerErrors := func() {
 		errors := producer.Errors()

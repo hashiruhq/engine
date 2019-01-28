@@ -1,7 +1,7 @@
 package queue
 
 import (
-	"gitlab.com/around25/products/matching-engine/trading_engine"
+	"gitlab.com/around25/products/matching-engine/engine"
 )
 
 // Dispatcher contains a pool of worker channels to process jobs
@@ -14,11 +14,11 @@ type dispatcher struct {
 	MaxWorkers int
 	WorkerPool chan chan Job
 	Workers    []Worker
-	Engine     trading_engine.TradingEngine
+	Engine     engine.TradingEngine
 }
 
 // NewDispatcher creates a new dispatcher
-func NewDispatcher(engine trading_engine.TradingEngine, maxWorkers int) Dispatcher {
+func NewDispatcher(engine engine.TradingEngine, maxWorkers int) Dispatcher {
 	pool := make(chan chan Job, maxWorkers)
 	workers := make([]Worker, 0, maxWorkers)
 	return &dispatcher{

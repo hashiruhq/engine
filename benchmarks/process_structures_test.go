@@ -3,8 +3,8 @@ package benchmarks_test
 import (
 	"testing"
 
+	"gitlab.com/around25/products/matching-engine/engine"
 	"gitlab.com/around25/products/matching-engine/queue"
-	"gitlab.com/around25/products/matching-engine/trading_engine"
 
 	"github.com/Shopify/sarama"
 )
@@ -13,8 +13,8 @@ func BenchmarkProcessChannels(b *testing.B) {
 	completed := 0
 	const SIZE = 10000
 	messages := make(chan []byte, SIZE)
-	orders := make(chan trading_engine.Order, SIZE)
-	tradeChan := make(chan []trading_engine.Trade, SIZE)
+	orders := make(chan engine.Order, SIZE)
+	tradeChan := make(chan []engine.Trade, SIZE)
 	done := make(chan bool)
 	defer close(done)
 	receiveMessages := func(messages chan<- []byte, n int) {
@@ -23,22 +23,22 @@ func BenchmarkProcessChannels(b *testing.B) {
 		}
 		close(messages)
 	}
-	jsonDecode := func(messages <-chan []byte, orders chan<- trading_engine.Order) {
+	jsonDecode := func(messages <-chan []byte, orders chan<- engine.Order) {
 		for msg := range messages {
-			var order trading_engine.Order
+			var order engine.Order
 			order.FromJSON(msg)
 			orders <- order
 		}
 		close(orders)
 	}
-	processOrders := func(orders <-chan trading_engine.Order, tradeChan chan<- []trading_engine.Trade, n int) {
+	processOrders := func(orders <-chan engine.Order, tradeChan chan<- []engine.Trade, n int) {
 		for order := range orders {
-			trades := []trading_engine.Trade{trading_engine.NewTrade(order.ID, order.ID, order.Amount, order.Price)}
+			trades := []engine.Trade{engine.NewTrade(order.ID, order.ID, order.Amount, order.Price)}
 			tradeChan <- trades
 		}
 		close(tradeChan)
 	}
-	publishTrades := func(tradeChan <-chan []trading_engine.Trade) {
+	publishTrades := func(tradeChan <-chan []engine.Trade) {
 		for trades := range tradeChan {
 			for _, trade := range trades {
 				trade.ToJSON()
@@ -67,7 +67,7 @@ func BenchmarkProcessEventRing(b *testing.B) {
 
 	go func(q *queue.Buffer, n int) {
 		for i := 0; i < n; i++ {
-			q.Write(trading_engine.NewEvent(&sarama.ConsumerMessage{Value: []byte(`{"base": "sym","quote": "tst","id":"TST_1","price": "1312213.00010201","amount": "8483828.29993942","side": 1,"type": 1,"stop": 1,"stop_price": "13132311.00010201","funds": "101000101.33232313"}`)}))
+			q.Write(engine.NewEvent(&sarama.ConsumerMessage{Value: []byte(`{"base": "sym","quote": "tst","id":"TST_1","price": "1312213.00010201","amount": "8483828.29993942","side": 1,"type": 1,"stop": 1,"stop_price": "13132311.00010201","funds": "101000101.33232313"}`)}))
 		}
 	}(msgQueue, b.N)
 
@@ -82,7 +82,7 @@ func BenchmarkProcessEventRing(b *testing.B) {
 	go func(n int) {
 		for i := 0; i < n; i++ {
 			event := orderQueue.Read()
-			event.SetTrades([]trading_engine.Trade{trading_engine.NewTrade(event.Order.ID, event.Order.ID, event.Order.Amount, event.Order.Price)})
+			event.SetTrades([]engine.Trade{engine.NewTrade(event.Order.ID, event.Order.ID, event.Order.Amount, event.Order.Price)})
 			tradeQueue.Write(event)
 		}
 	}(b.N)

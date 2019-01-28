@@ -1,7 +1,7 @@
 package queue
 
 import (
-	"gitlab.com/around25/products/matching-engine/trading_engine"
+	"gitlab.com/around25/products/matching-engine/engine"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 
 // Job structure to process
 type Job struct {
-	Order trading_engine.Order
+	Order engine.Order
 }
 
 // Worker contains information about the worker pool and job channel
@@ -23,7 +23,7 @@ type Worker interface {
 }
 
 type worker struct {
-	Engine     trading_engine.TradingEngine
+	Engine     engine.TradingEngine
 	WorkerPool chan chan Job
 	JobChannel chan Job
 	quit       chan bool
@@ -33,9 +33,9 @@ type worker struct {
 var JobQueue chan Job = make(chan Job, MaxQueue)
 
 // NewWorker creates a new worker for the given worker pool
-func NewWorker(engine trading_engine.TradingEngine, workerPool chan chan Job) Worker {
+func NewWorker(ngin engine.TradingEngine, workerPool chan chan Job) Worker {
 	return &worker{
-		Engine:     engine,
+		Engine:     ngin,
 		WorkerPool: workerPool,
 		JobChannel: make(chan Job),
 		quit:       make(chan bool),
