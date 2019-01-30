@@ -140,6 +140,14 @@ func TestPricePointCreation(t *testing.T) {
 	})
 }
 
+func TestSkiplists(t *testing.T) {
+	Convey("Check skiplist implementation", t, func() {
+		skipNode := node{}
+		So(skipNode.next(), ShouldBeNil)
+		So(maxInt(5, 1), ShouldEqual, 5)
+	})
+}
+
 func TestCheckCompareFunction(t *testing.T) {
 	Convey("Check compare function", t, func() {
 		So(cmp_func(10, 3), ShouldBeFalse)

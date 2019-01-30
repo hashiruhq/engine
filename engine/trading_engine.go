@@ -6,7 +6,7 @@ type TradingEngine interface {
 	GetOrderBook() OrderBook
 	BackupMarket() Market
 	LoadMarket(Market) error
-	CancelOrder(order Order) *BookEntry
+	CancelOrder(order Order) bool
 	ProcessEvent(order Order) interface{}
 }
 
@@ -28,8 +28,8 @@ func (ngin *tradingEngine) Process(order Order) []Trade {
 	return ngin.OrderBook.Process(order)
 }
 
-func (ngin *tradingEngine) CancelOrder(order Order) *BookEntry {
-	return ngin.OrderBook.Cancel(order.ID)
+func (ngin *tradingEngine) CancelOrder(order Order) bool {
+	return ngin.OrderBook.Cancel(order)
 }
 
 func (ngin *tradingEngine) LoadMarket(market Market) error {

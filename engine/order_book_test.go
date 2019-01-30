@@ -136,6 +136,36 @@ func TestOrderBookProcessing(t *testing.T) {
 			So(backup.HighestBid, ShouldBeLessThan, backup.LowestAsk)
 		})
 
+		Convey("Check if the lowest ask is moved after a completed limit order", func() {
+			orderBook := NewOrderBook()
+			orderBook.Process(NewOrder("mk_1", uint64(110000000), uint64(12000000000), SELL, LimitOrder, EventTypeNewOrder))
+			orderBook.Process(NewOrder("mk_2", uint64(120000000), uint64(12000000000), SELL, LimitOrder, EventTypeNewOrder))
+			trades := orderBook.Process(NewOrder("mk_3", uint64(110000000), uint64(12000000000), BUY, LimitOrder, EventTypeNewOrder))
+			So(len(trades), ShouldEqual, 1)
+			So(trades[0].Price, ShouldEqual, 110000000)
+			So(trades[0].Amount, ShouldEqual, 12000000000)
+		})
+
+		Convey("Check if the highest bid is moved after a completed limit order", func() {
+			orderBook := NewOrderBook()
+			orderBook.Process(NewOrder("mk_1", uint64(120000000), uint64(12000000000), BUY, LimitOrder, EventTypeNewOrder))
+			orderBook.Process(NewOrder("mk_2", uint64(110000000), uint64(12000000000), BUY, LimitOrder, EventTypeNewOrder))
+			trades := orderBook.Process(NewOrder("mk_3", uint64(110000000), uint64(12000000000), SELL, LimitOrder, EventTypeNewOrder))
+			So(len(trades), ShouldEqual, 1)
+			So(trades[0].Price, ShouldEqual, 120000000)
+			So(trades[0].Amount, ShouldEqual, 12000000000)
+		})
+
+		Convey("Check if trades are returned if the pricepoint is not complete", func() {
+			orderBook := NewOrderBook()
+			orderBook.Process(NewOrder("mk_1", uint64(120000000), uint64(12000000000), BUY, LimitOrder, EventTypeNewOrder))
+			orderBook.Process(NewOrder("mk_2", uint64(110000000), uint64(12000000000), BUY, LimitOrder, EventTypeNewOrder))
+			trades := orderBook.Process(NewOrder("mk_3", uint64(110000000), uint64(11000000000), SELL, LimitOrder, EventTypeNewOrder))
+			So(len(trades), ShouldEqual, 1)
+			So(trades[0].Price, ShouldEqual, 120000000)
+			So(trades[0].Amount, ShouldEqual, 11000000000)
+		})
+
 		Convey("I should be able to add a market buy order in an existing market", func() {
 			orderBook := NewOrderBook()
 			orderBook.Process(NewOrder("mk_1", uint64(110000000), uint64(12000000000), SELL, LimitOrder, EventTypeNewOrder))
@@ -379,11 +409,25 @@ func TestOrderBookProcessing(t *testing.T) {
 			So(trades[0].Amount, ShouldEqual, 7000000000)
 		})
 
+		Convey("Should not process invalid order types", func() {
+			orderBook := NewOrderBook()
+			trades := orderBook.Process(Order{ID: "mk_1", Amount: 11000000000, EventType: 0, Type: MarketOrder, Side: SELL})
+			So(len(trades), ShouldEqual, 0)
+		})
+
+		Convey("I should receive null when poping an empty pending market orders list", func() {
+			orderBook := orderBook{}
+			buyOrder := orderBook.popMarketBuyOrder()
+			sellOrder := orderBook.popMarketSellOrder()
+			So(buyOrder, ShouldBeNil)
+			So(sellOrder, ShouldBeNil)
+		})
+
 		Convey("I should be able to cancel a sell order", func() {
 			orderBook := NewOrderBook()
-			orderBook.Process(NewOrder("TEST_15", uint64(110000000), uint64(800000000), 2, 1, 1))
-			bookEntry := orderBook.Cancel("TEST_15")
-			So(bookEntry, ShouldNotBeNil)
+			order := NewOrder("TEST_15", uint64(110000000), uint64(800000000), 2, 1, 1)
+			orderBook.Process(order)
+			So(orderBook.Cancel(order), ShouldBeTrue)
 
 			state := orderBook.GetMarket()
 			So(state[0].Len(), ShouldBeZeroValue)
@@ -392,9 +436,31 @@ func TestOrderBookProcessing(t *testing.T) {
 
 		Convey("I should be able to cancel a buy order", func() {
 			orderBook := NewOrderBook()
-			orderBook.Process(NewOrder("TEST_15", uint64(110000000), uint64(800000000), 1, 1, 1))
-			bookEntry := orderBook.Cancel("TEST_15")
-			So(bookEntry, ShouldNotBeNil)
+			order := NewOrder("TEST_15", uint64(110000000), uint64(800000000), 1, 1, 1)
+			orderBook.Process(order)
+			So(orderBook.Cancel(order), ShouldBeTrue)
+
+			state := orderBook.GetMarket()
+			So(state[0].Len(), ShouldBeZeroValue)
+			So(state[1].Len(), ShouldBeZeroValue)
+		})
+
+		Convey("I should be able to cancel a buy market order", func() {
+			orderBook := NewOrderBook()
+			order := Order{ID: "mk_1", Amount: 11000000000, Funds: 13200000000, EventType: EventTypeNewOrder, Type: MarketOrder, Side: BUY}
+			orderBook.Process(order)
+			So(orderBook.Cancel(order), ShouldBeTrue)
+
+			state := orderBook.GetMarket()
+			So(state[0].Len(), ShouldBeZeroValue)
+			So(state[1].Len(), ShouldBeZeroValue)
+		})
+
+		Convey("I should be able to cancel a sell market order", func() {
+			orderBook := NewOrderBook()
+			order := Order{ID: "mk_1", Amount: 11000000000, EventType: EventTypeNewOrder, Type: MarketOrder, Side: SELL}
+			orderBook.Process(order)
+			So(orderBook.Cancel(order), ShouldBeTrue)
 
 			state := orderBook.GetMarket()
 			So(state[0].Len(), ShouldBeZeroValue)
@@ -403,12 +469,21 @@ func TestOrderBookProcessing(t *testing.T) {
 
 		Convey("I should be able to cancel an invalid order", func() {
 			orderBook := NewOrderBook()
-			bookEntry := orderBook.Cancel("INVALID_1")
-			So(bookEntry, ShouldBeNil)
+			order := NewOrder("TEST_15", uint64(110000000), uint64(800000000), 1, 1, 1)
+			So(orderBook.Cancel(order), ShouldBeFalse)
 
 			state := orderBook.GetMarket()
 			So(state[0].Len(), ShouldBeZeroValue)
 			So(state[1].Len(), ShouldBeZeroValue)
+
+			order = Order{ID: "mk_1", Amount: 11000000000, EventType: EventTypeNewOrder, Type: MarketOrder, Side: SELL}
+			So(orderBook.Cancel(order), ShouldBeFalse)
+
+			order = Order{ID: "mk_1", Amount: 11000000000, EventType: EventTypeNewOrder, Type: MarketOrder, Side: BUY}
+			So(orderBook.Cancel(order), ShouldBeFalse)
+
+			order = Order{ID: "mk_1", Amount: 11000000000, EventType: EventTypeNewOrder, Type: 0, Side: BUY}
+			So(orderBook.Cancel(order), ShouldBeFalse)
 		})
 
 	})
