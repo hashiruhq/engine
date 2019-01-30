@@ -62,31 +62,30 @@ removed from the pending list and since the limit order was filled it would not 
 // This method automatically adds the remaining amount needed to be fill the market order to the list of
 // pending market buy orders.
 // @todo CH: Refactor this to support processing already added market orders that have not been fully filled
-func (book *orderBook) processMarketBuy(order Order) []Trade {
+func (book *orderBook) processMarketBuy(order Order) (Order, []Trade) {
 	trades := []Trade{}
-	fundsRemaining := order.Funds
-	amountRemaining := order.Amount
 	if book.LowestAsk != 0 {
 		iterator := book.SellEntries.Seek(book.LowestAsk)
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
-			for amountRemaining > 0 && fundsRemaining > 0 {
+			for order.Amount > 0 && order.Funds > 0 {
 				pricePoint := iterator.Value()
 				complete := false
 				// calculate how much we could afford at this price
-				amountAffordable := utils.Divide(fundsRemaining, iterator.Key(), AmountPrecision)
+				amountAffordable := utils.Divide(order.Funds, iterator.Key(), AmountPrecision)
 				for index := 0; index < len(pricePoint.Entries); index++ {
 					sellEntry := &pricePoint.Entries[index]
 
-					amount := utils.Min(amountRemaining, amountAffordable)
+					amount := utils.Min(order.Amount, amountAffordable)
 
 					// if we can fill the amount instantly and we have the necessary funds then fill the order and return trade
 					// if we can fill the amount instantly, but we don't have the necessary funds then fill as much as we can afford and return the trade
 					if sellEntry.Amount >= amount {
 						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, amount, sellEntry.Order.Price))
 						sellEntry.Amount -= amount
-						amountRemaining = 0
+						order.Amount = 0
+						order.SetStatus(StatusFilled)
 						if sellEntry.Amount == 0 {
 							book.removeSellBookEntry(sellEntry, pricePoint, index)
 						}
@@ -98,10 +97,11 @@ func (book *orderBook) processMarketBuy(order Order) []Trade {
 					// we complete the sell order and we move to the next order
 					if sellEntry.Amount < amount {
 						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, sellEntry.Amount, sellEntry.Price))
-						amountRemaining -= sellEntry.Amount
+						order.Amount -= sellEntry.Amount
 						amountAffordable -= sellEntry.Amount
+						order.SetStatus(StatusPartiallyFilled)
 						// @todo CH: check for overflow issues
-						fundsRemaining -= utils.Multiply(sellEntry.Amount, sellEntry.Price, FundsPrecision)
+						order.Funds -= utils.Multiply(sellEntry.Amount, sellEntry.Price, FundsPrecision)
 						book.removeSellBookEntry(sellEntry, pricePoint, index)
 						index--
 						continue
@@ -111,16 +111,16 @@ func (book *orderBook) processMarketBuy(order Order) []Trade {
 				if complete {
 					if len(pricePoint.Entries) != 0 {
 						iterator.Close()
-						return trades
+						return order, trades
 					}
 					if ok := iterator.Next(); ok {
 						book.LowestAsk = iterator.Key()
 						iterator.Close()
-						return trades
+						return order, trades
 					}
 					book.LowestAsk = 0
 					iterator.Close()
-					return trades
+					return order, trades
 				}
 
 				if ok := iterator.Next(); ok {
@@ -135,35 +135,36 @@ func (book *orderBook) processMarketBuy(order Order) []Trade {
 	}
 
 	// if there are no more ordes just add the buy order to the list
-	book.pushMarketBuyBookEntry(BookEntry{Price: order.Price, Amount: amountRemaining, Order: order})
+	// book.pushMarketBuyBookEntry(BookEntry{Price: order.Price, Amount: amountRemaining, Order: order})
 	// if book.HighestBid < order.Price || book.HighestBid == 0 {
 	// 	book.HighestBid = order.Price
 	// }
 
-	return trades
+	return order, trades
 }
 
 // Process a new market sell order and return the list of trades that matched
 // This method automatically adds the remaining amount needed to be fill the market order to the list of
 // pending market sell orders.
 // @todo CH: Refactor this to support processing already added market orders that have not been fully filled
-func (book *orderBook) processMarketSell(order Order) []Trade {
+func (book *orderBook) processMarketSell(order Order) (Order, []Trade) {
 	trades := []Trade{}
-	amountRemaining := order.Amount
 	if book.HighestBid != 0 {
 		iterator := book.BuyEntries.Seek(book.HighestBid)
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
-			for amountRemaining > 0 {
+			for order.Amount > 0 {
 				pricePoint := iterator.Value()
 				complete := false
 				for index := 0; index < len(pricePoint.Entries); index++ {
 					buyEntry := &pricePoint.Entries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
-					if buyEntry.Amount >= amountRemaining {
-						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, amountRemaining, buyEntry.Order.Price))
-						buyEntry.Amount -= amountRemaining
+					if buyEntry.Amount >= order.Amount {
+						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, order.Amount, buyEntry.Order.Price))
+						buyEntry.Amount -= order.Amount
+						order.Amount = 0
+						order.SetStatus(StatusFilled)
 						if buyEntry.Amount == 0 {
 							book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						}
@@ -173,9 +174,10 @@ func (book *orderBook) processMarketSell(order Order) []Trade {
 
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
-					if buyEntry.Amount < amountRemaining {
+					if buyEntry.Amount < order.Amount {
 						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, buyEntry.Amount, buyEntry.Price))
-						amountRemaining -= buyEntry.Amount
+						order.Amount -= buyEntry.Amount
+						order.SetStatus(StatusPartiallyFilled)
 						book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						index--
 						continue
@@ -185,16 +187,16 @@ func (book *orderBook) processMarketSell(order Order) []Trade {
 				if complete {
 					if len(pricePoint.Entries) != 0 {
 						iterator.Close()
-						return trades
+						return order, trades
 					}
 					if ok := iterator.Previous(); ok {
 						book.HighestBid = iterator.Key()
 						iterator.Close()
-						return trades
+						return order, trades
 					}
 					book.HighestBid = 0
 					iterator.Close()
-					return trades
+					return order, trades
 				}
 
 				if ok := iterator.Previous(); ok {
@@ -208,11 +210,10 @@ func (book *orderBook) processMarketSell(order Order) []Trade {
 		}
 	}
 
-	// if there are no more ordes just add the buy order to the list
-	book.pushMarketSellBookEntry(BookEntry{Price: order.Price, Amount: amountRemaining, Order: order})
+	// book.pushMarketSellBookEntry(BookEntry{Price: order.Price, Amount: amountRemaining, Order: order})
 	// if book.LowestAsk > order.Price || book.LowestAsk == 0 {
 	// 	book.LowestAsk = order.Price
 	// }
 
-	return trades
+	return order, trades
 }

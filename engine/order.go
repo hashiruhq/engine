@@ -24,6 +24,19 @@ const (
 )
 
 const (
+	// StatusPending is used when the order has not yet been processed by the matching engine
+	StatusPending = iota + 1
+	// StatusUntouched means that the order was processed by the engine but it did not yet match with any order
+	StatusUntouched
+	// StatusPartiallyFilled is used when the order was not completely filled
+	StatusPartiallyFilled
+	// StatusCancelled is used when the order has been cancelled
+	StatusCancelled
+	// StatusFilled is used when the order was filled and th
+	StatusFilled
+)
+
+const (
 	// StopLossTypeLoss type loss
 	StopLossTypeLoss = iota + 1
 	// StopLossTypeEntry type entry @todo CH: document this better
@@ -79,6 +92,14 @@ type Order struct {
 	// 2 = Cancel Order
 	// 3 = Backup Market
 	EventType int8
+
+	// The status is dictated by the stage in the execution of the order by the matching engine
+	// 1 = Pending
+	// 2 = Untouched
+	// 3 = Partially Filled
+	// 4 = Cancelled
+	// 5 = Filled
+	Status int8
 
 	// User Order ID: An id defined by the user to identity the order
 	// UserOrderId string
@@ -229,6 +250,14 @@ func (order *Order) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
 	return nil
 }
 
+// SetStatus changes the status of an order if the new status has not already been set
+// and it's not lower than the current set status
+func (order *Order) SetStatus(status int8) {
+	if order.Status < status {
+		order.Status = status
+	}
+}
+
 // NKeys implements gojay.UnmarshalerJSONObject interface and returns the number of keys to parse
 func (order Order) NKeys() int {
 	return 11
@@ -251,5 +280,5 @@ func (order Order) MarshalJSONObject(enc *gojay.Encoder) {
 
 // IsNil checks if the order is empty
 func (order Order) IsNil() bool {
-	return order.EventType == 0 && order.ID == "" && order.Amount == 0
+	return order.EventType == 0 && order.ID == "" && order.Status == 0 && order.Amount == 0
 }

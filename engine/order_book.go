@@ -17,8 +17,8 @@ type orderBook struct {
 	SellEntries       *SkipList
 	LowestAsk         uint64
 	HighestBid        uint64
-	BuyMarketEntries  []BookEntry
-	SellMarketEntries []BookEntry
+	BuyMarketEntries  []Order
+	SellMarketEntries []Order
 	OpenOrders        map[string]uint64
 }
 
@@ -29,8 +29,8 @@ func NewOrderBook() OrderBook {
 		HighestBid:        0,
 		BuyEntries:        NewPricePoints(),
 		SellEntries:       NewPricePoints(),
-		BuyMarketEntries:  make([]BookEntry, 0, 0),
-		SellMarketEntries: make([]BookEntry, 0, 0),
+		BuyMarketEntries:  make([]Order, 0, 0),
+		SellMarketEntries: make([]Order, 0, 0),
 		OpenOrders:        make(map[string]uint64),
 	}
 }
@@ -72,25 +72,68 @@ func (book *orderBook) Process(order Order) []Trade {
 
 // Process a new order and return a list of trades resulted from the exchange
 func (book *orderBook) processOrder(order Order) []Trade {
+	// for limit orders first process the limit order with the orderbook since you
+	// can't have a pending market order and not have an empty order book
 	if order.Type == LimitOrder && order.Side == BUY {
-		return book.processLimitBuy(order)
+		trades := book.processLimitBuy(order)
+		// if there are sell market orders pending then keep loading the first one until there are
+		// no more pending market orders or the limit order was filled.
+		sellMarketCount := len(book.SellMarketEntries)
+		if sellMarketCount == 0 {
+			return trades
+		}
+		for i := 0; i < sellMarketCount; i++ {
+			mko := book.popMarketSellOrder()
+			mkOrder, mkTrades := book.processMarketSell(*mko)
+			trades = append(trades, mkTrades...)
+			if mkOrder.Status != StatusFilled {
+				book.lpushMarketSellOrder(mkOrder)
+				break
+			}
+		}
+		return trades
 	}
+	// similar to the above for sell limit orders
 	if order.Type == LimitOrder && order.Side == SELL {
-		return book.processLimitSell(order)
+		trades := book.processLimitSell(order)
+		buyMarketCount := len(book.BuyMarketEntries)
+		if buyMarketCount == 0 {
+			return trades
+		}
+		for i := 0; i < buyMarketCount; i++ {
+			mko := book.popMarketBuyOrder()
+			mkOrder, mkTrades := book.processMarketBuy(*mko)
+			trades = append(trades, mkTrades...)
+			if mkOrder.Status != StatusFilled {
+				book.lpushMarketBuyOrder(mkOrder)
+				break
+			}
+		}
+		return trades
 	}
 
+	// market order either get filly filled or they get added to the pending market order list
 	if order.Type == MarketOrder && order.Side == BUY {
 		if len(book.BuyMarketEntries) > 0 {
-			book.pushMarketBuyBookEntry(BookEntry{Amount: order.Amount, Price: order.Price, Order: order})
+			book.pushMarketBuyOrder(order)
 		} else {
-			return book.processMarketBuy(order)
+			order, trades := book.processMarketBuy(order)
+			if order.Status != StatusFilled {
+				book.pushMarketBuyOrder(order)
+			}
+			return trades
 		}
 	}
+	// exactly the same for sell market orders
 	if order.Type == MarketOrder && order.Side == SELL {
 		if len(book.SellMarketEntries) > 0 {
-			book.pushMarketSellBookEntry(BookEntry{Amount: order.Amount, Price: order.Price, Order: order})
+			book.pushMarketSellOrder(order)
 		} else {
-			return book.processMarketSell(order)
+			order, trades := book.processMarketSell(order)
+			if order.Status != StatusFilled {
+				book.pushMarketSellOrder(order)
+			}
+			return trades
 		}
 	}
 
@@ -183,26 +226,38 @@ func (book *orderBook) removeSellBookEntry(bookEntry *BookEntry, pricePoint *Pri
 	}
 }
 
-func (book *orderBook) pushMarketBuyBookEntry(bookEntry BookEntry) {
-	book.BuyMarketEntries = append(book.BuyMarketEntries, bookEntry)
+func (book *orderBook) pushMarketBuyOrder(order Order) {
+	book.BuyMarketEntries = append(book.BuyMarketEntries, order)
 }
 
-func (book *orderBook) pushMarketSellBookEntry(bookEntry BookEntry) {
-	book.SellMarketEntries = append(book.SellMarketEntries, bookEntry)
+func (book *orderBook) pushMarketSellOrder(order Order) {
+	book.SellMarketEntries = append(book.SellMarketEntries, order)
 }
 
-// func (book *orderBook) popMarketSellBookEntry() {
-// 	if len(book.SellMarketEntries) == 0 {
-// 		return
-// 	}
-// 	index := 0
-// 	book.SellMarketEntries = append(book.SellMarketEntries[:index], book.SellMarketEntries[index+1:]...)
-// }
+func (book *orderBook) lpushMarketBuyOrder(order Order) {
+	book.BuyMarketEntries = append([]Order{order}, book.BuyMarketEntries...)
+}
 
-// func (book *orderBook) popMarketBuyBookEntry() {
-// 	if len(book.BuyMarketEntries) == 0 {
-// 		return
-// 	}
-// 	index := 0
-// 	book.BuyMarketEntries = append(book.BuyMarketEntries[:index], book.BuyMarketEntries[index+1:]...)
-// }
+func (book *orderBook) lpushMarketSellOrder(order Order) {
+	book.SellMarketEntries = append([]Order{order}, book.SellMarketEntries...)
+}
+
+func (book *orderBook) popMarketSellOrder() *Order {
+	if len(book.SellMarketEntries) == 0 {
+		return nil
+	}
+	index := 0
+	order := book.SellMarketEntries[0]
+	book.SellMarketEntries = append(book.SellMarketEntries[:index], book.SellMarketEntries[index+1:]...)
+	return &order
+}
+
+func (book *orderBook) popMarketBuyOrder() *Order {
+	if len(book.BuyMarketEntries) == 0 {
+		return nil
+	}
+	index := 0
+	order := book.BuyMarketEntries[0]
+	book.BuyMarketEntries = append(book.BuyMarketEntries[:index], book.BuyMarketEntries[index+1:]...)
+	return &order
+}
