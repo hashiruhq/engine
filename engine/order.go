@@ -37,8 +37,15 @@ const (
 )
 
 const (
+	// THere are 2 types of stop orders: 1=loss 2=entry
+	// - Stop loss triggers when the last trade price changes to a value at or below the `StopPrice`.
+	// - Stop entry triggers when the last trade price changes to a value at or above the `StopPrice`.
+	// - Note that when triggered, stop orders execute as either market or limit orders, depending on the type.
+
+	// StopLossTypeNone by default an order has its stop loss flag set to disabled
+	StopLossTypeNone = iota
 	// StopLossTypeLoss type loss
-	StopLossTypeLoss = iota + 1
+	StopLossTypeLoss
 	// StopLossTypeEntry type entry @todo CH: document this better
 	StopLossTypeEntry
 )
@@ -68,6 +75,12 @@ const FundsPrecision = 8
 // Order allows the trader to start an order where the transaction will be completed
 // if the market price is at or better than the set price
 type Order struct {
+	//*****************************************
+	// Limit Order
+	// - Requires the Amount field from above
+	// - Requires the Price field from above
+	//*****************************************
+
 	// Optional:
 	// Amount of coins to buy/sell with the order
 	// - The amount must be greater than the base_min_amount for the product and no larger than the base_max_amount.
@@ -112,6 +125,49 @@ type Order struct {
 	// Base and Quote symbols as lowercase 3-4 letter words. Ex: btc, usd, eth
 	BaseCurrency  string
 	QuoteCurrency string
+
+	// Stop flag. Requires `StopPrice`` to be defined.
+	// Stop orders become active and wait to trigger based on the movement of the last trade price.
+	// There are 2 types of stop orders: 0=none 1=loss 2=entry
+	// - Stop loss triggers when the last trade price changes to a value at or below the `StopPrice`.
+	// - Stop entry triggers when the last trade price changes to a value at or above the `StopPrice`.
+	// - Note that when triggered, stop orders execute as either market or limit orders, depending on the type.
+	Stop int8
+	// Sets trigger price for stop order. Only if stop is defined.
+	StopPrice uint64
+
+	//*****************************************
+	// Market Order Fields
+	// - Requires the Amount field from above
+	// - At lease one of Amount or Funds fields should be set
+	// - Funds limit how much your quote currency account balance is used and
+	//   Amount limits the amount of coins that will be transacted
+	// - Market orders are always considered takers and should always fill immediately
+	//*****************************************
+
+	// Maximum total funds to use for the order
+	// - The funds field is optionally used for market orders. When specified it indicates how much of the product
+	//   quote currency to buy or sell. For example, a market buy for BTC-USD with funds specified as 150.00 will
+	//   spend 150 USD to buy BTC (including any fees). If the funds field is not specified for a market buy order,
+	//   size must be specified and the enting will use available funds in your account to buy bitcoin.
+	// - A market sell order can also specify the funds. If funds is specified, it will limit the sell to the amount
+	//   of funds specified. You can use funds with sell orders to limit the amount of quote currency funds received.
+	Funds uint64
+
+	// FUTURE PROPERTY
+	//
+	// TimeInForce string // time in force. GTC, GTT, IOC, or FOK (default is GTC)
+
+	// FUTURE PROPERTY
+	//
+	// CancelAfter uint   // cancel after min, hour, day. Requires time_in_force to be GTT
+
+	// FUTURE PROPERTY
+	// The post-only flag indicates that the order should only make liquidity. If any part of the
+	// order results in taking liquidity, the order will be rejected and no part of it will execute.
+	//
+	// PostOnly    string // post only. Invalid when time_in_force is IOC or FOK
+
 	// FUTURE FIELD
 	// Prevent self trade
 	//
@@ -139,54 +195,6 @@ type Order struct {
 	// not specified, then funds will be decremented. For a market sell, the size will be decremented when
 	// encountering existing limit orders.
 	// PreventSelfTrade string
-
-	// Stop flag. Requires `StopPrice`` to be defined.
-	// Stop orders become active and wait to trigger based on the movement of the last trade price.
-	// THere are 2 types of stop orders: 1=loss 2=entry
-	// - Stop loss triggers when the last trade price changes to a value at or below the `StopPrice`.
-	// - Stop entry triggers when the last trade price changes to a value at or above the `StopPrice`.
-	// - Note that when triggered, stop orders execute as either market or limit orders, depending on the type.
-	Stop int8
-	// Sets trigger price for stop order. Only if stop is defined.
-	StopPrice uint64
-
-	//*****************************************
-	// Market Order Fields
-	// - Requires the Amount field from above
-	// - At lease one of Amount or Funds fields should be set
-	// - Funds limit how much your quote currency account balance is used and
-	//   Amount limits the amount of coins that will be transacted
-	// - Market orders are always considered takers and should always fill immediately
-	//*****************************************
-
-	// Maximum total funds to use for the order
-	// - The funds field is optionally used for market orders. When specified it indicates how much of the product
-	//   quote currency to buy or sell. For example, a market buy for BTC-USD with funds specified as 150.00 will
-	//   spend 150 USD to buy BTC (including any fees). If the funds field is not specified for a market buy order,
-	//   size must be specified and the enting will use available funds in your account to buy bitcoin.
-	// - A market sell order can also specify the funds. If funds is specified, it will limit the sell to the amount
-	//   of funds specified. You can use funds with sell orders to limit the amount of quote currency funds received.
-	Funds uint64
-
-	//*****************************************
-	// Limit Order
-	// - Requires the Amount field from above
-	// - Requires the Price field from above
-	//*****************************************
-
-	// FUTURE PROPERTY
-	//
-	// TimeInForce string // time in force. GTC, GTT, IOC, or FOK (default is GTC)
-
-	// FUTURE PROPERTY
-	//
-	// CancelAfter uint   // cancel after min, hour, day. Requires time_in_force to be GTT
-
-	// FUTURE PROPERTY
-	// The post-only flag indicates that the order should only make liquidity. If any part of the
-	// order results in taking liquidity, the order will be rejected and no part of it will execute.
-	//
-	// PostOnly    string // post only. Invalid when time_in_force is IOC or FOK
 }
 
 // NewOrder create a new order
