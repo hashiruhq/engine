@@ -46,7 +46,7 @@ func NewBufferedMarketEngine(config MarketEngineConfig) MarketEngine {
 func (mkt *bufferedMarketEngine) Start() {
 	// listen for producer errors when publishing trades
 	go mkt.ReceiveProducerErrors()
-	// decode the json value for each message received into an Order Structure
+	// decode the binary value for each message received into an Order Structure
 	go mkt.DecodeMessage()
 	// process each order by the trading engine and forward trades to the trades channel
 	go mkt.ProcessOrder()
@@ -92,7 +92,7 @@ func (mkt *bufferedMarketEngine) ScheduleBackup() {
 	}
 }
 
-// DecodeMessage decode the json value for each message received into an Order struct
+// DecodeMessage decode the binary value for each message received into an Order struct
 // before sending it for processing by the trading engine
 //
 // Message flow is unidirectional from the messages channel to the orders channel
@@ -126,9 +126,9 @@ func (mkt *bufferedMarketEngine) ProcessOrder() {
 				market.Offset = lastOffset
 				prevOffset = lastOffset
 				mkt.BackupMarket(market)
-				log.Printf("[Backup] [%s] Snapshot created in /root/backups/%s.json\n", mkt.name, mkt.name)
+				log.Printf("[Backup] [%s] Snapshot created\n", mkt.name)
 			} else {
-				log.Printf("[Backup] [%s] Skipped. No changes since last backup.\n", mkt.name)
+				log.Printf("[Backup] [%s] Skipped. No changes since last backup\n", mkt.name)
 			}
 		default:
 			event := mkt.orders.Read()
@@ -152,7 +152,7 @@ func (mkt *bufferedMarketEngine) PublishTrades() {
 	for {
 		event := mkt.trades.Read()
 		for _, trade := range event.Trades {
-			rawTrade, _ := trade.ToBinary() // @todo thread error on encoding json object (low priority)
+			rawTrade, _ := trade.ToBinary() // @todo threat error on encoding object
 			mkt.producer.Input() <- &sarama.ProducerMessage{
 				Topic: mkt.config.config.Publish.Topic,
 				Value: sarama.ByteEncoder(rawTrade),
@@ -168,7 +168,7 @@ func (mkt *bufferedMarketEngine) PublishTrades() {
 	}
 }
 
-// BackupMarket saves the given snapshot of the order book as JSON into the backups folder with the name of the market pair
+// BackupMarket saves the given snapshot of the order book as binary into the backups folder with the name of the market pair
 // - It first saves into a temporary file before moving the file to the final localtion
 func (mkt *bufferedMarketEngine) BackupMarket(market engine.MarketBackup) error {
 	file := mkt.config.config.Backup.Path + ".tmp"

@@ -8,7 +8,7 @@ import (
 	"gitlab.com/around25/products/matching-engine/engine"
 )
 
-// BackupMarket saves the given snapshot of the order book as JSON into the backups folder with the name of the market pair
+// BackupMarket saves the given snapshot of the order book as binary into the backups folder with the name of the market pair
 // - It first saves into a temporary file before moving the file to the final localtion
 func (mkt *marketEngine) BackupMarket(market engine.MarketBackup) error {
 	file := mkt.config.config.Backup.Path + ".tmp"

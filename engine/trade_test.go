@@ -16,8 +16,8 @@ func TestTradeCreation(t *testing.T) {
 	})
 }
 
-func TestTradeLoadFromJson(t *testing.T) {
-	Convey("Should be able to load a trade from json", t, func() {
+func TestTradeLoadFromBinary(t *testing.T) {
+	Convey("Should be able to load a trade from binary", t, func() {
 		trade := NewTrade("TST_1", "TST_2", 848382829993942, 131221300010201)
 		data, _ := trade.ToBinary()
 		trade = Trade{}
@@ -29,8 +29,8 @@ func TestTradeLoadFromJson(t *testing.T) {
 	})
 }
 
-func TestTradeConvertToJson(t *testing.T) {
-	Convey("Should be able to convert a trade to json string", t, func() {
+func TestTradeConvertToBinary(t *testing.T) {
+	Convey("Should be able to convert a trade to binary", t, func() {
 		trade := NewTrade("TST_1", "TST_2", 848382829993942, 131221300010201)
 		initData, _ := trade.ToBinary()
 		trade = Trade{}

@@ -9,6 +9,7 @@ import (
 	"github.com/Shopify/sarama"
 )
 
+// @todo replace message data format to use protobuf
 func BenchmarkProcessChannels(b *testing.B) {
 	completed := 0
 	const SIZE = 10000
@@ -23,7 +24,7 @@ func BenchmarkProcessChannels(b *testing.B) {
 		}
 		close(messages)
 	}
-	jsonDecode := func(messages <-chan []byte, orders chan<- engine.Order) {
+	decode := func(messages <-chan []byte, orders chan<- engine.Order) {
 		for msg := range messages {
 			var order engine.Order
 			order.FromBinary(msg)
@@ -51,7 +52,7 @@ func BenchmarkProcessChannels(b *testing.B) {
 		}
 	}
 	go receiveMessages(messages, b.N)
-	go jsonDecode(messages, orders)
+	go decode(messages, orders)
 	go processOrders(orders, tradeChan, b.N)
 	go publishTrades(tradeChan)
 

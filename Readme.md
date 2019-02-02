@@ -52,6 +52,8 @@ The engine should support the following actions:
 This bechmark checks the performance of executing orders after they are available in memory.
 
 ```
+// Old benchmarks
+
 Total Orders: 1000000
 Total Trades: 996903
 Orders/second: 667924.145191
@@ -62,7 +64,46 @@ Pending Sell: 2838
 Highest Bid: 7007361
 Duration (seconds): 1.497176
 
- 1000000	      1497 ns/op	     642 B/op	       6 allocs/op
+1000000	      1497 ns/op	     642 B/op	       6 allocs/op
+
+// New Benchmarks without decoding/encoding orders/trades
+Total Orders: 10000
+Orders/second: 1197318.007663
+Pending Buy: 591
+Lowest Ask: 996920900000000
+Pending Sell: 662
+Highest Bid: 996859500000000
+Duration (seconds): 0.008352
+
+Total Orders: 1000000
+Orders/second: 764608.417268
+Pending Buy: 2244
+Lowest Ask: 996670000000000
+Pending Sell: 1038
+Highest Bid: 700948400000000
+Duration (seconds): 1.307859
+
+1000000	      1307 ns/op	     735 B/op	       5 allocs/op
+
+// New Benchmarks with decoding/encoding orders/trades
+
+Total Orders: 10000
+Orders/second: 548065.329387
+Pending Buy: 591
+Lowest Ask: 996920900000000
+Pending Sell: 662
+Highest Bid: 996859500000000
+Duration (seconds): 0.018246
+
+Total Orders: 1000000
+Orders/second: 441570.312345
+Pending Buy: 2244
+Lowest Ask: 996670000000000
+Pending Sell: 1038
+Highest Bid: 700948400000000
+Duration (seconds): 2.264645
+
+1000000	      2264 ns/op	    1007 B/op	      10 allocs/op
 ```
 
 ### Consumer and Producer
@@ -86,7 +127,7 @@ Duration (seconds): 1.205161
 ```
 
 ## Further optimizations
-- Decrease the size of the Kafka message value by switching the JSON encoded order to either Protobufs or FIX formats
+- Add support for FIX formats
 - Maybe Switch Kafka Client to: https://github.com/confluentinc/confluent-kafka-go
 - Optimize Kafka Producer rate
 - Use the golang profiler to see where the bottlenecks are in the code
