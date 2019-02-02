@@ -1,18 +1,6 @@
 package engine
 
-import (
-	"gitlab.com/around25/products/matching-engine/conv"
-
-	"github.com/francoispqt/gojay"
-)
-
-// Trade represents a completed trade between two orders
-type Trade struct {
-	TakerOrderID string
-	MakerOrderID string
-	Amount       uint64
-	Price        uint64
-}
+import proto "github.com/golang/protobuf/proto"
 
 // NewTrade Creates a new trade between the taker order and the maker order
 func NewTrade(takerOrder string, makerOrder string, amount, price uint64) Trade {
@@ -24,49 +12,12 @@ func NewTrade(takerOrder string, makerOrder string, amount, price uint64) Trade 
 	}
 }
 
-// FromJSON loads a trade from a byte array
-func (trade *Trade) FromJSON(msg []byte) error {
-	return gojay.Unsafe.Unmarshal(msg, trade)
+// FromBinary loads a trade from a byte array
+func (trade *Trade) FromBinary(msg []byte) error {
+	return proto.Unmarshal(msg, trade)
 }
 
-// ToJSON Converts the trade into a JSON byte array
-func (trade *Trade) ToJSON() ([]byte, error) {
-	return gojay.MarshalJSONObject(trade)
-}
-
-// UnmarshalJSONObject implement gojay.UnmarshalerJSONObject interface
-func (trade *Trade) UnmarshalJSONObject(dec *gojay.Decoder, key string) error {
-	switch key {
-	case "taker_order_id":
-		return dec.String(&trade.TakerOrderID)
-	case "maker_order_id":
-		return dec.String(&trade.MakerOrderID)
-	case "price":
-		var amount string
-		dec.String(&amount)
-		trade.Price = conv.ToUnits(amount, PricePrecision)
-	case "amount":
-		var amount string
-		dec.String(&amount)
-		trade.Amount = conv.ToUnits(amount, AmountPrecision)
-	}
-	return nil
-}
-
-// MarshalJSONObject implement gojay.MarshalerJSONObject interface
-func (trade *Trade) MarshalJSONObject(enc *gojay.Encoder) {
-	enc.StringKey("taker_order_id", trade.TakerOrderID)
-	enc.StringKey("maker_order_id", trade.MakerOrderID)
-	enc.StringKey("price", conv.FromUnits(trade.Price, PricePrecision))
-	enc.StringKey("amount", conv.FromUnits(trade.Amount, AmountPrecision))
-}
-
-// IsNil checks if the trade is empty
-func (trade *Trade) IsNil() bool {
-	return trade == nil
-}
-
-// NKeys implements gojay.UnmarshalerJSONObject interface and returns the number of keys to parse
-func (trade *Trade) NKeys() int {
-	return 4
+// ToBinary converts a trade to a byte string
+func (trade *Trade) ToBinary() ([]byte, error) {
+	return proto.Marshal(trade)
 }

@@ -7,8 +7,8 @@ type OrderBook interface {
 	Cancel(order Order) bool
 	GetHighestBid() uint64
 	GetLowestAsk() uint64
-	Load(Market) error
-	Backup() Market
+	Load(MarketBackup) error
+	Backup() MarketBackup
 	GetMarket() []*SkipList
 }
 
@@ -52,7 +52,7 @@ func (book orderBook) GetMarket() []*SkipList {
 // Process a new received order and return a list of trades make
 func (book *orderBook) Process(order Order) []Trade {
 	switch order.EventType {
-	case EventTypeNewOrder:
+	case CommandType_NewOrder:
 		return book.processOrder(order)
 		// case EventTypeCancelOrder: return book.Cancel(order.ID);
 		// case EventTypeBackupMarket: return book.Backup();
@@ -64,7 +64,7 @@ func (book *orderBook) Process(order Order) []Trade {
 func (book *orderBook) processOrder(order Order) []Trade {
 	// for limit orders first process the limit order with the orderbook since you
 	// can't have a pending market order and not have an empty order book
-	if order.Type == LimitOrder && order.Side == BUY {
+	if order.Type == OrderType_Limit && order.Side == MarketSide_Buy {
 		trades := book.processLimitBuy(order)
 		// if there are sell market orders pending then keep loading the first one until there are
 		// no more pending market orders or the limit order was filled.
@@ -76,7 +76,7 @@ func (book *orderBook) processOrder(order Order) []Trade {
 			mko := book.popMarketSellOrder()
 			mkOrder, mkTrades := book.processMarketSell(*mko)
 			trades = append(trades, mkTrades...)
-			if mkOrder.Status != StatusFilled {
+			if mkOrder.Status != OrderStatus_Filled {
 				book.lpushMarketSellOrder(mkOrder)
 				break
 			}
@@ -84,7 +84,7 @@ func (book *orderBook) processOrder(order Order) []Trade {
 		return trades
 	}
 	// similar to the above for sell limit orders
-	if order.Type == LimitOrder && order.Side == SELL {
+	if order.Type == OrderType_Limit && order.Side == MarketSide_Sell {
 		trades := book.processLimitSell(order)
 		buyMarketCount := len(book.BuyMarketEntries)
 		if buyMarketCount == 0 {
@@ -94,7 +94,7 @@ func (book *orderBook) processOrder(order Order) []Trade {
 			mko := book.popMarketBuyOrder()
 			mkOrder, mkTrades := book.processMarketBuy(*mko)
 			trades = append(trades, mkTrades...)
-			if mkOrder.Status != StatusFilled {
+			if mkOrder.Status != OrderStatus_Filled {
 				book.lpushMarketBuyOrder(mkOrder)
 				break
 			}
@@ -103,36 +103,30 @@ func (book *orderBook) processOrder(order Order) []Trade {
 	}
 
 	// market order either get filly filled or they get added to the pending market order list
-	if order.Type == MarketOrder && order.Side == BUY {
+	if order.Type == OrderType_Market && order.Side == MarketSide_Buy {
 		if len(book.BuyMarketEntries) > 0 {
 			book.pushMarketBuyOrder(order)
 		} else {
 			order, trades := book.processMarketBuy(order)
-			if order.Status != StatusFilled {
+			if order.Status != OrderStatus_Filled {
 				book.pushMarketBuyOrder(order)
 			}
 			return trades
 		}
 	}
 	// exactly the same for sell market orders
-	if order.Type == MarketOrder && order.Side == SELL {
+	if order.Type == OrderType_Market && order.Side == MarketSide_Sell {
 		if len(book.SellMarketEntries) > 0 {
 			book.pushMarketSellOrder(order)
 		} else {
 			order, trades := book.processMarketSell(order)
-			if order.Status != StatusFilled {
+			if order.Status != OrderStatus_Filled {
 				book.pushMarketSellOrder(order)
 			}
 			return trades
 		}
 	}
 
-	// if order.Type == StopLossOrder && order.Side == BUY {
-	// 	return book.processStopLossBuy(order)
-	// }
-	// if order.Type == StopLossOrder && order.Side == SELL {
-	// 	return book.processStopLossSell(order)
-	// }
 	return []Trade{}
 }
 
@@ -142,9 +136,9 @@ func (book *orderBook) processOrder(order Order) []Trade {
 // - Improve this by also calculating the new LowestAsk and HighestBid after the order is removed
 func (book *orderBook) Cancel(order Order) bool {
 	switch order.Type {
-	case LimitOrder:
+	case OrderType_Limit:
 		return book.cancelLimitOrder(order)
-	case MarketOrder:
+	case OrderType_Market:
 		return book.cancelMarketOrder(order)
 	default:
 		return false
@@ -153,7 +147,7 @@ func (book *orderBook) Cancel(order Order) bool {
 
 // Cancel a limit order based in order attributes
 func (book *orderBook) cancelLimitOrder(order Order) bool {
-	if order.Side == BUY {
+	if order.Side == MarketSide_Buy {
 		if pricePoint, ok := book.BuyEntries.Get(order.Price); ok {
 			for i := 0; i < len(pricePoint.Entries); i++ {
 				if pricePoint.Entries[i].Order.ID == order.ID {
@@ -178,7 +172,7 @@ func (book *orderBook) cancelLimitOrder(order Order) bool {
 }
 
 func (book *orderBook) cancelMarketOrder(order Order) bool {
-	if order.Side == BUY {
+	if order.Side == MarketSide_Buy {
 		for i := 0; i < len(book.BuyMarketEntries); i++ {
 			if order.ID == book.BuyMarketEntries[i].ID {
 				book.BuyMarketEntries = append(book.BuyMarketEntries[:i], book.BuyMarketEntries[i+1:]...)

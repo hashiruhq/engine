@@ -60,7 +60,7 @@ func BenchmarkNetworkProcessChannels(benchmark *testing.B) {
 	jsonDecode := func(messages <-chan []byte, orders chan<- engine.Order) {
 		for msg := range messages {
 			var order engine.Order
-			order.FromJSON(msg)
+			order.FromBinary(msg)
 			orders <- order
 		}
 	}
@@ -84,7 +84,7 @@ func BenchmarkNetworkProcessChannels(benchmark *testing.B) {
 	publishTrades := func(tradeChan <-chan []engine.Trade, finishTrades chan bool, closeChan bool) {
 		for trades := range tradeChan {
 			for _, trade := range trades {
-				rawTrade, _ := trade.ToJSON() // @todo thread error on encoding json object (low priority)
+				rawTrade, _ := trade.ToBinary() // @todo thread error on encoding json object (low priority)
 				producer.Input() <- &sarama.ProducerMessage{
 					Topic: kafkaTradeTopic,
 					Value: sarama.ByteEncoder(rawTrade),
@@ -173,7 +173,7 @@ func BenchmarkNetworkProcessEventRing(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		event := tradeQueue.Read()
 		for _, trade := range event.Trades {
-			rawTrade, _ := trade.ToJSON()
+			rawTrade, _ := trade.ToBinary()
 			producer.Input() <- &sarama.ProducerMessage{
 				Topic: kafkaTradeTopic,
 				Value: sarama.ByteEncoder(rawTrade),

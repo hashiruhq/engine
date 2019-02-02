@@ -26,7 +26,7 @@ func BenchmarkProcessChannels(b *testing.B) {
 	jsonDecode := func(messages <-chan []byte, orders chan<- engine.Order) {
 		for msg := range messages {
 			var order engine.Order
-			order.FromJSON(msg)
+			order.FromBinary(msg)
 			orders <- order
 		}
 		close(orders)
@@ -41,7 +41,7 @@ func BenchmarkProcessChannels(b *testing.B) {
 	publishTrades := func(tradeChan <-chan []engine.Trade) {
 		for trades := range tradeChan {
 			for _, trade := range trades {
-				trade.ToJSON()
+				trade.ToBinary()
 				completed++
 				if completed >= b.N {
 					done <- true
@@ -91,7 +91,7 @@ func BenchmarkProcessEventRing(b *testing.B) {
 		for i := 0; i < n; i++ {
 			event := tradeQueue.Read()
 			for _, trade := range event.Trades {
-				trade.ToJSON()
+				trade.ToBinary()
 			}
 		}
 		done <- true

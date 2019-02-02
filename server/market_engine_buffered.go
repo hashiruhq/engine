@@ -152,7 +152,7 @@ func (mkt *bufferedMarketEngine) PublishTrades() {
 	for {
 		event := mkt.trades.Read()
 		for _, trade := range event.Trades {
-			rawTrade, _ := trade.ToJSON() // @todo thread error on encoding json object (low priority)
+			rawTrade, _ := trade.ToBinary() // @todo thread error on encoding json object (low priority)
 			mkt.producer.Input() <- &sarama.ProducerMessage{
 				Topic: mkt.config.config.Publish.Topic,
 				Value: sarama.ByteEncoder(rawTrade),
@@ -170,9 +170,9 @@ func (mkt *bufferedMarketEngine) PublishTrades() {
 
 // BackupMarket saves the given snapshot of the order book as JSON into the backups folder with the name of the market pair
 // - It first saves into a temporary file before moving the file to the final localtion
-func (mkt *bufferedMarketEngine) BackupMarket(market engine.Market) error {
+func (mkt *bufferedMarketEngine) BackupMarket(market engine.MarketBackup) error {
 	file := mkt.config.config.Backup.Path + ".tmp"
-	rawMarket, _ := market.ToJSON()
+	rawMarket, _ := market.ToBinary()
 	ioutil.WriteFile(file, rawMarket, 0644)
 	os.Rename(mkt.config.config.Backup.Path+".tmp", mkt.config.config.Backup.Path)
 	return nil
@@ -188,8 +188,8 @@ func (mkt *bufferedMarketEngine) LoadMarketFromBackup() (err error) {
 		return
 	}
 
-	var market engine.Market
-	market.FromJSON(content)
+	var market engine.MarketBackup
+	market.FromBinary(content)
 
 	// load all records from the backup into the order book
 	mkt.LoadMarket(market)
@@ -206,6 +206,6 @@ func (mkt *bufferedMarketEngine) LoadMarketFromBackup() (err error) {
 	return nil
 }
 
-func (mkt *bufferedMarketEngine) LoadMarket(market engine.Market) {
+func (mkt *bufferedMarketEngine) LoadMarket(market engine.MarketBackup) {
 	mkt.engine.LoadMarket(market)
 }

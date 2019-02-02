@@ -62,7 +62,7 @@ func (book *orderBook) processLimitBuy(order Order) []Trade {
 	}
 
 	// if there are no more ordes just add the buy order to the list
-	book.addBuyBookEntry(BookEntry{Price: order.Price, Amount: order.Amount, Order: order})
+	book.addBuyBookEntry(BookEntry{Price: order.Price, Amount: order.Amount, Order: &order})
 	if book.HighestBid < order.Price || book.HighestBid == 0 {
 		book.HighestBid = order.Price
 	}
@@ -131,7 +131,7 @@ func (book *orderBook) processLimitSell(order Order) []Trade {
 	}
 
 	// if there are no more ordes just add the buy order to the list
-	book.addSellBookEntry(BookEntry{Price: order.Price, Amount: order.Amount, Order: order})
+	book.addSellBookEntry(BookEntry{Price: order.Price, Amount: order.Amount, Order: &order})
 	if book.LowestAsk > order.Price || book.LowestAsk == 0 {
 		book.LowestAsk = order.Price
 	}

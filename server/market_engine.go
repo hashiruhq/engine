@@ -166,7 +166,7 @@ func (mkt *marketEngine) ProcessOrder() {
 func (mkt *marketEngine) PublishTrades() {
 	for event := range mkt.trades {
 		for _, trade := range event.Trades {
-			rawTrade, _ := trade.ToJSON() // @todo thread error on encoding json object (low priority)
+			rawTrade, _ := trade.ToBinary() // @todo thread error on encoding json object (low priority)
 			mkt.producer.Input() <- &sarama.ProducerMessage{
 				Topic: mkt.config.config.Publish.Topic,
 				Value: sarama.ByteEncoder(rawTrade),

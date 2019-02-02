@@ -10,9 +10,9 @@ import (
 
 // BackupMarket saves the given snapshot of the order book as JSON into the backups folder with the name of the market pair
 // - It first saves into a temporary file before moving the file to the final localtion
-func (mkt *marketEngine) BackupMarket(market engine.Market) error {
+func (mkt *marketEngine) BackupMarket(market engine.MarketBackup) error {
 	file := mkt.config.config.Backup.Path + ".tmp"
-	rawMarket, _ := market.ToJSON()
+	rawMarket, _ := market.ToBinary()
 	ioutil.WriteFile(file, rawMarket, 0644)
 	os.Rename(mkt.config.config.Backup.Path+".tmp", mkt.config.config.Backup.Path)
 	return nil
@@ -28,8 +28,8 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 		return
 	}
 
-	var market engine.Market
-	market.FromJSON(content)
+	var market engine.MarketBackup
+	market.FromBinary(content)
 
 	// load all records from the backup into the order book
 	mkt.LoadMarket(market)
@@ -46,6 +46,6 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 	return nil
 }
 
-func (mkt *marketEngine) LoadMarket(market engine.Market) {
+func (mkt *marketEngine) LoadMarket(market engine.MarketBackup) {
 	mkt.engine.LoadMarket(market)
 }

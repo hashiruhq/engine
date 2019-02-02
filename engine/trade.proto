@@ -1,0 +1,9 @@
+syntax = "proto3";
+package engine;
+
+message Trade {
+  uint64 Price = 1;
+  uint64 Amount = 2;
+  string TakerOrderID = 3;
+  string MakerOrderID = 4;
+}

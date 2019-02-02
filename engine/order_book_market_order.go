@@ -85,7 +85,7 @@ func (book *orderBook) processMarketBuy(order Order) (Order, []Trade) {
 						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, amount, sellEntry.Order.Price))
 						sellEntry.Amount -= amount
 						order.Amount = 0
-						order.SetStatus(StatusFilled)
+						order.SetStatus(OrderStatus_Filled)
 						if sellEntry.Amount == 0 {
 							book.removeSellBookEntry(sellEntry, pricePoint, index)
 						}
@@ -99,7 +99,7 @@ func (book *orderBook) processMarketBuy(order Order) (Order, []Trade) {
 						trades = append(trades, NewTrade(order.ID, sellEntry.Order.ID, sellEntry.Amount, sellEntry.Price))
 						order.Amount -= sellEntry.Amount
 						amountAffordable -= sellEntry.Amount
-						order.SetStatus(StatusPartiallyFilled)
+						order.SetStatus(OrderStatus_PartiallyFilled)
 						// @todo CH: check for overflow issues
 						order.Funds -= utils.Multiply(sellEntry.Amount, sellEntry.Price, FundsPrecision)
 						book.removeSellBookEntry(sellEntry, pricePoint, index)
@@ -164,7 +164,7 @@ func (book *orderBook) processMarketSell(order Order) (Order, []Trade) {
 						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, order.Amount, buyEntry.Order.Price))
 						buyEntry.Amount -= order.Amount
 						order.Amount = 0
-						order.SetStatus(StatusFilled)
+						order.SetStatus(OrderStatus_Filled)
 						if buyEntry.Amount == 0 {
 							book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						}
@@ -177,7 +177,7 @@ func (book *orderBook) processMarketSell(order Order) (Order, []Trade) {
 					if buyEntry.Amount < order.Amount {
 						trades = append(trades, NewTrade(order.ID, buyEntry.Order.ID, buyEntry.Amount, buyEntry.Price))
 						order.Amount -= buyEntry.Amount
-						order.SetStatus(StatusPartiallyFilled)
+						order.SetStatus(OrderStatus_PartiallyFilled)
 						book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						index--
 						continue

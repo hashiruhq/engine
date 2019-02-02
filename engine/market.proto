@@ -1,0 +1,14 @@
+syntax = "proto3";
+package engine;
+
+import "book_entry.proto";
+
+message MarketBackup {
+  string Topic = 1;
+  int32 Partition = 2;
+  int64 Offset = 3;
+  uint64 LowestAsk = 4;
+  uint64 HighestBid = 5;
+  repeated BookEntry BuyOrders = 6;
+  repeated BookEntry SellOrders = 7;
+}

@@ -18,14 +18,10 @@ func TestTradeCreation(t *testing.T) {
 
 func TestTradeLoadFromJson(t *testing.T) {
 	Convey("Should be able to load a trade from json", t, func() {
-		var trade Trade
-		json := []byte(`{
-			"taker_order_id":"TST_1",
-			"maker_order_id":"TST_2",
-			"price": "1312213.00010201",
-			"amount": "8483828.29993942"
-		}`)
-		trade.FromJSON(json)
+		trade := NewTrade("TST_1", "TST_2", 848382829993942, 131221300010201)
+		data, _ := trade.ToBinary()
+		trade = Trade{}
+		trade.FromBinary(data)
 		So(trade.Price, ShouldEqual, 131221300010201)
 		So(trade.Amount, ShouldEqual, 848382829993942)
 		So(trade.TakerOrderID, ShouldEqual, "TST_1")
@@ -35,10 +31,11 @@ func TestTradeLoadFromJson(t *testing.T) {
 
 func TestTradeConvertToJson(t *testing.T) {
 	Convey("Should be able to convert a trade to json string", t, func() {
-		var trade Trade
-		json := `{"taker_order_id":"TST_1","maker_order_id":"TST_2","price":"1312213.00010201","amount":"8483828.29993942"}`
-		trade.FromJSON([]byte(json))
-		bytes, _ := trade.ToJSON()
-		So(string(bytes), ShouldEqual, json)
+		trade := NewTrade("TST_1", "TST_2", 848382829993942, 131221300010201)
+		initData, _ := trade.ToBinary()
+		trade = Trade{}
+		trade.FromBinary(initData)
+		encoded, _ := trade.ToBinary()
+		So(encoded, ShouldResemble, initData)
 	})
 }

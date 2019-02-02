@@ -40,7 +40,7 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 				return
 			}
 			var order engine.Order
-			order.FromJSON(msg)
+			order.FromBinary(msg)
 			orders <- order
 		}
 	}

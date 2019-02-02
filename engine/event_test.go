@@ -3,16 +3,16 @@ package engine_test
 import (
 	"testing"
 
-	"gitlab.com/around25/products/matching-engine/engine"
-
 	"github.com/Shopify/sarama"
-
 	. "github.com/smartystreets/goconvey/convey"
+	"gitlab.com/around25/products/matching-engine/engine"
 )
 
 func TestEventsUsage(t *testing.T) {
 	Convey("Create a new event", t, func() {
-		msg := &sarama.ConsumerMessage{Value: []byte(`{"id": "112", "price": "12.00", "amount": "1213.00"}`)}
+		order := engine.Order{ID: "112", Price: 1200000000, Amount: 121300000000}
+		encoded, _ := order.ToBinary()
+		msg := &sarama.ConsumerMessage{Value: encoded}
 		event := engine.NewEvent(msg)
 		Convey("I should be able to decode the message as an order", func() {
 			event.Decode()

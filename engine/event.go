@@ -18,7 +18,7 @@ func NewEvent(msg *sarama.ConsumerMessage) Event {
 
 // Decode the contained message into a proper order
 func (event *Event) Decode() {
-	event.Order.FromJSON(event.Msg.Value)
+	event.Order.FromBinary(event.Msg.Value)
 }
 
 // SetTrades - sets the generated trades from that order on the current market

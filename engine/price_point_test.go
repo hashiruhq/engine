@@ -11,7 +11,7 @@ func TestPricePointCreation(t *testing.T) {
 		pricePoints := NewPricePoints()
 		Convey("And add a new price point to it with a new book", func() {
 			order := NewOrder("TEST_1", uint64(100000000), uint64(12000000000), 1, 1, 1)
-			bookEntry := NewBookEntry(order)
+			bookEntry := BookEntry{Price: order.Price, Amount: order.Amount, Order: &order}
 			pricePoints.Set(bookEntry.Price, &PricePoint{
 				Entries: []BookEntry{bookEntry},
 			})

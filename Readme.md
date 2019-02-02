@@ -144,6 +144,8 @@ Duration (seconds): 1.205161
 
 ## Testing
 
+`go test -bench=^BenchmarkWithRandomData -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m"  ./benchmarks`
+`go-torch benchmarks.test cpu.prof`
 
 **Create flame chart out of active server**
 ```

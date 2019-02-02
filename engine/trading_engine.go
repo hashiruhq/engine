@@ -4,8 +4,8 @@ package engine
 type TradingEngine interface {
 	Process(order Order) []Trade
 	GetOrderBook() OrderBook
-	BackupMarket() Market
-	LoadMarket(Market) error
+	BackupMarket() MarketBackup
+	LoadMarket(MarketBackup) error
 	CancelOrder(order Order) bool
 	ProcessEvent(order Order) interface{}
 }
@@ -32,21 +32,21 @@ func (ngin *tradingEngine) CancelOrder(order Order) bool {
 	return ngin.OrderBook.Cancel(order)
 }
 
-func (ngin *tradingEngine) LoadMarket(market Market) error {
+func (ngin *tradingEngine) LoadMarket(market MarketBackup) error {
 	return ngin.GetOrderBook().Load(market)
 }
 
-func (ngin *tradingEngine) BackupMarket() Market {
+func (ngin *tradingEngine) BackupMarket() MarketBackup {
 	return ngin.GetOrderBook().Backup()
 }
 
 func (ngin *tradingEngine) ProcessEvent(order Order) interface{} {
 	switch order.EventType {
-	case EventTypeNewOrder:
+	case CommandType_NewOrder:
 		return ngin.Process(order)
-	case EventTypeCancelOrder:
+	case CommandType_CancelOrder:
 		return ngin.CancelOrder(order)
-	case EventTypeBackupMarket:
+	case CommandType_BackupMarket:
 		return ngin.BackupMarket()
 	}
 	return nil
