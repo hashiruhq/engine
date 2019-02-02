@@ -154,6 +154,7 @@ go-torch -u http://127.0.0.1:6060
 
 **Start GoConvey**
 ```
+govendor install
 goconvey .
 ```
 

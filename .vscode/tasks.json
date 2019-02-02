@@ -26,7 +26,7 @@
     {
       "label": "Go: Benchmark Random Data",
       "type": "shell",
-      "command": "/usr/local/bin/go test -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData$"
+      "command": "/usr/local/bin/go test -cpuprofile cpu.prof -memprofile mem.prof -benchmem -timeout 20s -run=^$ trading_engine/trading_engine -bench ^BenchmarkWithRandomData$"
     }
   ]
 }
