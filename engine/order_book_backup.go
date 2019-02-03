@@ -20,8 +20,8 @@ func (book *orderBook) Backup() MarketBackup {
 	market := MarketBackup{
 		LowestAsk:  book.LowestAsk,
 		HighestBid: book.HighestBid,
-		BuyOrders:  make([]*BookEntry, 0, book.BuyEntries.Len()),
-		SellOrders: make([]*BookEntry, 0, book.SellEntries.Len()),
+		BuyOrders:  make([]*Order, 0, book.BuyEntries.Len()),
+		SellOrders: make([]*Order, 0, book.SellEntries.Len()),
 	}
 
 	if market.LowestAsk != 0 {

@@ -84,22 +84,36 @@ func BenchmarkEncodeToProto(benchmark *testing.B) {
 
 func BenchmarkWithRandomData(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
+	trades := make([]engine.Trade, 0, 100)
+	processing_trades := make([]engine.Trade, 0, 100)
 	// ngin := engine.NewTradingEngine()
 	for j := 0; j < benchmark.N; j++ {
-		ngin.Process(arr[j])
+		ngin.Process(arr[j], &trades)
+		if len(trades) >= cap(trades)/2+1 {
+			copy(processing_trades, trades)
+			trades = trades[0:0]
+			processing_trades = processing_trades[0:0]
+		}
 	}
 	PrintOrderLogs(ngin, benchmark.N, startTime)
 }
 
 func BenchmarkWithDecodeAndEncodeRandomData(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
+	trades := make([]engine.Trade, 0, 200)
+	processing_trades := make([]engine.Trade, 0, 200)
 	// ngin := engine.NewTradingEngine()
 	for j := 0; j < benchmark.N; j++ {
 		order := engine.Order{}
 		order.FromBinary(msgs[j])
-		trades := ngin.Process(order)
-		for _, trade := range trades {
-			trade.ToBinary()
+		ngin.Process(order, &trades)
+		if len(trades) >= cap(trades)/2+1 {
+			for _, trade := range trades {
+				trade.ToBinary()
+			}
+			copy(processing_trades, trades)
+			trades = trades[0:0]
+			processing_trades = processing_trades[0:0]
 		}
 	}
 	PrintOrderLogs(ngin, benchmark.N, startTime)

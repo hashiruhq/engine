@@ -60,11 +60,15 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 	go receiveMessages(messages, benchmark.N)
 	go decode(messages, orders)
 	go func(ngin engine.TradingEngine, orders <-chan engine.Order, n int) {
+		trades := make([]engine.Trade, 1000)
 		for {
 			order := <-orders
-			trades := ngin.Process(order)
+			ngin.Process(order, &trades)
 			ordersCompleted++
-			tradesCompleted += len(trades)
+			if len(trades) >= cap(trades)/2+1 {
+				tradesCompleted += len(trades)
+				trades = trades[0:0]
+			}
 			if ordersCompleted >= n {
 				done <- true
 				return

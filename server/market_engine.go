@@ -151,7 +151,7 @@ func (mkt *marketEngine) ProcessOrder() {
 			lastPartition = event.Msg.Partition
 			lastOffset = event.Msg.Offset
 			// Process each order and generate trades
-			event.SetTrades(mkt.engine.Process(event.Order))
+			// event.SetTrades(mkt.engine.Process(event.Order))
 			// Monitor: Update order count for monitoring with prometheus
 			engineOrderCount.WithLabelValues(mkt.name).Inc()
 			ordersQueued.WithLabelValues(mkt.name).Dec()

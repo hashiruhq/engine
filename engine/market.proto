@@ -1,7 +1,7 @@
 syntax = "proto3";
 package engine;
 
-import "book_entry.proto";
+import "order.proto";
 
 message MarketBackup {
   string Topic = 1;
@@ -9,6 +9,6 @@ message MarketBackup {
   int64 Offset = 3;
   uint64 LowestAsk = 4;
   uint64 HighestBid = 5;
-  repeated BookEntry BuyOrders = 6;
-  repeated BookEntry SellOrders = 7;
+  repeated Order BuyOrders = 6;
+  repeated Order SellOrders = 7;
 }
