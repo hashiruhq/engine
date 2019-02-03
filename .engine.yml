@@ -13,7 +13,7 @@ markets:
     base_max: 10000 # not used yet
     backup:
       interval: 1
-      path: /root/backups/btc.usd.json
+      path: /root/backups/btc.usd.dat
     listen: 
       broker: requests
       topic: engine.orders.btc.usd
@@ -28,7 +28,7 @@ markets:
     base_max: 10000 # not used yet
     backup:
       interval: 1
-      path: /root/backups/btc.usd.json
+      path: /root/backups/btc.usd.dat
     listen: 
       broker: requests
       topic: engine.orders.eth.usd

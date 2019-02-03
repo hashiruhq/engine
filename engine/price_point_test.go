@@ -11,9 +11,9 @@ func TestPricePointCreation(t *testing.T) {
 		pricePoints := NewPricePoints()
 		Convey("And add a new price point to it with a new book", func() {
 			order := NewOrder("TEST_1", uint64(100000000), uint64(12000000000), 1, 1, 1)
-			bookEntry := NewBookEntry(order)
+			bookEntry := order
 			pricePoints.Set(bookEntry.Price, &PricePoint{
-				Entries: []BookEntry{bookEntry},
+				Entries: []Order{bookEntry},
 			})
 			So(pricePoints.Len(), ShouldEqual, 1)
 			Convey("And the order added should be the same as the one retrieved", func() {
@@ -32,9 +32,9 @@ func TestPricePointCreation(t *testing.T) {
 		So(iterator.Value(), ShouldBeNil)
 		iterator.Close()
 		// test with list items
-		firstPoint := &PricePoint{Entries: []BookEntry{BookEntry{Amount: 1}}}
-		secondPoint := &PricePoint{Entries: []BookEntry{BookEntry{Amount: 2}}}
-		thirdPoint := &PricePoint{Entries: []BookEntry{BookEntry{Amount: 3}}}
+		firstPoint := &PricePoint{Entries: []Order{Order{Amount: 1}}}
+		secondPoint := &PricePoint{Entries: []Order{Order{Amount: 2}}}
+		thirdPoint := &PricePoint{Entries: []Order{Order{Amount: 3}}}
 		pricePoints.Set(10, firstPoint)
 		pricePoints.Set(13, secondPoint)
 		pricePoints.Set(15, thirdPoint)
@@ -127,7 +127,7 @@ func TestPricePointCreation(t *testing.T) {
 		Convey("Should panic at set for key=0", func() {
 			So(func() {
 				pricePoints := NewPricePoints()
-				pricePoints.Set(0, &PricePoint{Entries: []BookEntry{BookEntry{Amount: 1}}})
+				pricePoints.Set(0, &PricePoint{Entries: []Order{Order{Amount: 1}}})
 			}, ShouldPanic)
 		})
 

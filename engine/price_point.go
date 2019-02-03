@@ -1,11 +1,10 @@
 package engine
 
 // import "github.com/ryszard/goskiplist/skiplist"
-// import "engine/skiplist"
 
 // PricePoint holds the records for a particular price
 type PricePoint struct {
-	Entries []BookEntry
+	Entries []Order
 }
 
 // NewPricePoints creates a new skiplist in which to hold all price points

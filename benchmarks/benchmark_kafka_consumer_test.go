@@ -33,14 +33,14 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 	done := make(chan bool)
 	defer close(done)
 
-	jsonDecode := func(messages <-chan []byte, orders chan<- engine.Order) {
+	decode := func(messages <-chan []byte, orders chan<- engine.Order) {
 		for {
 			msg, more := <-messages
 			if !more {
 				return
 			}
 			var order engine.Order
-			order.FromJSON(msg)
+			order.FromBinary(msg)
 			orders <- order
 		}
 	}
@@ -58,13 +58,17 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 	benchmark.ResetTimer()
 
 	go receiveMessages(messages, benchmark.N)
-	go jsonDecode(messages, orders)
+	go decode(messages, orders)
 	go func(ngin engine.TradingEngine, orders <-chan engine.Order, n int) {
+		trades := make([]engine.Trade, 1000)
 		for {
 			order := <-orders
-			trades := ngin.Process(order)
+			ngin.Process(order, &trades)
 			ordersCompleted++
-			tradesCompleted += len(trades)
+			if len(trades) >= cap(trades)/2+1 {
+				tradesCompleted += len(trades)
+				trades = trades[0:0]
+			}
 			if ordersCompleted >= n {
 				done <- true
 				return

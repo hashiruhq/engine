@@ -1,27 +1,27 @@
 package engine
 
-func (book *orderBook) Load(market Market) error {
+func (book *orderBook) Load(market MarketBackup) error {
 	book.LowestAsk = market.LowestAsk
 	book.HighestBid = market.HighestBid
 
 	for _, buyBookEntry := range market.BuyOrders {
-		book.addBuyBookEntry(buyBookEntry)
+		book.addBuyBookEntry(*buyBookEntry)
 	}
 
 	for _, sellBookEntry := range market.SellOrders {
-		book.addSellBookEntry(sellBookEntry)
+		book.addSellBookEntry(*sellBookEntry)
 	}
 
 	return nil
 }
 
 // Backup the order book in another structure for exporting
-func (book *orderBook) Backup() Market {
-	market := Market{
+func (book *orderBook) Backup() MarketBackup {
+	market := MarketBackup{
 		LowestAsk:  book.LowestAsk,
 		HighestBid: book.HighestBid,
-		BuyOrders:  make([]BookEntry, 0, book.BuyEntries.Len()),
-		SellOrders: make([]BookEntry, 0, book.SellEntries.Len()),
+		BuyOrders:  make([]*Order, 0, book.BuyEntries.Len()),
+		SellOrders: make([]*Order, 0, book.SellEntries.Len()),
 	}
 
 	if market.LowestAsk != 0 {
@@ -31,7 +31,7 @@ func (book *orderBook) Backup() Market {
 			for {
 				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.Entries {
-					market.SellOrders = append(market.SellOrders, entry)
+					market.SellOrders = append(market.SellOrders, &entry)
 				}
 				if ok := iterator.Next(); !ok {
 					break
@@ -47,7 +47,7 @@ func (book *orderBook) Backup() Market {
 			for {
 				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.Entries {
-					market.BuyOrders = append(market.BuyOrders, entry)
+					market.BuyOrders = append(market.BuyOrders, &entry)
 				}
 				if ok := iterator.Previous(); !ok {
 					break

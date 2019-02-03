@@ -59,7 +59,7 @@ func NewMarketEngine(config MarketEngineConfig) MarketEngine {
 func (mkt *marketEngine) Start() {
 	// listen for producer errors when publishing trades
 	go mkt.ReceiveProducerErrors()
-	// decode the json value for each message received into an Order Structure
+	// decode the binary value for each message received into an Order Structure
 	go mkt.DecodeMessage()
 	// process each order by the trading engine and forward trades to the trades channel
 	go mkt.ProcessOrder()
@@ -107,7 +107,7 @@ func (mkt *marketEngine) ScheduleBackup() {
 	}
 }
 
-// DecodeMessage decode the json value for each message received into an Order struct
+// DecodeMessage decode the binary value for each message received into an Order struct
 // before sending it for processing by the trading engine
 //
 // Message flow is unidirectional from the messages channel to the orders channel
@@ -142,16 +142,18 @@ func (mkt *marketEngine) ProcessOrder() {
 				market.Offset = lastOffset
 				prevOffset = lastOffset
 				mkt.BackupMarket(market)
-				log.Printf("[Backup] [%s] Snapshot created in /root/backups/%s.json\n", mkt.name, mkt.name)
+				log.Printf("[Backup] [%s] Snapshot created\n", mkt.name)
 			} else {
-				log.Printf("[Backup] [%s] Skipped. No changes since last backup.\n", mkt.name)
+				log.Printf("[Backup] [%s] Skipped. No changes since last backup\n", mkt.name)
 			}
 		case event := <-mkt.orders:
 			lastTopic = event.Msg.Topic
 			lastPartition = event.Msg.Partition
 			lastOffset = event.Msg.Offset
+			trades := make([]engine.Trade, 0, 5)
 			// Process each order and generate trades
-			event.SetTrades(mkt.engine.Process(event.Order))
+			mkt.engine.Process(event.Order, &trades)
+			event.SetTrades(trades)
 			// Monitor: Update order count for monitoring with prometheus
 			engineOrderCount.WithLabelValues(mkt.name).Inc()
 			ordersQueued.WithLabelValues(mkt.name).Dec()
@@ -166,7 +168,7 @@ func (mkt *marketEngine) ProcessOrder() {
 func (mkt *marketEngine) PublishTrades() {
 	for event := range mkt.trades {
 		for _, trade := range event.Trades {
-			rawTrade, _ := trade.ToJSON() // @todo thread error on encoding json object (low priority)
+			rawTrade, _ := trade.ToBinary() // @todo add better error handling on encoding
 			mkt.producer.Input() <- &sarama.ProducerMessage{
 				Topic: mkt.config.config.Publish.Topic,
 				Value: sarama.ByteEncoder(rawTrade),
