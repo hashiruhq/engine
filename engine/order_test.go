@@ -8,7 +8,7 @@ import (
 
 func TestOrderCreation(t *testing.T) {
 	Convey("Should be able to create a new order", t, func() {
-		order := NewOrder("TEST_1", 100000000, 12000000000, 1, 2, 1)
+		order := NewOrder(1, 100000000, 12000000000, 1, 2, 1)
 		So(order.Amount, ShouldEqual, 12000000000)
 		So(order.Price, ShouldEqual, 100000000)
 		So(order.Side, ShouldEqual, 1)
@@ -18,8 +18,8 @@ func TestOrderCreation(t *testing.T) {
 
 func TestOrderComparisonByPrice(t *testing.T) {
 	Convey("Should be able to compare two orders by price", t, func() {
-		order1 := NewOrder("TEST_1", 100000000, 12000000000, 1, 2, 1)
-		order2 := NewOrder("TEST_2", 110000000, 12000000000, 1, 2, 1)
+		order1 := NewOrder(1, 100000000, 12000000000, 1, 2, 1)
+		order2 := NewOrder(2, 110000000, 12000000000, 1, 2, 1)
 		So(order1.LessThan(order2), ShouldBeTrue)
 	})
 }

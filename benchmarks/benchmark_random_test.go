@@ -8,7 +8,6 @@ import (
 	"math"
 	"math/rand"
 	"os"
-	"strconv"
 	"testing"
 	"time"
 
@@ -18,7 +17,7 @@ import (
 
 var arr []engine.Order = make([]engine.Order, 0, 2000000)
 var msgs [][]byte = make([][]byte, 0, 2000000)
-var ngin = engine.NewTradingEngine()
+var ngin = engine.NewTradingEngine("btcusd", 8, 8)
 
 func init() {
 	rand.Seed(42)
@@ -47,7 +46,7 @@ func init() {
 
 func BenchmarkDecodeFromProto(benchmark *testing.B) {
 	order := &engine.Order{
-		ID:        "TST_1",
+		ID:        1,
 		Market:    "btc-usd",
 		Amount:    848382829993942,
 		Price:     131221300010201,
@@ -66,7 +65,7 @@ func BenchmarkDecodeFromProto(benchmark *testing.B) {
 
 func BenchmarkEncodeToProto(benchmark *testing.B) {
 	order := &engine.Order{
-		ID:        "TST_1",
+		ID:        1,
 		Market:    "btc-usd",
 		Amount:    848382829993942,
 		Price:     131221300010201,
@@ -119,6 +118,12 @@ func BenchmarkWithDecodeAndEncodeRandomData(benchmark *testing.B) {
 	PrintOrderLogs(ngin, benchmark.N, startTime)
 }
 
+func BenchmarkTimestamp(benchmark *testing.B) {
+	for j := 0; j < benchmark.N; j++ {
+		time.Now().UTC().Unix()
+	}
+}
+
 // GenerateRandomRecordsInFile create N orders and stores them in the given file
 // Use "~/Incubator/go/src/engine/priv/data/market.txt" locally
 // The file is opened with append and 0644 permissions
@@ -130,7 +135,7 @@ func GenerateRandomRecordsInFile(file *string, n int) {
 	}
 	defer fh.Close()
 	for i := 0; i < n; i++ {
-		id := "ID_" + strconv.Itoa(i)
+		id := uint64(i + 1)
 		price := uint64(10000100-3*i-int(math.Ceil(10000*rand.Float64()))) * 100000000
 		amount := uint64(10001-int(math.Ceil(10000*rand.Float64()))) * 100000000
 		side := engine.MarketSide_Sell

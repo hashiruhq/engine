@@ -110,7 +110,7 @@ message Order {
 	// Common fields
 	//******************************************
 	// The id of the order
-  string ID = 9;
+	uint64 ID = 9;
   // The market for which this order is for. Ex: eth-btc
   string Market = 10;
   // The status is dictated by the stage in the execution of the order by the matching engine
@@ -119,7 +119,10 @@ message Order {
 	// 2 = Partially Filled
 	// 3 = Cancelled
 	// 4 = Filled
-  OrderStatus Status = 11;
+	OrderStatus Status = 11;
+
+	// The unique identifier the account that added the order
+	uint64 OwnerID = 12;
 
   // User Order ID: An id defined by the user to identity the order
   // UserOrderId string

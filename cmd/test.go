@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"math"
 	"math/rand"
@@ -61,7 +60,7 @@ func test_gen_orders(timeout, delay, topicCount int) {
 			index := 0
 			for {
 				topicIndex := rand.Intn(maxTopics)
-				id := "ID_" + fmt.Sprintf("%d", index)
+				id := index
 				price := uint64(math.Floor((1 + float64(index) + 10000*rand.Float64()) * 100000000))
 				amount := uint64(math.Floor((10001 - 10000*rand.Float64()) * 100000000))
 				side := engine.MarketSide_Buy
@@ -69,7 +68,7 @@ func test_gen_orders(timeout, delay, topicCount int) {
 					side = engine.MarketSide_Sell
 				}
 				order := engine.Order{
-					ID:        id,
+					ID:        uint64(id),
 					Price:     price,
 					Amount:    amount,
 					Side:      side,

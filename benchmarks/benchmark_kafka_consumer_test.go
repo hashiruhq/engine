@@ -10,7 +10,7 @@ import (
 )
 
 func BenchmarkKafkaConsumer(benchmark *testing.B) {
-	ngin := engine.NewTradingEngine()
+	ngin := engine.NewTradingEngine("btcusd", 8, 8)
 
 	// generateOrdersInKafka(benchmark.N)
 
