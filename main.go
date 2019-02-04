@@ -2,7 +2,8 @@ package main
 
 import (
 	"runtime"
-	"trading_engine/cmd"
+
+	"gitlab.com/around25/products/matching-engine/cmd"
 )
 
 func init() {

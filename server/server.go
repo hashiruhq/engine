@@ -10,7 +10,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-	"trading_engine/net"
+
+	"gitlab.com/around25/products/matching-engine/net"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

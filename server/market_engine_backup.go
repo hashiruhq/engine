@@ -4,14 +4,15 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"trading_engine/trading_engine"
+
+	"gitlab.com/around25/products/matching-engine/engine"
 )
 
-// BackupMarket saves the given snapshot of the order book as JSON into the backups folder with the name of the market pair
+// BackupMarket saves the given snapshot of the order book as binary into the backups folder with the name of the market pair
 // - It first saves into a temporary file before moving the file to the final localtion
-func (mkt *marketEngine) BackupMarket(market trading_engine.Market) error {
+func (mkt *marketEngine) BackupMarket(market engine.MarketBackup) error {
 	file := mkt.config.config.Backup.Path + ".tmp"
-	rawMarket, _ := market.ToJSON()
+	rawMarket, _ := market.ToBinary()
 	ioutil.WriteFile(file, rawMarket, 0644)
 	os.Rename(mkt.config.config.Backup.Path+".tmp", mkt.config.config.Backup.Path)
 	return nil
@@ -24,13 +25,25 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 	file := mkt.config.config.Backup.Path
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
+		log.Println("Backup file does not exist:", file)
 		return
 	}
 
-	var market trading_engine.Market
-	market.FromJSON(content)
+	var market engine.MarketBackup
+	log.Println("Load market from binary. Content size:", len(content))
+	market.FromBinary(content)
 
 	// load all records from the backup into the order book
+	log.Println(
+		"Loading market from market backup. \n",
+		"Highest Bid:", market.GetHighestBid(),
+		"Lowest Ask:", market.GetLowestAsk(),
+		"Kafka Topic:", market.GetTopic(),
+		"Kafka Partition:", market.GetPartition(),
+		"Kafka Offset:", market.GetOffset(),
+		"Buy Orders Found:", len(market.GetBuyOrders()),
+		"Sell Orders Found:", len(market.GetSellOrders()),
+	)
 	mkt.LoadMarket(market)
 
 	// mark the last message that has been processed by the engine to the one saved in the backup file
@@ -45,6 +58,6 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 	return nil
 }
 
-func (mkt *marketEngine) LoadMarket(market trading_engine.Market) {
+func (mkt *marketEngine) LoadMarket(market engine.MarketBackup) {
 	mkt.engine.LoadMarket(market)
 }

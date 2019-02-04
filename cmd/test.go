@@ -1,15 +1,17 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-	"trading_engine/net"
-	"trading_engine/server"
+
+	"gitlab.com/around25/products/matching-engine/engine"
+	"gitlab.com/around25/products/matching-engine/net"
+	"gitlab.com/around25/products/matching-engine/server"
 
 	"github.com/Shopify/sarama"
 	"github.com/spf13/cobra"
@@ -58,14 +60,25 @@ func test_gen_orders(timeout, delay, topicCount int) {
 			index := 0
 			for {
 				topicIndex := rand.Intn(maxTopics)
-				id := "ID_" + fmt.Sprintf("%d", index)
-				price := 1 + float64(index) + 10000*rand.Float64()
-				amount := 10001 - 10000*rand.Float64()
-				side := int8(1 + rand.Intn(2)%2)
-				order := fmt.Sprintf(`{"base":"sym","market":"tst","id":"%s","price":"%.8f","amount":"%.8f","side":%d,"type":1,"event_type":1}`, id, price, amount, side)
+				id := index
+				price := uint64(math.Floor((1 + float64(index) + 10000*rand.Float64()) * 100000000))
+				amount := uint64(math.Floor((10001 - 10000*rand.Float64()) * 100000000))
+				side := engine.MarketSide_Buy
+				if rand.Intn(2)%2 == 1 {
+					side = engine.MarketSide_Sell
+				}
+				order := engine.Order{
+					ID:        uint64(id),
+					Price:     price,
+					Amount:    amount,
+					Side:      side,
+					EventType: engine.CommandType_NewOrder,
+					Type:      engine.OrderType_Limit,
+				}
+				data, _ := order.ToBinary()
 				producer.Input() <- &sarama.ProducerMessage{
 					Topic: topics[topicIndex],
-					Value: sarama.ByteEncoder(([]byte)(order)),
+					Value: sarama.ByteEncoder(data),
 				}
 				index++
 				if delay > 0 {

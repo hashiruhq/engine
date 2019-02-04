@@ -52,6 +52,8 @@ The engine should support the following actions:
 This bechmark checks the performance of executing orders after they are available in memory.
 
 ```
+// Old benchmarks
+
 Total Orders: 1000000
 Total Trades: 996903
 Orders/second: 667924.145191
@@ -62,7 +64,70 @@ Pending Sell: 2838
 Highest Bid: 7007361
 Duration (seconds): 1.497176
 
- 1000000	      1497 ns/op	     642 B/op	       6 allocs/op
+1000000	      1497 ns/op	     642 B/op	       6 allocs/op
+
+// New Benchmarks without decoding/encoding orders/trades
+Total Orders: 100
+Orders/second: 980392.156863
+Pending Buy: 18
+Lowest Ask: 999705600000000
+Pending Sell: 10
+Highest Bid: 999622700000000
+Duration (seconds): 0.000102
+
+Total Orders: 10000
+Orders/second: 1511944.360448
+Pending Buy: 591
+Lowest Ask: 996920900000000
+Pending Sell: 662
+Highest Bid: 996859500000000
+Duration (seconds): 0.006614
+
+Total Orders: 1000000
+Orders/second: 1160515.547427
+Pending Buy: 2244
+Lowest Ask: 996670000000000
+Pending Sell: 1038
+Highest Bid: 700948400000000
+Duration (seconds): 0.861686
+
+Total Orders: 2000000
+Orders/second: 1058599.293173
+Pending Buy: 4207
+Lowest Ask: 994008100000000
+Pending Sell: 1350
+Highest Bid: 402202500000000
+Duration (seconds): 1.889289
+
+ 2000000	       944 ns/op	     505 B/op	       3 allocs/op
+
+// New Benchmarks with decoding/encoding orders/trades
+
+Total Orders: 100
+Orders/second: 735294.117647
+Pending Buy: 18
+Lowest Ask: 999705600000000
+Pending Sell: 10
+Highest Bid: 999622700000000
+Duration (seconds): 0.000136
+
+Total Orders: 10000
+Orders/second: 831393.415364
+Pending Buy: 591
+Lowest Ask: 996920900000000
+Pending Sell: 662
+Highest Bid: 996859500000000
+Duration (seconds): 0.012028
+
+Total Orders: 1000000
+Orders/second: 600300.990917
+Pending Buy: 2244
+Lowest Ask: 996670000000000
+Pending Sell: 1038
+Highest Bid: 700948400000000
+Duration (seconds): 1.665831
+
+ 1000000	      1665 ns/op	     698 B/op	       7 allocs/op
 ```
 
 ### Consumer and Producer
@@ -86,7 +151,7 @@ Duration (seconds): 1.205161
 ```
 
 ## Further optimizations
-- Decrease the size of the Kafka message value by switching the JSON encoded order to either Protobufs or FIX formats
+- Add support for FIX formats
 - Maybe Switch Kafka Client to: https://github.com/confluentinc/confluent-kafka-go
 - Optimize Kafka Producer rate
 - Use the golang profiler to see where the bottlenecks are in the code
@@ -144,6 +209,8 @@ Duration (seconds): 1.205161
 
 ## Testing
 
+`go test -bench=^BenchmarkWithRandomData -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m"  ./benchmarks`
+`go-torch benchmarks.test cpu.prof`
 
 **Create flame chart out of active server**
 ```
@@ -152,6 +219,7 @@ go-torch -u http://127.0.0.1:6060
 
 **Start GoConvey**
 ```
+govendor install
 goconvey .
 ```
 
