@@ -33,8 +33,9 @@ type TopicConfig struct {
 
 // MarketConfig structure
 type MarketConfig struct {
-	Base  string
-	Quote string
+	MarketID        string `mapstructure:"market_id"`
+	PricePrecision  int    `mapstructure:"price_precision"`
+	VolumePrecision int    `mapstructure:"volume_precision"`
 
 	QuoteIncrements float64 `mapstructure:"quote_increments"`
 	BaseMin         float64 `mapstructure:"base_min"`

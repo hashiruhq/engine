@@ -4,19 +4,8 @@ import (
 	proto "github.com/golang/protobuf/proto"
 )
 
-// PricePrecision - The maximum precision of the price for an item in the market
-// Max Price: 184467440737.09551615
-const PricePrecision = 8
-
-// AmountPrecision - The maximum precision of the amount for an item in the market
-// Max Amount: 184467440737.09551615
-const AmountPrecision = 8
-
-// FundsPrecision - the precision for the provided funds
-const FundsPrecision = 8
-
 // NewOrder create a new order
-func NewOrder(id string, price, amount uint64, side MarketSide, category OrderType, eventType CommandType) Order {
+func NewOrder(id, price, amount uint64, side MarketSide, category OrderType, eventType CommandType) Order {
 	return Order{ID: id, Price: price, Amount: amount, Side: side, Type: category, EventType: eventType}
 }
 

@@ -16,8 +16,8 @@ type tradingEngine struct {
 }
 
 // NewTradingEngine creates a new trading engine that contains an empty order book and can start receving requests
-func NewTradingEngine() TradingEngine {
-	orderBook := NewOrderBook()
+func NewTradingEngine(marketID string, pricePrecision, volumePrecision int) TradingEngine {
+	orderBook := NewOrderBook(marketID, pricePrecision, volumePrecision)
 	return &tradingEngine{
 		OrderBook: orderBook,
 	}

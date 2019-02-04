@@ -1,14 +1,23 @@
 package engine
 
-import proto "github.com/golang/protobuf/proto"
+import (
+	"time"
+
+	proto "github.com/golang/protobuf/proto"
+)
 
 // NewTrade Creates a new trade between the taker order and the maker order
-func NewTrade(takerOrder string, makerOrder string, amount, price uint64) Trade {
+func NewTrade(market string, makerSide MarketSide, askID, bidID, askOwnerID, bidOwnerID, amount, price uint64) Trade {
 	return Trade{
-		TakerOrderID: takerOrder,
-		MakerOrderID: makerOrder,
-		Amount:       amount,
-		Price:        price,
+		Market:     market,
+		MakerSide:  makerSide,
+		AskID:      askID,
+		AskOwnerID: askOwnerID,
+		BidID:      bidID,
+		BidOwnerID: bidOwnerID,
+		Amount:     amount,
+		Price:      price,
+		CreatedAt:  time.Now().UTC().Unix(),
 	}
 }
 

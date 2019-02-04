@@ -72,7 +72,7 @@ func (book *orderBook) processMarketBuy(order Order, trades *[]Trade) Order {
 				pricePoint := iterator.Value()
 				complete := false
 				// calculate how much we could afford at this price
-				amountAffordable := utils.Divide(order.Funds, iterator.Key(), AmountPrecision)
+				amountAffordable := utils.Divide(order.Funds, iterator.Key(), book.PricePrecision, book.PricePrecision, book.VolumePrecision)
 				for index := 0; index < len(pricePoint.Entries); index++ {
 					sellEntry := &pricePoint.Entries[index]
 
@@ -81,7 +81,8 @@ func (book *orderBook) processMarketBuy(order Order, trades *[]Trade) Order {
 					// if we can fill the amount instantly and we have the necessary funds then fill the order and return trade
 					// if we can fill the amount instantly, but we don't have the necessary funds then fill as much as we can afford and return the trade
 					if sellEntry.Amount >= amount {
-						*trades = append(*trades, NewTrade(order.ID, sellEntry.ID, amount, sellEntry.Price))
+						// funds := utils.Multiply(amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Sell, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, amount, sellEntry.Price))
 						sellEntry.Amount -= amount
 						order.Amount = 0
 						order.SetStatus(OrderStatus_Filled)
@@ -95,12 +96,13 @@ func (book *orderBook) processMarketBuy(order Order, trades *[]Trade) Order {
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
 					if sellEntry.Amount < amount {
-						*trades = append(*trades, NewTrade(order.ID, sellEntry.ID, sellEntry.Amount, sellEntry.Price))
+						// @todo CH: check for overflow issues
+						funds := utils.Multiply(amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Sell, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, sellEntry.Amount, sellEntry.Price))
 						order.Amount -= sellEntry.Amount
 						amountAffordable -= sellEntry.Amount
 						order.SetStatus(OrderStatus_PartiallyFilled)
-						// @todo CH: check for overflow issues
-						order.Funds -= utils.Multiply(sellEntry.Amount, sellEntry.Price, FundsPrecision)
+						order.Funds -= funds
 						book.removeSellBookEntry(sellEntry, pricePoint, index)
 						index--
 						continue
@@ -153,7 +155,8 @@ func (book *orderBook) processMarketSell(order Order, trades *[]Trade) Order {
 					buyEntry := &pricePoint.Entries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
 					if buyEntry.Amount >= order.Amount {
-						*trades = append(*trades, NewTrade(order.ID, buyEntry.ID, order.Amount, buyEntry.Price))
+						// funds := utils.Multiply(order.Amount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Buy, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, order.Amount, buyEntry.Price))
 						buyEntry.Amount -= order.Amount
 						order.Amount = 0
 						order.SetStatus(OrderStatus_Filled)
@@ -167,7 +170,8 @@ func (book *orderBook) processMarketSell(order Order, trades *[]Trade) Order {
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
 					if buyEntry.Amount < order.Amount {
-						*trades = append(*trades, NewTrade(order.ID, buyEntry.ID, buyEntry.Amount, buyEntry.Price))
+						// funds := utils.Multiply(buyEntry.Amount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Buy, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, buyEntry.Amount, buyEntry.Price))
 						order.Amount -= buyEntry.Amount
 						order.SetStatus(OrderStatus_PartiallyFilled)
 						book.removeBuyBookEntry(buyEntry, pricePoint, index)

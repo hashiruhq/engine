@@ -10,9 +10,15 @@ type OrderBook interface {
 	Load(MarketBackup) error
 	Backup() MarketBackup
 	GetMarket() []*SkipList
+	GetMarketID() string
+	GetPricePrecision() int
+	GetVolumePrecision() int
 }
 
 type orderBook struct {
+	MarketID          string
+	PricePrecision    int
+	VolumePrecision   int
 	BuyEntries        *SkipList
 	SellEntries       *SkipList
 	LowestAsk         uint64
@@ -22,8 +28,11 @@ type orderBook struct {
 }
 
 // NewOrderBook Creates a new empty order book for the trading engine
-func NewOrderBook() OrderBook {
+func NewOrderBook(marketID string, pricePrecision, volumePrecision int) OrderBook {
 	return &orderBook{
+		MarketID:          marketID,
+		PricePrecision:    pricePrecision,
+		VolumePrecision:   volumePrecision,
 		LowestAsk:         0,
 		HighestBid:        0,
 		BuyEntries:        NewPricePoints(),
@@ -31,6 +40,18 @@ func NewOrderBook() OrderBook {
 		BuyMarketEntries:  make([]Order, 0, 0),
 		SellMarketEntries: make([]Order, 0, 0),
 	}
+}
+
+func (book orderBook) GetMarketID() string {
+	return book.MarketID
+}
+
+func (book orderBook) GetPricePrecision() int {
+	return book.PricePrecision
+}
+
+func (book orderBook) GetVolumePrecision() int {
+	return book.VolumePrecision
 }
 
 // GetHighestBid returns the highest bid of the current market

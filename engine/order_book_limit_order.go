@@ -13,7 +13,8 @@ func (book *orderBook) processLimitBuy(order Order, trades *[]Trade) {
 					sellEntry := &pricePoint.Entries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
 					if sellEntry.Amount >= order.Amount {
-						*trades = append(*trades, NewTrade(order.ID, sellEntry.ID, order.Amount, sellEntry.Price))
+						// funds := utils.Multiply(order.Amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Sell, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, order.Amount, sellEntry.Price))
 						sellEntry.Amount -= order.Amount
 						if sellEntry.Amount == 0 {
 							book.removeSellBookEntry(sellEntry, pricePoint, index)
@@ -26,7 +27,8 @@ func (book *orderBook) processLimitBuy(order Order, trades *[]Trade) {
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
 					if sellEntry.Amount < order.Amount {
-						*trades = append(*trades, NewTrade(order.ID, sellEntry.ID, sellEntry.Amount, sellEntry.Price))
+						// funds := utils.Multiply(sellEntry.Amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Sell, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, sellEntry.Amount, sellEntry.Price))
 						order.Amount -= sellEntry.Amount
 						book.removeSellBookEntry(sellEntry, pricePoint, index)
 						index--
@@ -80,7 +82,8 @@ func (book *orderBook) processLimitSell(order Order, trades *[]Trade) {
 					buyEntry := &pricePoint.Entries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
 					if buyEntry.Amount >= order.Amount {
-						*trades = append(*trades, NewTrade(order.ID, buyEntry.ID, order.Amount, buyEntry.Price))
+						// funds := utils.Multiply(order.Amount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Sell, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, order.Amount, buyEntry.Price))
 						buyEntry.Amount -= order.Amount
 						if buyEntry.Amount == 0 {
 							book.removeBuyBookEntry(buyEntry, pricePoint, index)
@@ -92,7 +95,8 @@ func (book *orderBook) processLimitSell(order Order, trades *[]Trade) {
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
 					if buyEntry.Amount < order.Amount {
-						*trades = append(*trades, NewTrade(order.ID, buyEntry.ID, buyEntry.Amount, buyEntry.Price))
+						// funds := utils.Multiply(buyEntry.Amount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Sell, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, buyEntry.Amount, buyEntry.Price))
 						order.Amount -= buyEntry.Amount
 						book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						index--
