@@ -20,38 +20,42 @@ type MarketEngine interface {
 
 // marketEngine structure
 type marketEngine struct {
-	name           string
-	engine         engine.TradingEngine
-	inputs         chan *sarama.ConsumerMessage
-	messages       chan engine.Event
-	orders         chan engine.Event
-	trades         chan engine.Event
-	backup         chan bool
-	producer       net.KafkaProducer
-	backupProducer net.KafkaProducer
-	consumer       net.KafkaConsumer
-	config         MarketEngineConfig
+	name          string
+	engine        engine.TradingEngine
+	inputs        chan *sarama.ConsumerMessage
+	messages      chan engine.Event
+	orders        chan engine.Event
+	trades        chan engine.Event
+	backup        chan bool
+	stats         chan bool
+	producer      net.KafkaProducer
+	statsProducer net.KafkaProducer
+	consumer      net.KafkaConsumer
+	config        MarketEngineConfig
 }
 
 // MarketEngineConfig structure
 type MarketEngineConfig struct {
-	producer net.KafkaProducer
-	consumer net.KafkaConsumer
-	config   MarketConfig
+	producer      net.KafkaProducer
+	consumer      net.KafkaConsumer
+	statsProducer net.KafkaProducer
+	config        MarketConfig
 }
 
 // NewMarketEngine open a new market
 func NewMarketEngine(config MarketEngineConfig) MarketEngine {
 	return &marketEngine{
-		producer: config.producer,
-		consumer: config.consumer,
-		config:   config,
-		name:     config.config.MarketID,
-		engine:   engine.NewTradingEngine(config.config.MarketID, config.config.PricePrecision, config.config.VolumePrecision),
-		backup:   make(chan bool),
-		orders:   make(chan engine.Event, 20000),
-		trades:   make(chan engine.Event, 20000),
-		messages: make(chan engine.Event, 20000),
+		producer:      config.producer,
+		statsProducer: config.statsProducer,
+		consumer:      config.consumer,
+		config:        config,
+		name:          config.config.MarketID,
+		engine:        engine.NewTradingEngine(config.config.MarketID, config.config.PricePrecision, config.config.VolumePrecision),
+		backup:        make(chan bool),
+		stats:         make(chan bool),
+		orders:        make(chan engine.Event, 20000),
+		trades:        make(chan engine.Event, 20000),
+		messages:      make(chan engine.Event, 20000),
 	}
 }
 
@@ -67,6 +71,8 @@ func (mkt *marketEngine) Start() {
 	go mkt.PublishTrades()
 	// start the backup scheduler
 	go mkt.ScheduleBackup()
+	// send out stats every second
+	go mkt.ScheduleStats()
 }
 
 // Process a new message from the consumer
@@ -107,6 +113,13 @@ func (mkt *marketEngine) ScheduleBackup() {
 	}
 }
 
+func (mkt *marketEngine) ScheduleStats() {
+	for {
+		time.Sleep(1 * time.Second)
+		mkt.stats <- true
+	}
+}
+
 // DecodeMessage decode the binary value for each message received into an Order struct
 // before sending it for processing by the trading engine
 //
@@ -132,9 +145,15 @@ func (mkt *marketEngine) ProcessOrder() {
 	var prevOffset int64
 	for {
 		select {
+		case <-mkt.stats:
+			depth := mkt.engine.GetMarketDepth()
+			rawTrade, _ := depth.ToBinary()
+			mkt.statsProducer.Input() <- &sarama.ProducerMessage{
+				Topic: mkt.config.config.Stats.Topic,
+				Value: sarama.ByteEncoder(rawTrade),
+			}
 		case <-mkt.backup:
 			// Generate backup event
-
 			if lastTopic != "" && lastOffset != prevOffset {
 				market := mkt.engine.BackupMarket()
 				market.Topic = lastTopic
@@ -143,8 +162,6 @@ func (mkt *marketEngine) ProcessOrder() {
 				prevOffset = lastOffset
 				mkt.BackupMarket(market)
 				log.Printf("[Backup] [%s] Snapshot created\n", mkt.name)
-			} else {
-				log.Printf("[Backup] [%s] Skipped. No changes since last backup\n", mkt.name)
 			}
 		case event := <-mkt.orders:
 			lastTopic = event.Msg.Topic

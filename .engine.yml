@@ -21,6 +21,9 @@ markets:
     publish: 
       broker: events
       topic: engine.events.btc.usd
+    stats:
+      broker: stats
+      topic: engine.stats.btc.usd
   eth_usd:
     market_id: ethusd
     price_precision: 8
@@ -37,6 +40,9 @@ markets:
     publish: 
       broker: events
       topic: engine.events.eth.usd
+    stats:
+      broker: stats
+      topic: engine.stats.eth.usd
 
 brokers:
   consumers:
@@ -54,3 +60,9 @@ brokers:
       topics: 
         - engine.events.btc.usd
         - engine.events.eth.usd
+    stats: 
+      hosts: 
+        - kafka:9092
+      topics: 
+        - engine.stats.btc.usd
+        - engine.stats.eth.usd

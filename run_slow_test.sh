@@ -1,2 +1,1 @@
-
-matchine-engine test -c gen_orders -d 1
+./matching-engine test -t 60 -c gen_orders -d 1

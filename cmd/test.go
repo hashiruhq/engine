@@ -70,6 +70,7 @@ func test_gen_orders(timeout, delay, topicCount int) {
 				order := engine.Order{
 					ID:        uint64(id),
 					Price:     price,
+					Market:    "btcusd",
 					Amount:    amount,
 					Side:      side,
 					EventType: engine.CommandType_NewOrder,

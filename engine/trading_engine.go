@@ -5,6 +5,7 @@ type TradingEngine interface {
 	Process(order Order, trades *[]Trade)
 	GetOrderBook() OrderBook
 	BackupMarket() MarketBackup
+	GetMarketDepth() *MarketDepth
 	LoadMarket(MarketBackup) error
 	CancelOrder(order Order) bool
 	ProcessEvent(order Order, trades *[]Trade) interface{}
@@ -38,6 +39,10 @@ func (ngin *tradingEngine) LoadMarket(market MarketBackup) error {
 
 func (ngin *tradingEngine) BackupMarket() MarketBackup {
 	return ngin.GetOrderBook().Backup()
+}
+
+func (ngin *tradingEngine) GetMarketDepth() *MarketDepth {
+	return ngin.OrderBook.GetMarketDepth()
 }
 
 func (ngin *tradingEngine) ProcessEvent(order Order, trades *[]Trade) interface{} {

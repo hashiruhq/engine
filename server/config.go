@@ -45,6 +45,7 @@ type MarketConfig struct {
 
 	Listen  TopicConfig
 	Publish TopicConfig
+	Stats   TopicConfig
 }
 
 // MarketBackupConfig structure

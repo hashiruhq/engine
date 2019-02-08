@@ -9,6 +9,7 @@ type OrderBook interface {
 	GetLowestAsk() uint64
 	Load(MarketBackup) error
 	Backup() MarketBackup
+	GetMarketDepth() *MarketDepth
 	GetMarket() []*SkipList
 	GetMarketID() string
 	GetPricePrecision() int
@@ -144,8 +145,6 @@ func (book *orderBook) processOrder(order Order, trades *[]Trade) {
 			return
 		}
 	}
-
-	return
 }
 
 // Cancel an order from the order book based on the order price and ID

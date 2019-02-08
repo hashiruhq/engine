@@ -94,9 +94,10 @@ func NewServer(config Config) Server {
 	markets := make(map[string]MarketEngine)
 	for key, marketCfg := range config.Markets {
 		marketEngineConfig := MarketEngineConfig{
-			config:   marketCfg,
-			producer: producers[marketCfg.Publish.Broker],
-			consumer: consumers[marketCfg.Listen.Broker],
+			config:        marketCfg,
+			producer:      producers[marketCfg.Publish.Broker],
+			statsProducer: producers[marketCfg.Stats.Broker],
+			consumer:      consumers[marketCfg.Listen.Broker],
 		}
 		markets[key] = NewMarketEngine(marketEngineConfig)
 		topic2market[marketCfg.Listen.Topic] = key
