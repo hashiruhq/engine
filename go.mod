@@ -1,7 +1,6 @@
 module gitlab.com/around25/products/matching-engine
 
 require (
-	cloud.google.com/go v0.36.0 // indirect
 	dmitri.shuralyov.com/app/changes v0.0.0-20181114035150-5af16e21babb // indirect
 	dmitri.shuralyov.com/service/change v0.0.0-20190203163610-217368fe4577 // indirect
 	git.apache.org/thrift.git v0.12.0 // indirect
@@ -20,8 +19,6 @@ require (
 	github.com/gorilla/mux v1.7.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.7.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/jtolds/gls v4.2.1+incompatible // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/openzipkin/zipkin-go v0.1.5 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
@@ -46,21 +43,17 @@ require (
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/shurcooL/webdavfs v0.0.0-20181215192745-5988b2d638f6 // indirect
 	github.com/sirupsen/logrus v1.3.0 // indirect
-	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
-	github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.3.1
 	github.com/stretchr/testify v1.3.0 // indirect
 	go.opencensus.io v0.19.0 // indirect
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
 	golang.org/x/build v0.0.0-20190214165022-ebe19e37a462 // indirect
-	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67 // indirect
 	golang.org/x/exp v0.0.0-20190212162250-21964bba6549 // indirect
-	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd // indirect
 	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635 // indirect
 	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
 	golang.org/x/sys v0.0.0-20190213121743-983097b1a8a3 // indirect
-	golang.org/x/tools v0.0.0-20190214195451-78f9822548c1 // indirect
+	golang.org/x/tools v0.0.0-20190214204934-8dcb7bc8c7fe // indirect
 	google.golang.org/grpc v1.18.0 // indirect
 	honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
