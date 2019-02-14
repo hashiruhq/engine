@@ -8,7 +8,7 @@ require (
 	github.com/Shopify/sarama v1.20.1
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/coreos/go-systemd v0.0.0-20190212144455-93d5ec2c7f76 // indirect
-	github.com/ericlagergren/decimal v0.0.0-20190204014639-71cf34b7c2b5
+	github.com/ericlagergren/decimal v0.0.0-20181231230500-73749d4874d5
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/gogo/protobuf v1.2.0 // indirect
 	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
