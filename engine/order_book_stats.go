@@ -2,8 +2,9 @@ package engine
 
 func (book *orderBook) GetMarketDepth() *MarketDepth {
 	depth := MarketDepth{
-		Bid: make([]*MarketDepthPriceLevel, 0, 100),
-		Ask: make([]*MarketDepthPriceLevel, 0, 100),
+		Market: book.MarketID,
+		Bid:    make([]*MarketDepthPriceLevel, 0, 100),
+		Ask:    make([]*MarketDepthPriceLevel, 0, 100),
 		// @todo set last price and volume with the last generated trade
 		LastPrice:  0,
 		LastVolume: 0,

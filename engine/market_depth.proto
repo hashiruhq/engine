@@ -11,4 +11,5 @@ message MarketDepth {
   repeated MarketDepthPriceLevel Ask = 2;
   uint64 LastPrice = 3;
   uint64 LastVolume = 4;
+  string Market = 5;
 }

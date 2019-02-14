@@ -27,7 +27,6 @@ func (book *orderBook) Backup() MarketBackup {
 	if market.LowestAsk != 0 {
 		iterator := book.SellEntries.Seek(market.LowestAsk)
 		if iterator != nil {
-			defer iterator.Close()
 			for {
 				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.Entries {
@@ -37,13 +36,13 @@ func (book *orderBook) Backup() MarketBackup {
 					break
 				}
 			}
+			iterator.Close()
 		}
 	}
 
 	if market.HighestBid != 0 {
 		iterator := book.BuyEntries.Seek(market.HighestBid)
 		if iterator != nil {
-			defer iterator.Close()
 			for {
 				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.Entries {
@@ -53,6 +52,7 @@ func (book *orderBook) Backup() MarketBackup {
 					break
 				}
 			}
+			iterator.Close()
 		}
 	}
 	return market

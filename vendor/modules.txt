@@ -1,0 +1,96 @@
+# github.com/Shopify/sarama v0.0.0-20180614201519-d02029110d94
+github.com/Shopify/sarama
+# github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
+github.com/beorn7/perks/quantile
+# github.com/bsm/sarama-cluster v0.0.0-20180316075551-d98592677c0a
+github.com/bsm/sarama-cluster
+# github.com/davecgh/go-spew v1.1.1
+github.com/davecgh/go-spew/spew
+# github.com/eapache/go-resiliency v1.1.0
+github.com/eapache/go-resiliency/breaker
+# github.com/eapache/go-xerial-snappy v0.0.0-20160609142408-bb955e01b934
+github.com/eapache/go-xerial-snappy
+# github.com/eapache/queue v0.0.0-20180227141424-093482f3f8ce
+github.com/eapache/queue
+# github.com/ericlagergren/decimal v0.0.0-20190204014639-71cf34b7c2b5
+github.com/ericlagergren/decimal
+github.com/ericlagergren/decimal/internal/arith
+github.com/ericlagergren/decimal/internal/arith/checked
+github.com/ericlagergren/decimal/internal/c
+# github.com/fsnotify/fsnotify v1.4.7
+github.com/fsnotify/fsnotify
+# github.com/golang/protobuf v0.0.0-20190109072247-347cf4a86c1c
+github.com/golang/protobuf/proto
+# github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db
+github.com/golang/snappy
+# github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e
+github.com/gopherjs/gopherjs/js
+# github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce
+github.com/hashicorp/hcl
+github.com/hashicorp/hcl/hcl/printer
+github.com/hashicorp/hcl/hcl/ast
+github.com/hashicorp/hcl/hcl/parser
+github.com/hashicorp/hcl/hcl/token
+github.com/hashicorp/hcl/json/parser
+github.com/hashicorp/hcl/hcl/scanner
+github.com/hashicorp/hcl/hcl/strconv
+github.com/hashicorp/hcl/json/scanner
+github.com/hashicorp/hcl/json/token
+# github.com/inconshreveable/mousetrap v1.0.0
+github.com/inconshreveable/mousetrap
+# github.com/jtolds/gls v4.2.1+incompatible
+github.com/jtolds/gls
+# github.com/magiconair/properties v1.8.0
+github.com/magiconair/properties
+# github.com/matttproud/golang_protobuf_extensions v1.0.1
+github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/mitchellh/mapstructure v0.0.0-20180511142126-bb74f1db0675
+github.com/mitchellh/mapstructure
+# github.com/pelletier/go-toml v1.2.0
+github.com/pelletier/go-toml
+# github.com/pierrec/lz4 v2.0.2+incompatible
+github.com/pierrec/lz4
+github.com/pierrec/lz4/internal/xxh32
+# github.com/prometheus/client_golang v0.0.0-20180623155954-77e8f2ddcfed
+github.com/prometheus/client_golang/prometheus
+# github.com/prometheus/client_model v0.0.0-20171117100541-99fa1f4be8e5
+github.com/prometheus/client_model/go
+# github.com/prometheus/common v0.0.0-20180518154759-7600349dcfe1
+github.com/prometheus/common/expfmt
+github.com/prometheus/common/model
+github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
+# github.com/prometheus/procfs v0.0.0-20180612222113-7d6f385de8be
+github.com/prometheus/procfs
+github.com/prometheus/procfs/nfs
+github.com/prometheus/procfs/xfs
+github.com/prometheus/procfs/internal/util
+# github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165
+github.com/rcrowley/go-metrics
+# github.com/smartystreets/assertions v0.0.0-20180607162144-eb5b59917fa2
+github.com/smartystreets/assertions
+github.com/smartystreets/assertions/internal/go-render/render
+github.com/smartystreets/assertions/internal/oglematchers
+# github.com/smartystreets/goconvey v0.0.0-20180222194500-ef6db91d284a
+github.com/smartystreets/goconvey/convey
+github.com/smartystreets/goconvey/convey/reporting
+github.com/smartystreets/goconvey/convey/gotest
+# github.com/spf13/afero v1.1.1
+github.com/spf13/afero
+github.com/spf13/afero/mem
+# github.com/spf13/cast v1.2.0
+github.com/spf13/cast
+# github.com/spf13/cobra v0.0.0-20180531180338-1e58aa3361fd
+github.com/spf13/cobra
+# github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec
+github.com/spf13/jwalterweatherman
+# github.com/spf13/pflag v0.0.0-20180601132542-3ebe029320b2
+github.com/spf13/pflag
+# github.com/spf13/viper v0.0.0-20180507071007-15738813a09d
+github.com/spf13/viper
+# golang.org/x/sys v0.0.0-20180622082034-63fc586f45fe
+golang.org/x/sys/unix
+# golang.org/x/text v0.0.0-20180617084112-5cec4b58c438
+golang.org/x/text/transform
+golang.org/x/text/unicode/norm
+# gopkg.in/yaml.v2 v2.2.1
+gopkg.in/yaml.v2

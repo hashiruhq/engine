@@ -3,11 +3,9 @@
 
 package engine
 
-import (
-	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
-	math "math"
-)
+import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -18,7 +16,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type MarketDepthPriceLevel struct {
 	Price                uint64   `protobuf:"varint,1,opt,name=Price,proto3" json:"Price,omitempty"`
@@ -32,17 +30,16 @@ func (m *MarketDepthPriceLevel) Reset()         { *m = MarketDepthPriceLevel{} }
 func (m *MarketDepthPriceLevel) String() string { return proto.CompactTextString(m) }
 func (*MarketDepthPriceLevel) ProtoMessage()    {}
 func (*MarketDepthPriceLevel) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30b38d900267658c, []int{0}
+	return fileDescriptor_market_depth_e4d4b11e477bfe57, []int{0}
 }
-
 func (m *MarketDepthPriceLevel) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MarketDepthPriceLevel.Unmarshal(m, b)
 }
 func (m *MarketDepthPriceLevel) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_MarketDepthPriceLevel.Marshal(b, m, deterministic)
 }
-func (m *MarketDepthPriceLevel) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MarketDepthPriceLevel.Merge(m, src)
+func (dst *MarketDepthPriceLevel) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MarketDepthPriceLevel.Merge(dst, src)
 }
 func (m *MarketDepthPriceLevel) XXX_Size() int {
 	return xxx_messageInfo_MarketDepthPriceLevel.Size(m)
@@ -72,6 +69,7 @@ type MarketDepth struct {
 	Ask                  []*MarketDepthPriceLevel `protobuf:"bytes,2,rep,name=Ask,proto3" json:"Ask,omitempty"`
 	LastPrice            uint64                   `protobuf:"varint,3,opt,name=LastPrice,proto3" json:"LastPrice,omitempty"`
 	LastVolume           uint64                   `protobuf:"varint,4,opt,name=LastVolume,proto3" json:"LastVolume,omitempty"`
+	Market               string                   `protobuf:"bytes,5,opt,name=Market,proto3" json:"Market,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
 	XXX_unrecognized     []byte                   `json:"-"`
 	XXX_sizecache        int32                    `json:"-"`
@@ -81,17 +79,16 @@ func (m *MarketDepth) Reset()         { *m = MarketDepth{} }
 func (m *MarketDepth) String() string { return proto.CompactTextString(m) }
 func (*MarketDepth) ProtoMessage()    {}
 func (*MarketDepth) Descriptor() ([]byte, []int) {
-	return fileDescriptor_30b38d900267658c, []int{1}
+	return fileDescriptor_market_depth_e4d4b11e477bfe57, []int{1}
 }
-
 func (m *MarketDepth) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MarketDepth.Unmarshal(m, b)
 }
 func (m *MarketDepth) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_MarketDepth.Marshal(b, m, deterministic)
 }
-func (m *MarketDepth) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MarketDepth.Merge(m, src)
+func (dst *MarketDepth) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MarketDepth.Merge(dst, src)
 }
 func (m *MarketDepth) XXX_Size() int {
 	return xxx_messageInfo_MarketDepth.Size(m)
@@ -130,25 +127,33 @@ func (m *MarketDepth) GetLastVolume() uint64 {
 	return 0
 }
 
+func (m *MarketDepth) GetMarket() string {
+	if m != nil {
+		return m.Market
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*MarketDepthPriceLevel)(nil), "engine.MarketDepthPriceLevel")
 	proto.RegisterType((*MarketDepth)(nil), "engine.MarketDepth")
 }
 
-func init() { proto.RegisterFile("market_depth.proto", fileDescriptor_30b38d900267658c) }
+func init() { proto.RegisterFile("market_depth.proto", fileDescriptor_market_depth_e4d4b11e477bfe57) }
 
-var fileDescriptor_30b38d900267658c = []byte{
-	// 180 bytes of a gzipped FileDescriptorProto
+var fileDescriptor_market_depth_e4d4b11e477bfe57 = []byte{
+	// 193 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0xca, 0x4d, 0x2c, 0xca,
 	0x4e, 0x2d, 0x89, 0x4f, 0x49, 0x2d, 0x28, 0xc9, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62,
 	0x4b, 0xcd, 0x4b, 0xcf, 0xcc, 0x4b, 0x55, 0x72, 0xe5, 0x12, 0xf5, 0x05, 0xcb, 0xba, 0x80, 0x24,
 	0x03, 0x8a, 0x32, 0x93, 0x53, 0x7d, 0x52, 0xcb, 0x52, 0x73, 0x84, 0x44, 0xb8, 0x58, 0xc1, 0x3c,
 	0x09, 0x46, 0x05, 0x46, 0x0d, 0x96, 0x20, 0x08, 0x47, 0x48, 0x8c, 0x8b, 0x2d, 0x2c, 0x3f, 0xa7,
-	0x34, 0x37, 0x55, 0x82, 0x09, 0x2c, 0x0c, 0xe5, 0x29, 0xad, 0x65, 0xe4, 0xe2, 0x46, 0x32, 0x47,
+	0x34, 0x37, 0x55, 0x82, 0x09, 0x2c, 0x0c, 0xe5, 0x29, 0x1d, 0x65, 0xe4, 0xe2, 0x46, 0x32, 0x47,
 	0x48, 0x9f, 0x8b, 0xd9, 0x29, 0x33, 0x45, 0x82, 0x51, 0x81, 0x59, 0x83, 0xdb, 0x48, 0x56, 0x0f,
 	0x62, 0x99, 0x1e, 0x56, 0x9b, 0x82, 0x40, 0x2a, 0x41, 0x1a, 0x1c, 0x8b, 0xb3, 0x25, 0x98, 0x88,
 	0xd2, 0xe0, 0x58, 0x9c, 0x2d, 0x24, 0xc3, 0xc5, 0xe9, 0x93, 0x58, 0x5c, 0x02, 0x71, 0x23, 0x33,
 	0xd8, 0x31, 0x08, 0x01, 0x21, 0x39, 0x2e, 0x2e, 0x10, 0x07, 0xea, 0x56, 0x16, 0xb0, 0x34, 0x92,
-	0x48, 0x12, 0x1b, 0x38, 0x14, 0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x9b, 0x9b, 0x36, 0xe0,
-	0x1b, 0x01, 0x00, 0x00,
+	0x08, 0xc8, 0x1f, 0x10, 0xb3, 0x25, 0x58, 0x15, 0x18, 0x35, 0x38, 0x83, 0xa0, 0xbc, 0x24, 0x36,
+	0x70, 0xe8, 0x18, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x5f, 0x24, 0xf9, 0x99, 0x33, 0x01, 0x00,
+	0x00,
 }

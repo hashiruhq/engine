@@ -1,4 +1,4 @@
-package main
+package main // import "gitlab.com/around25/products/matching-engine"
 
 import (
 	"runtime"

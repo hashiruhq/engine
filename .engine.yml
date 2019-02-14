@@ -5,7 +5,7 @@ server:
     port: 6060
 
 markets:
-  btc_usd:
+  btcusd:
     market_id: btcusd
     price_precision: 8
     volume_precision: 8
@@ -14,17 +14,17 @@ markets:
     base_max: 10000 # not used yet
     backup:
       interval: 1
-      path: /root/backups/btc.usd.dat
+      path: /root/backups/btcusd.dat
     listen: 
       broker: requests
-      topic: engine.orders.btc.usd
+      topic: engine.orders.btcusd
     publish: 
       broker: events
-      topic: engine.events.btc.usd
+      topic: engine.events.btcusd
     stats:
       broker: stats
-      topic: engine.stats.btc.usd
-  eth_usd:
+      topic: engine.stats.btcusd
+  ethusd:
     market_id: ethusd
     price_precision: 8
     volume_precision: 8
@@ -33,16 +33,16 @@ markets:
     base_max: 10000 # not used yet
     backup:
       interval: 1
-      path: /root/backups/btc.usd.dat
+      path: /root/backups/ethusd.dat
     listen: 
       broker: requests
-      topic: engine.orders.eth.usd
+      topic: engine.orders.ethusd
     publish: 
       broker: events
-      topic: engine.events.eth.usd
+      topic: engine.events.ethusd
     stats:
       broker: stats
-      topic: engine.stats.eth.usd
+      topic: engine.stats.ethusd
 
 brokers:
   consumers:
@@ -51,18 +51,18 @@ brokers:
       hosts: 
         - kafka:9092
       topics:
-        - engine.orders.btc.usd
-        - engine.orders.eth.usd
+        - engine.orders.btcusd
+        - engine.orders.ethusd
   producers:
     events: 
       hosts: 
         - kafka:9092
       topics: 
-        - engine.events.btc.usd
-        - engine.events.eth.usd
+        - engine.events.btcusd
+        - engine.events.ethusd
     stats: 
       hosts: 
         - kafka:9092
       topics: 
-        - engine.stats.btc.usd
-        - engine.stats.eth.usd
+        - engine.stats.btcusd
+        - engine.stats.ethusd

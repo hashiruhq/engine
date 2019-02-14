@@ -1,5 +1,23 @@
 # Changelog
 
+## Version 1.3.0
+
+- Support for market depth statistics
+- Move go package support from govendor to go modules
+
+## Version 1.2.0
+
+- Communication encoding changed from JSON format to Protocol Buffers
+- Changed order id from string to uint64
+- Added owner id to order
+- Improved generated trades to include market id, maker side, timestamp, bid/ask order ids and bid/ask owner ids
+- Improved performance by reusing the array of generated trades
+- Added support for market orders
+- Allow market configurable precision for price and volume
+- Modified backups to use Protobuf instead of JSON and decrease the overall backup size
+- Eliminated the use of book entries and used orders instead to preserve memory and increase performance
+- Added support for GitLab CI
+
 ## Version 1.1.0
 
 - Configurable file system backup support

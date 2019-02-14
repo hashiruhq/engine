@@ -1,14 +1,14 @@
 version: '3.2'
 services:
-  trading_engine:
+  matching_engine:
     build: 
       context: ../
     restart: always
     ports: 
       - 6060:6060
-    image: trading_engine:local
+    image: matching_engine:local
     volumes:
       - backups:/root/backups
-      - /root/trading_engine/.engine.yml:/root/.engine.yml
+      - /root/matching_engine/.engine.yml:/root/.engine.yml
 volumes:
   backups:

@@ -8,7 +8,7 @@ global:
 
 # A scrape configuration containing exactly one endpoint to scrape:
 scrape_configs:
-  - job_name:       'trading-engine'
+  - job_name:       'matching-engine'
 
     # Override the global default and scrape targets from this job every 5 seconds.
     scrape_interval: 5s
@@ -18,7 +18,7 @@ scrape_configs:
       #   labels:
       #     group: 'production'
 
-      - targets: ['trading_engine:6060']
+      - targets: ['matching_engine:6060']
         labels:
           group: 'dev'
   # - job_name: 'docker'
