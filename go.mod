@@ -1,42 +1,67 @@
 module gitlab.com/around25/products/matching-engine
 
 require (
-	github.com/Shopify/sarama v0.0.0-20180614201519-d02029110d94
-	github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 // indirect
-	github.com/bsm/sarama-cluster v0.0.0-20180316075551-d98592677c0a
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/eapache/go-resiliency v1.1.0 // indirect
-	github.com/eapache/go-xerial-snappy v0.0.0-20160609142408-bb955e01b934 // indirect
-	github.com/eapache/queue v0.0.0-20180227141424-093482f3f8ce // indirect
+	cloud.google.com/go v0.36.0 // indirect
+	dmitri.shuralyov.com/app/changes v0.0.0-20181114035150-5af16e21babb // indirect
+	dmitri.shuralyov.com/service/change v0.0.0-20190203163610-217368fe4577 // indirect
+	git.apache.org/thrift.git v0.12.0 // indirect
+	github.com/DataDog/zstd v1.3.5 // indirect
+	github.com/Shopify/sarama v1.20.1
+	github.com/bsm/sarama-cluster v2.1.15+incompatible
+	github.com/coreos/go-systemd v0.0.0-20190212144455-93d5ec2c7f76 // indirect
 	github.com/ericlagergren/decimal v0.0.0-20190204014639-71cf34b7c2b5
-	github.com/francoispqt/gojay v0.0.0-20180608003328-9f5ebac1e960 // indirect
-	github.com/fsnotify/fsnotify v1.4.7 // indirect
-	github.com/golang/protobuf v0.0.0-20190109072247-347cf4a86c1c
-	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
+	github.com/go-logfmt/logfmt v0.4.0 // indirect
+	github.com/gogo/protobuf v1.2.0 // indirect
+	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
+	github.com/golang/protobuf v1.2.1-0.20190205222052-c823c79ea157
+	github.com/google/pprof v0.0.0-20190208070709-b421f19a5c07 // indirect
+	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
-	github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce // indirect
+	github.com/gorilla/mux v1.7.0 // indirect
+	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
+	github.com/grpc-ecosystem/grpc-gateway v1.7.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jtolds/gls v4.2.1+incompatible // indirect
-	github.com/magiconair/properties v1.8.0 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/mitchellh/mapstructure v0.0.0-20180511142126-bb74f1db0675 // indirect
-	github.com/pelletier/go-toml v1.2.0 // indirect
-	github.com/pierrec/lz4 v2.0.2+incompatible // indirect
-	github.com/prometheus/client_golang v0.0.0-20180623155954-77e8f2ddcfed
-	github.com/prometheus/client_model v0.0.0-20171117100541-99fa1f4be8e5 // indirect
-	github.com/prometheus/common v0.0.0-20180518154759-7600349dcfe1 // indirect
-	github.com/prometheus/procfs v0.0.0-20180612222113-7d6f385de8be // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20180503174638-e2704e165165
-	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
-	github.com/smartystreets/assertions v0.0.0-20180607162144-eb5b59917fa2 // indirect
-	github.com/smartystreets/goconvey v0.0.0-20180222194500-ef6db91d284a
-	github.com/spf13/afero v1.1.1 // indirect
-	github.com/spf13/cast v1.2.0 // indirect
-	github.com/spf13/cobra v0.0.0-20180531180338-1e58aa3361fd
-	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec // indirect
-	github.com/spf13/pflag v0.0.0-20180601132542-3ebe029320b2 // indirect
-	github.com/spf13/viper v0.0.0-20180507071007-15738813a09d
-	golang.org/x/sys v0.0.0-20180622082034-63fc586f45fe // indirect
-	golang.org/x/text v0.0.0-20180617084112-5cec4b58c438 // indirect
-	gopkg.in/yaml.v2 v2.2.1 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
+	github.com/openzipkin/zipkin-go v0.1.5 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
+	github.com/prometheus/client_golang v0.9.2
+	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
+	github.com/prometheus/common v0.2.0 // indirect
+	github.com/prometheus/procfs v0.0.0-20190209105433-f8d8b3f739bd // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
+	github.com/russross/blackfriday v2.0.0+incompatible // indirect
+	github.com/shurcooL/go v0.0.0-20190121191506-3fef8c783dec // indirect
+	github.com/shurcooL/gofontwoff v0.0.0-20181114050219-180f79e6909d // indirect
+	github.com/shurcooL/highlight_diff v0.0.0-20181222201841-111da2e7d480 // indirect
+	github.com/shurcooL/highlight_go v0.0.0-20181215221002-9d8641ddf2e1 // indirect
+	github.com/shurcooL/home v0.0.0-20190204141146-5c8ae21d4240 // indirect
+	github.com/shurcooL/htmlg v0.0.0-20190120222857-1e8a37b806f3 // indirect
+	github.com/shurcooL/httpfs v0.0.0-20181222201310-74dc9339e414 // indirect
+	github.com/shurcooL/issues v0.0.0-20190120000219-08d8dadf8acb // indirect
+	github.com/shurcooL/issuesapp v0.0.0-20181229001453-b8198a402c58 // indirect
+	github.com/shurcooL/notifications v0.0.0-20181111060504-bcc2b3082a7a // indirect
+	github.com/shurcooL/octicon v0.0.0-20181222203144-9ff1a4cf27f4 // indirect
+	github.com/shurcooL/reactions v0.0.0-20181222204718-145cd5e7f3d1 // indirect
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
+	github.com/shurcooL/webdavfs v0.0.0-20181215192745-5988b2d638f6 // indirect
+	github.com/sirupsen/logrus v1.3.0 // indirect
+	github.com/smartystreets/assertions v0.0.0-20190116191733-b6c0e53d7304 // indirect
+	github.com/smartystreets/goconvey v0.0.0-20181108003508-044398e4856c
+	github.com/spf13/cobra v0.0.3
+	github.com/spf13/viper v1.3.1
+	github.com/stretchr/testify v1.3.0 // indirect
+	go.opencensus.io v0.19.0 // indirect
+	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
+	golang.org/x/build v0.0.0-20190214165022-ebe19e37a462 // indirect
+	golang.org/x/crypto v0.0.0-20190211182817-74369b46fc67 // indirect
+	golang.org/x/exp v0.0.0-20190212162250-21964bba6549 // indirect
+	golang.org/x/net v0.0.0-20190213061140-3a22650c66bd // indirect
+	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635 // indirect
+	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
+	golang.org/x/sys v0.0.0-20190213121743-983097b1a8a3 // indirect
+	golang.org/x/tools v0.0.0-20190214195451-78f9822548c1 // indirect
+	google.golang.org/grpc v1.18.0 // indirect
+	honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe // indirect
+	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
