@@ -42,13 +42,18 @@ func NewKafkaPartitionConsumer(name string, brokers []string, topics []string) K
 
 // Start the consumer
 func (conn *kafkaPartitionConsumer) Start() error {
+	log.Printf("Starting consumer with the following config:\n - name: %s\n - brokers: %v\n - topics: %v\n", conn.name, conn.brokers, conn.topics)
 	consumer, err := cluster.NewConsumer(conn.brokers, conn.name, conn.topics, conn.config)
 	conn.consumer = consumer
 	if err == nil {
 		go conn.handleMessages()
 		go conn.handleErrors()
 		go conn.handleNotifications()
+	} else {
+		log.Println("Failed to start kafka consumer with the following error: \n", err, "\n", conn.brokers)
 	}
+	log.Printf("Consumer '%s' connected successfully", conn.name)
+
 	return err
 }
 
@@ -105,6 +110,13 @@ func (conn *kafkaPartitionConsumer) handleErrors() {
 
 func (conn *kafkaPartitionConsumer) handleNotifications() {
 	for ntf := range conn.consumer.Notifications() {
-		log.Printf("Rebalanced: %+v\n", ntf)
+		switch ntf.Type {
+		case cluster.RebalanceStart:
+			log.Printf("[info] [consumer] Kafka node is starting rebalancing...\n")
+		case cluster.RebalanceOK:
+			log.Printf("[info] [consumer] Rebalanced done...\n")
+		case cluster.RebalanceError:
+			log.Printf("[error] [consumer] Rebalancing error %+v\n", ntf)
+		}
 	}
 }

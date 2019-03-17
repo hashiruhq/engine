@@ -4,8 +4,7 @@ require (
 	dmitri.shuralyov.com/app/changes v0.0.0-20181114035150-5af16e21babb // indirect
 	dmitri.shuralyov.com/service/change v0.0.0-20190203163610-217368fe4577 // indirect
 	git.apache.org/thrift.git v0.12.0 // indirect
-	github.com/DataDog/zstd v1.3.5 // indirect
-	github.com/Shopify/sarama v1.20.1
+	github.com/Shopify/sarama v1.21.0
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/coreos/go-systemd v0.0.0-20190212144455-93d5ec2c7f76 // indirect
 	github.com/ericlagergren/decimal v0.0.0-20181231230500-73749d4874d5

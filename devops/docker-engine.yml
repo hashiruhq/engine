@@ -9,6 +9,6 @@ services:
     image: matching_engine:local
     volumes:
       - backups:/root/backups
-      - /root/matching_engine/.engine.yml:/root/.engine.yml
+      # - /root/matching_engine/.engine.yml:/root/.engine.yml
 volumes:
   backups:

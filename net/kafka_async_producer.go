@@ -1,6 +1,8 @@
 package net
 
 import (
+	"log"
+
 	"github.com/Shopify/sarama"
 	metrics "github.com/rcrowley/go-metrics"
 )
@@ -35,6 +37,10 @@ func NewKafkaAsyncProducer(brokers []string) KafkaProducer {
 // Start the kafka producer
 func (conn *kafkaAsyncProducer) Start() error {
 	producer, err := sarama.NewAsyncProducer(conn.brokers, conn.config)
+	if err != nil {
+		log.Printf("[error] [producer] Error connecting producer: %v", conn.brokers)
+	}
+	log.Printf("[info] [producer] Connected producer: %v", conn.brokers)
 	conn.producer = producer
 	return err
 }

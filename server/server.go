@@ -116,7 +116,10 @@ func NewServer(config Config) Server {
 func (srv *server) Listen() {
 	// start all producers
 	for _, producer := range srv.producers {
-		producer.Start()
+		err := producer.Start()
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	// start all markets and listen for incomming events
@@ -133,7 +136,10 @@ func (srv *server) Listen() {
 
 	// start all consumers
 	for _, consumer := range srv.consumers {
-		consumer.Start()
+		err := consumer.Start()
+		if err != nil {
+			log.Fatalln(err)
+		}
 	}
 
 	// listen for messages and ditribute them to the correct markets
