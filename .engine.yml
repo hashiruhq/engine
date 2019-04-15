@@ -5,8 +5,8 @@ server:
     port: 6060
 
 markets:
-  btcusd:
-    market_id: btcusd
+  ltcbtc:
+    market_id: ltcbtc
     price_precision: 8
     volume_precision: 8
     quote_increments: 0.01 # not used yet
@@ -14,18 +14,18 @@ markets:
     base_max: 10000 # not used yet
     backup:
       interval: 1
-      path: /root/backups/btcusd.dat
+      path: /root/backups/ltcbtc.dat
     listen: 
       broker: requests
-      topic: engine.orders.btcusd
+      topic: engine.orders.ltcbtc
     publish: 
       broker: events
-      topic: engine.events.btcusd
+      topic: engine.events.ltcbtc
     stats:
       broker: stats
-      topic: engine.stats.btcusd
-  ethusd:
-    market_id: ethusd
+      topic: engine.stats.ltcbtc
+  ethbtc:
+    market_id: ethbtc
     price_precision: 8
     volume_precision: 8
     quote_increments: 0.01 # not used yet
@@ -33,16 +33,283 @@ markets:
     base_max: 10000 # not used yet
     backup:
       interval: 1
-      path: /root/backups/ethusd.dat
+      path: /root/backups/ethbtc.dat
     listen: 
       broker: requests
-      topic: engine.orders.ethusd
+      topic: engine.orders.ethbtc
     publish: 
       broker: events
-      topic: engine.events.ethusd
+      topic: engine.events.ethbtc
     stats:
       broker: stats
-      topic: engine.stats.ethusd
+      topic: engine.stats.ethbtc
+  xrpbtc:
+    market_id: xrpbtc
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/xrpbtc.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.xrpbtc
+    publish: 
+      broker: events
+      topic: engine.events.xrpbtc
+    stats:
+      broker: stats
+      topic: engine.stats.xrpbtc
+  bchbtc:
+    market_id: bchbtc
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/bchbtc.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.bchbtc
+    publish: 
+      broker: events
+      topic: engine.events.bchbtc
+    stats:
+      broker: stats
+      topic: engine.stats.bchbtc
+  prdxbtc:
+    market_id: prdxbtc
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/prdxbtc.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.prdxbtc
+    publish: 
+      broker: events
+      topic: engine.events.prdxbtc
+    stats:
+      broker: stats
+      topic: engine.stats.prdxbtc
+  ltceth:
+    market_id: ltceth
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/ltceth.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.ltceth
+    publish: 
+      broker: events
+      topic: engine.events.ltceth
+    stats:
+      broker: stats
+      topic: engine.stats.ltceth
+  xrpeth:
+    market_id: xrpeth
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/xrpeth.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.xrpeth
+    publish: 
+      broker: events
+      topic: engine.events.xrpeth
+    stats:
+      broker: stats
+      topic: engine.stats.xrpeth
+  eoseth:
+    market_id: eoseth
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/eoseth.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.eoseth
+    publish: 
+      broker: events
+      topic: engine.events.eoseth
+    stats:
+      broker: stats
+      topic: engine.stats.eoseth
+  prdxeth:
+    market_id: prdxeth
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/prdxeth.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.prdxeth
+    publish: 
+      broker: events
+      topic: engine.events.prdxeth
+    stats:
+      broker: stats
+      topic: engine.stats.prdxeth
+  btcusdt:
+    market_id: btcusdt
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/btcusdt.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.btcusdt
+    publish: 
+      broker: events
+      topic: engine.events.btcusdt
+    stats:
+      broker: stats
+      topic: engine.stats.btcusdt
+  ethusdt:
+    market_id: ethusdt
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/ethusdt.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.ethusdt
+    publish: 
+      broker: events
+      topic: engine.events.ethusdt
+    stats:
+      broker: stats
+      topic: engine.stats.ethusdt
+  ltcusdt:
+    market_id: ltcusdt
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/ltcusdt.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.ltcusdt
+    publish: 
+      broker: events
+      topic: engine.events.ltcusdt
+    stats:
+      broker: stats
+      topic: engine.stats.ltcusdt
+  bchusdt:
+    market_id: bchusdt
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/bchusdt.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.bchusdt
+    publish: 
+      broker: events
+      topic: engine.events.bchusdt
+    stats:
+      broker: stats
+      topic: engine.stats.bchusdt
+  prdxusdt:
+    market_id: prdxusdt
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/prdxusdt.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.prdxusdt
+    publish: 
+      broker: events
+      topic: engine.events.prdxusdt
+    stats:
+      broker: stats
+      topic: engine.stats.prdxusdt
+  ltcprdx:
+    market_id: ltcprdx
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/ltcprdx.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.ltcprdx
+    publish: 
+      broker: events
+      topic: engine.events.ltcprdx
+    stats:
+      broker: stats
+      topic: engine.stats.ltcprdx
+  xrpprdx:
+    market_id: xrpprdx
+    price_precision: 8
+    volume_precision: 8
+    quote_increments: 0.01 # not used yet
+    base_min: 0.0001 # not used yet
+    base_max: 10000 # not used yet
+    backup:
+      interval: 1
+      path: /root/backups/xrpprdx.dat
+    listen: 
+      broker: requests
+      topic: engine.orders.xrpprdx
+    publish: 
+      broker: events
+      topic: engine.events.xrpprdx
+    stats:
+      broker: stats
+      topic: engine.stats.xrpprdx
+
 
 brokers:
   consumers:
@@ -51,18 +318,60 @@ brokers:
       hosts: 
         - kafka:9092
       topics:
-        - engine.orders.btcusd
-        - engine.orders.ethusd
+        - engine.orders.ltcbtc
+        - engine.orders.ethbtc
+        - engine.orders.xrpbtc
+        - engine.orders.bchbtc
+        - engine.orders.prdxbtc
+        - engine.orders.ltceth
+        - engine.orders.xrpeth
+        - engine.orders.eoseth
+        - engine.orders.prdxeth
+        - engine.orders.btcusdt
+        - engine.orders.ethusdt
+        - engine.orders.ltcusdt
+        - engine.orders.bchusdt
+        - engine.orders.prdxusdt
+        - engine.orders.ltcprdx
+        - engine.orders.xrpprdx
   producers:
     events: 
       hosts: 
         - kafka:9092
       topics: 
-        - engine.events.btcusd
-        - engine.events.ethusd
+        - engine.events.ltcbtc
+        - engine.events.ethbtc
+        - engine.events.xrpbtc
+        - engine.events.bchbtc
+        - engine.events.prdxbtc
+        - engine.events.ltceth
+        - engine.events.xrpeth
+        - engine.events.eoseth
+        - engine.events.prdxeth
+        - engine.events.btcusdt
+        - engine.events.ethusdt
+        - engine.events.ltcusdt
+        - engine.events.bchusdt
+        - engine.events.prdxusdt
+        - engine.events.ltcprdx
+        - engine.events.xrpprdx
     stats: 
       hosts: 
         - kafka:9092
       topics: 
-        - engine.stats.btcusd
-        - engine.stats.ethusd
+        - engine.stats.ltcbtc
+        - engine.stats.ethbtc
+        - engine.stats.xrpbtc
+        - engine.stats.bchbtc
+        - engine.stats.prdxbtc
+        - engine.stats.ltceth
+        - engine.stats.xrpeth
+        - engine.stats.eoseth
+        - engine.stats.prdxeth
+        - engine.stats.btcusdt
+        - engine.stats.ethusdt
+        - engine.stats.ltcusdt
+        - engine.stats.bchusdt
+        - engine.stats.prdxusdt
+        - engine.stats.ltcprdx
+        - engine.stats.xrpprdx
