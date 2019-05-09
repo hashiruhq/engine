@@ -186,6 +186,7 @@ Duration (seconds): 1.205161
 **Golang Docs**
 
 - https://www.apress.com/gp/book/9781484226919
+- https://go101.org/article/channel-closing.html
 
 **Communication**
 
