@@ -1,68 +1,72 @@
 package server
 
 import (
+	"context"
 	"log"
 	"time"
 
 	"gitlab.com/around25/products/matching-engine/engine"
 	"gitlab.com/around25/products/matching-engine/net"
 
-	"github.com/Shopify/sarama"
+	"github.com/segmentio/kafka-go"
 )
 
 // MarketEngine defines how we can communicate to the trading engine for a specific market
 type MarketEngine interface {
-	Start()
+	Start(context.Context)
 	Close()
+	GetMessageChan() <-chan kafka.Message
 	LoadMarketFromBackup() error
-	Process(*sarama.ConsumerMessage)
+	Process(kafka.Message)
 }
 
 // marketEngine structure
 type marketEngine struct {
-	name          string
-	engine        engine.TradingEngine
-	inputs        chan *sarama.ConsumerMessage
-	messages      chan engine.Event
-	orders        chan engine.Event
-	trades        chan engine.Event
-	backup        chan bool
-	stats         chan bool
-	producer      net.KafkaProducer
-	statsProducer net.KafkaProducer
-	consumer      net.KafkaConsumer
-	config        MarketEngineConfig
+	name     string
+	engine   engine.TradingEngine
+	inputs   chan kafka.Message
+	messages chan engine.Event
+	orders   chan engine.Event
+	trades   chan engine.Event
+	backup   chan bool
+	stats    chan bool
+	producer net.KafkaProducer
+	consumer net.KafkaConsumer
+	config   MarketEngineConfig
 }
 
 // MarketEngineConfig structure
 type MarketEngineConfig struct {
-	producer      net.KafkaProducer
-	consumer      net.KafkaConsumer
-	statsProducer net.KafkaProducer
-	config        MarketConfig
+	producer net.KafkaProducer
+	consumer net.KafkaConsumer
+	config   MarketConfig
 }
 
 // NewMarketEngine open a new market
 func NewMarketEngine(config MarketEngineConfig) MarketEngine {
 	return &marketEngine{
-		producer:      config.producer,
-		statsProducer: config.statsProducer,
-		consumer:      config.consumer,
-		config:        config,
-		name:          config.config.MarketID,
-		engine:        engine.NewTradingEngine(config.config.MarketID, config.config.PricePrecision, config.config.VolumePrecision),
-		backup:        make(chan bool),
-		stats:         make(chan bool),
-		orders:        make(chan engine.Event, 20000),
-		trades:        make(chan engine.Event, 20000),
-		messages:      make(chan engine.Event, 20000),
+		producer: config.producer,
+		consumer: config.consumer,
+		config:   config,
+		name:     config.config.MarketID,
+		engine:   engine.NewTradingEngine(config.config.MarketID, config.config.PricePrecision, config.config.VolumePrecision),
+		backup:   make(chan bool),
+		orders:   make(chan engine.Event, 20000),
+		trades:   make(chan engine.Event, 20000),
+		messages: make(chan engine.Event, 20000),
 	}
 }
 
+func (mkt *marketEngine) GetMessageChan() <-chan kafka.Message {
+	return mkt.consumer.GetMessageChan()
+}
+
 // Start the engine for this market
-func (mkt *marketEngine) Start() {
-	// listen for producer errors when publishing trades
-	go mkt.ReceiveProducerErrors()
+func (mkt *marketEngine) Start(ctx context.Context) {
+	// load last market snapshot from the backup files and update offset for the trading engine consumer
+	mkt.LoadMarketFromBackup()
+	mkt.producer.Start()
+	mkt.consumer.Start(ctx)
 	// decode the binary value for each message received into an Order Structure
 	go mkt.DecodeMessage()
 	// process each order by the trading engine and forward trades to the trades channel
@@ -71,12 +75,10 @@ func (mkt *marketEngine) Start() {
 	go mkt.PublishTrades()
 	// start the backup scheduler
 	go mkt.ScheduleBackup()
-	// send out stats every second
-	go mkt.ScheduleStats()
 }
 
 // Process a new message from the consumer
-func (mkt *marketEngine) Process(msg *sarama.ConsumerMessage) {
+func (mkt *marketEngine) Process(msg kafka.Message) {
 	// Monitor: Increment the number of messages that has been received by the market
 	messagesQueued.WithLabelValues(mkt.name).Inc()
 	mkt.messages <- engine.NewEvent(msg)
@@ -89,34 +91,15 @@ func (mkt *marketEngine) Close() {
 	close(mkt.trades)
 }
 
-// ReceiveProducerErrors listens for error messages trades that have not been published
-// and sends them on another queue to processing later.
-//
-// @todo Optionally we can send them to another service, like an in memory database (Redis) so
-// that we don't retry to push then to a broken Kafka instance
-func (mkt *marketEngine) ReceiveProducerErrors() {
-	errors := mkt.producer.Errors()
-	for err := range errors {
-		log.Printf("Error sending trade on '%s' market: %v", mkt.name, err)
-	}
-}
-
 // ScheduleBackup sets up an interval at which to automatically back up the market on Kafka
 func (mkt *marketEngine) ScheduleBackup() {
 	if mkt.config.config.Backup.Interval == 0 {
-		log.Printf("Backup disabled for '%s' market. Please set backup interval to a positive value.", mkt.name)
+		log.Printf("[warn] Backup disabled for '%s' market. Please set backup interval to a positive value.", mkt.name)
 		return
 	}
 	for {
 		time.Sleep(time.Duration(mkt.config.config.Backup.Interval) * time.Minute)
 		mkt.backup <- true
-	}
-}
-
-func (mkt *marketEngine) ScheduleStats() {
-	for {
-		time.Sleep(1 * time.Second)
-		mkt.stats <- true
 	}
 }
 
@@ -145,13 +128,6 @@ func (mkt *marketEngine) ProcessOrder() {
 	var prevOffset int64
 	for {
 		select {
-		case <-mkt.stats:
-			depth := mkt.engine.GetMarketDepth()
-			rawTrade, _ := depth.ToBinary()
-			mkt.statsProducer.Input() <- &sarama.ProducerMessage{
-				Topic: mkt.config.config.Stats.Topic,
-				Value: sarama.ByteEncoder(rawTrade),
-			}
 		case <-mkt.backup:
 			// Generate backup event
 			if lastTopic != "" && lastOffset != prevOffset {
@@ -163,18 +139,42 @@ func (mkt *marketEngine) ProcessOrder() {
 				mkt.BackupMarket(market)
 				log.Printf("[Backup] [%s] Snapshot created\n", mkt.name)
 			}
-		case event := <-mkt.orders:
-			lastTopic = event.Msg.Topic
-			lastPartition = event.Msg.Partition
-			lastOffset = event.Msg.Offset
+		case event, more := <-mkt.orders:
+			if !more {
+				log.Printf("[info] [market:%s] Closing order processor", mkt.name)
+				return
+			}
+			log.Printf(
+				"[%s:%d][%s] %s:%s %d@%d\n",
+				event.Order.EventType,
+				event.Order.ID,
+				event.Order.Market,
+				event.Order.Side,
+				event.Order.Type,
+				event.Order.Amount,
+				event.Order.Price,
+			)
 			trades := make([]engine.Trade, 0, 5)
 			// Process each order and generate trades
-			mkt.engine.Process(event.Order, &trades)
+			mkt.engine.ProcessEvent(event.Order, &trades)
 			event.SetTrades(trades)
+			lastTopic = event.Msg.Topic
+			lastPartition = int32(event.Msg.Partition)
+			lastOffset = event.Msg.Offset
 			// Monitor: Update order count for monitoring with prometheus
 			engineOrderCount.WithLabelValues(mkt.name).Inc()
 			ordersQueued.WithLabelValues(mkt.name).Dec()
 			tradesQueued.WithLabelValues(mkt.name).Add(float64(len(event.Trades)))
+			log.Printf(
+				"-> [%s:%d][%s]: generated %d trades\n",
+				event.Order.EventType,
+				event.Order.ID,
+				event.Order.Market,
+				len(event.Trades),
+			)
+			for _, trade := range event.Trades {
+				log.Printf("-> [trade] %s ask:%d bid:%d %d@%d\n", trade.MakerSide, trade.AskID, trade.BidID, trade.Amount, trade.Price)
+			}
 			// send trades for storage
 			mkt.trades <- event
 		}
@@ -184,15 +184,17 @@ func (mkt *marketEngine) ProcessOrder() {
 // PublishTrades listens for new trades from the trading engine and publishes them to the Kafka server
 func (mkt *marketEngine) PublishTrades() {
 	for event := range mkt.trades {
-		for _, trade := range event.Trades {
+		trades := make([]kafka.Message, len(event.Trades))
+		for index, trade := range event.Trades {
 			rawTrade, _ := trade.ToBinary() // @todo add better error handling on encoding
-			mkt.producer.Input() <- &sarama.ProducerMessage{
-				Topic: mkt.config.config.Publish.Topic,
-				Value: sarama.ByteEncoder(rawTrade),
+			trades[index] = kafka.Message{
+				Value: rawTrade,
 			}
 		}
-		// mark the order as completed only after the trades have been sent to the kafka server
-		mkt.consumer.MarkOffset(event.Msg, "")
+		err := mkt.producer.WriteMessages(context.Background(), trades...)
+		if err != nil {
+			log.Println("[error] [kafka] [market:%s] Unable to publish trades: %v", mkt.name, err)
+		}
 
 		// Monitor: Update the number of trades processed after sending them back to Kafka
 		tradeCount := float64(len(event.Trades))

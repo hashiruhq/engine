@@ -51,8 +51,8 @@ func (ngin *tradingEngine) ProcessEvent(order Order, trades *[]Trade) interface{
 		ngin.Process(order, trades)
 	case CommandType_CancelOrder:
 		return ngin.CancelOrder(order)
-	case CommandType_BackupMarket:
-		return ngin.BackupMarket()
+	default:
+		return nil
 	}
 	return nil
 }

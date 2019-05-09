@@ -16,19 +16,13 @@ COPY go.mod .
 # (or when we add another docker instruction below this line)
 RUN go mod download
 
+# Add code refresh package
+RUN go get github.com/cespare/reflex
+RUN echo "-r '(\.go$|go\.mod)' -s -- sh -c 'go run . server'" >> /reflex.conf
+ENTRYPOINT ["reflex", "--decoration=none", "-c", "/reflex.conf"]
+ 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -a -installsuffix cgo --ldflags "-s -w" -o /usr/bin/matching_engine
-
-FROM alpine:3.9
-
-RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
-
-COPY --from=build /usr/bin/matching_engine /root/
-COPY --from=build /build/matching-engine/.engine.yml /root/
+# RUN CGO_ENABLED=0 go build -a -installsuffix cgo --ldflags "-s -w" -o /usr/bin/matching_engine
 
 EXPOSE 6060
-RUN mkdir -p /root/backups
-WORKDIR /root/
-
-CMD ["./matching_engine", "server"]

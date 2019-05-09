@@ -47,9 +47,9 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 	mkt.LoadMarket(market)
 
 	// mark the last message that has been processed by the engine to the one saved in the backup file
-	err = mkt.consumer.ResetOffset(market.Topic, market.Partition, market.Offset, "")
+	err = mkt.consumer.SetOffset(market.Offset + 1)
 	if err != nil {
-		log.Printf("Unable to reset offset for the '%s' market on '%s' topic and partition '%d' to offset '%d'", mkt.name, market.Topic, market.Partition, market.Offset)
+		log.Fatalf("Unable to reset offset for the '%s' market on '%s' topic and partition '%d' to offset '%d'", mkt.name, market.Topic, market.Partition, market.Offset)
 		return
 	}
 

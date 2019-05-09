@@ -1,15 +1,15 @@
 package engine_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
 	"math/rand"
 	"time"
 
+	"github.com/segmentio/kafka-go"
 	"gitlab.com/around25/products/matching-engine/net"
-
-	"github.com/Shopify/sarama"
 )
 
 func generateOrdersInKafka(n int) {
@@ -17,7 +17,7 @@ func generateOrdersInKafka(n int) {
 	kafkaBroker := "kafka:9092"
 	kafkaOrderTopic := "trading.order.btc.eth"
 
-	producer := net.NewKafkaAsyncProducer([]string{kafkaBroker})
+	producer := net.NewKafkaProducer([]string{kafkaBroker})
 	err := producer.Start()
 
 	go func(producer net.KafkaProducer) {
@@ -36,10 +36,9 @@ func generateOrdersInKafka(n int) {
 		price := 4000100 - 3*i - int(math.Ceil(10000*rand.Float64()))
 		amount := 10001 - int(math.Ceil(10000*rand.Float64()))
 		side := int8(1 + rand.Intn(2)%2)
-		producer.Input() <- &sarama.ProducerMessage{
-			Topic: kafkaOrderTopic,
-			Value: sarama.ByteEncoder(([]byte)(fmt.Sprintf(`{"base":"eth","quote":"btc","id":"%s","price":"%d","amount":"%d","side":%d,"type":1}`, id, price, amount, side))),
-		}
+		producer.WriteMessages(context.Background(), kafka.Message{
+			Value: ([]byte)(fmt.Sprintf(`{"base":"eth","quote":"btc","id":"%s","price":"%d","amount":"%d","side":%d,"type":1}`, id, price, amount, side)),
+		})
 	}
 
 	time.Sleep(time.Millisecond * 300)

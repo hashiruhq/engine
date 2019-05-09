@@ -8,15 +8,12 @@ import (
 
 // ConsumerConfig structure
 type ConsumerConfig struct {
-	Name   string
-	Hosts  []string
-	Topics []string
+	Hosts []string
 }
 
 // ProducerConfig structure
 type ProducerConfig struct {
-	Hosts  []string
-	Topics []string
+	Hosts []string
 }
 
 // BrokersConfig structure
@@ -45,7 +42,6 @@ type MarketConfig struct {
 
 	Listen  TopicConfig
 	Publish TopicConfig
-	Stats   TopicConfig
 }
 
 // MarketBackupConfig structure
@@ -56,6 +52,7 @@ type MarketBackupConfig struct {
 
 // ServerConfig structure
 type ServerConfig struct {
+	Debug      bool
 	Monitoring MonitoringConfig
 }
 

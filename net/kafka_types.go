@@ -1,20 +1,23 @@
 package net
 
-import "github.com/Shopify/sarama"
+import (
+	"context"
+
+	"github.com/segmentio/kafka-go"
+)
 
 // KafkaProducer inferface
 type KafkaProducer interface {
 	Start() error
-	Input() chan<- *sarama.ProducerMessage
-	Errors() <-chan *sarama.ProducerError
+	WriteMessages(context.Context, ...kafka.Message) error
 	Close() error
 }
 
 // KafkaConsumer interface
 type KafkaConsumer interface {
-	Start() error
-	GetMessageChan() <-chan *sarama.ConsumerMessage
-	MarkOffset(msg *sarama.ConsumerMessage, meta string)
-	ResetOffset(topic string, partition int32, offset int64, meta string) error
+	Start(ctx context.Context) error
+	SetOffset(offset int64) error
+	GetMessageChan() <-chan kafka.Message
+	CommitMessages(context.Context, ...kafka.Message)
 	Close() error
 }
