@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"log"
 	"math"
 	"math/rand"
@@ -13,7 +14,7 @@ import (
 	"gitlab.com/around25/products/matching-engine/net"
 	"gitlab.com/around25/products/matching-engine/server"
 
-	"github.com/Shopify/sarama"
+	"github.com/segmentio/kafka-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -49,7 +50,7 @@ func test_gen_orders(timeout, delay, topicCount int) {
 
 	producers := make([]net.KafkaProducer, 0, len(cfg.Brokers.Consumers))
 	for _, consumer := range cfg.Brokers.Consumers {
-		producer := net.NewKafkaAsyncProducer(consumer.Hosts)
+		producer := net.NewKafkaProducer(consumer.Hosts, "testing-producer")
 		producer.Start()
 		go func(producer net.KafkaProducer, topics []string) {
 			maxTopics := len(topics)
@@ -77,24 +78,14 @@ func test_gen_orders(timeout, delay, topicCount int) {
 					Type:      engine.OrderType_Limit,
 				}
 				data, _ := order.ToBinary()
-				producer.Input() <- &sarama.ProducerMessage{
-					Topic: topics[topicIndex],
-					Value: sarama.ByteEncoder(data),
-				}
+				producer.WriteMessages(context.Background(), kafka.Message{Value: data})
 				index++
 				if delay > 0 {
 					log.Println(topics[topicIndex], order)
 					time.Sleep(time.Duration(delay) * time.Second)
 				}
 			}
-		}(producer, consumer.Topics)
-		go func(producer net.KafkaProducer) {
-			errors := producer.Errors()
-			for err := range errors {
-				value, _ := err.Msg.Value.Encode()
-				log.Print("Error received from trades producer ", (string)(value), err)
-			}
-		}(producer)
+		}(producer, []string{"testing-orders"})
 		producers = append(producers, producer)
 	}
 

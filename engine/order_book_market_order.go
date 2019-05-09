@@ -17,7 +17,7 @@ Therefore in regards to market orders we have the following scenarios:
 1. DONE: New Market Order, existing limit orders
 2. DONE: New Market Order, empty order book
 3. DONE: New Market Order, only existing market orders
-4. New Limit Order, existing market orders
+4. DONE: New Limit Order, existing market orders
 
 Let's see how each one should be handled individually and how they are treated by the engine.
 
@@ -61,7 +61,10 @@ removed from the pending list and since the limit order was filled it would not 
 // Process a new market buy order and return the list of trades that matched
 // This method automatically adds the remaining amount needed to be fill the market order to the list of
 // pending market buy orders.
-// @todo CH: Refactor this to support processing already added market orders that have not been fully filled
+//
+// If there are only market orders pending and a limit order is added then the limit order is added in the
+// orderbook and then each pending market order will be executed until the available amount is depleted or
+// all market orders are completed
 func (book *orderBook) processMarketBuy(order Order, trades *[]Trade) Order {
 	if book.LowestAsk != 0 {
 		iterator := book.SellEntries.Seek(book.LowestAsk)
@@ -141,7 +144,10 @@ func (book *orderBook) processMarketBuy(order Order, trades *[]Trade) Order {
 // Process a new market sell order and return the list of trades that matched
 // This method automatically adds the remaining amount needed to be fill the market order to the list of
 // pending market sell orders.
-// @todo CH: Refactor this to support processing already added market orders that have not been fully filled
+//
+// If there are only market orders pending and a limit order is added then the limit order is added in the
+// orderbook and then each pending market order will be executed until the available amount is depleted or
+// all market orders are completed
 func (book *orderBook) processMarketSell(order Order, trades *[]Trade) Order {
 	if book.HighestBid != 0 {
 		iterator := book.BuyEntries.Seek(book.HighestBid)
