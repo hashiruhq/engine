@@ -21,39 +21,31 @@ func (mkt *marketEngine) BackupMarket(market engine.MarketBackup) error {
 // LoadMarketFromBackup from a backup file and update the order book with the given data
 // - Also reset the Kafka partition offset to the one from the backup and replay the orders to recreate the latest state
 func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
-	log.Printf("Loading market %s from backup file: %s", mkt.name, mkt.config.config.Backup.Path)
 	file := mkt.config.config.Backup.Path
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Println("Backup file does not exist:", file)
 		return
 	}
 
 	var market engine.MarketBackup
-	log.Println("Load market from binary. Content size:", len(content))
 	market.FromBinary(content)
 
 	// load all records from the backup into the order book
-	log.Println(
-		"Loading market from market backup. \n",
-		"Highest Bid:", market.GetHighestBid(),
-		"Lowest Ask:", market.GetLowestAsk(),
-		"Kafka Topic:", market.GetTopic(),
-		"Kafka Partition:", market.GetPartition(),
-		"Kafka Offset:", market.GetOffset(),
-		"Buy Orders Found:", len(market.GetBuyOrders()),
-		"Sell Orders Found:", len(market.GetSellOrders()),
+	log.Printf(
+		"[info] [market:%s] [init:1] Loaded market from storage with offset:%d bids:%d asks:%d\n",
+		mkt.name,
+		market.GetOffset(),
+		len(market.GetBuyOrders()),
+		len(market.GetSellOrders()),
 	)
 	mkt.LoadMarket(market)
 
 	// mark the last message that has been processed by the engine to the one saved in the backup file
-	err = mkt.consumer.ResetOffset(market.Topic, market.Partition, market.Offset, "")
+	err = mkt.consumer.SetOffset(market.Offset + 1)
 	if err != nil {
-		log.Printf("Unable to reset offset for the '%s' market on '%s' topic and partition '%d' to offset '%d'", mkt.name, market.Topic, market.Partition, market.Offset)
+		log.Fatalf("[fatal] [market:%s] Unable to reset offset to '%d'\n", mkt.name, market.Offset)
 		return
 	}
-
-	log.Printf("Market %s loaded from backup", mkt.name)
 
 	return nil
 }

@@ -76,8 +76,8 @@ func (book *orderBook) Process(order Order, trades *[]Trade) {
 	switch order.EventType {
 	case CommandType_NewOrder:
 		book.processOrder(order, trades)
-		// case EventTypeCancelOrder: return book.Cancel(order.ID);
-		// case EventTypeBackupMarket: return book.Backup();
+	case CommandType_CancelOrder:
+		book.Cancel(order)
 	}
 }
 

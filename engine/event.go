@@ -1,18 +1,16 @@
 package engine
 
-import (
-	"github.com/Shopify/sarama"
-)
+import "github.com/segmentio/kafka-go"
 
 // Event structure for order execution
 type Event struct {
-	Msg    *sarama.ConsumerMessage
+	Msg    kafka.Message
 	Order  Order
 	Trades []Trade
 }
 
 // NewEvent Create a new event
-func NewEvent(msg *sarama.ConsumerMessage) Event {
+func NewEvent(msg kafka.Message) Event {
 	return Event{Msg: msg}
 }
 

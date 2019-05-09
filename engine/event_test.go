@@ -3,7 +3,7 @@ package engine_test
 import (
 	"testing"
 
-	"github.com/Shopify/sarama"
+	"github.com/segmentio/kafka-go"
 	. "github.com/smartystreets/goconvey/convey"
 	"gitlab.com/around25/products/matching-engine/engine"
 )
@@ -12,7 +12,7 @@ func TestEventsUsage(t *testing.T) {
 	Convey("Create a new event", t, func() {
 		order := engine.Order{ID: 1, Price: 1200000000, Amount: 121300000000}
 		encoded, _ := order.ToBinary()
-		msg := &sarama.ConsumerMessage{Value: encoded}
+		msg := kafka.Message{Value: encoded}
 		event := engine.NewEvent(msg)
 		Convey("I should be able to decode the message as an order", func() {
 			event.Decode()
