@@ -165,6 +165,16 @@ func (mkt *marketEngine) ProcessOrder() {
 			engineOrderCount.WithLabelValues(mkt.name).Inc()
 			ordersQueued.WithLabelValues(mkt.name).Dec()
 			tradesQueued.WithLabelValues(mkt.name).Add(float64(len(event.Trades)))
+			log.Printf(
+				"-> [%s:%d][%s]: generated %d trades\n",
+				event.Order.EventType,
+				event.Order.ID,
+				event.Order.Market,
+				len(event.Trades),
+			)
+			for _, trade := range event.Trades {
+				log.Printf("-> [trade] %s ask:%d bid:%d %d@%d\n", trade.MakerSide, trade.AskID, trade.BidID, trade.Amount, trade.Price)
+			}
 			// send trades for storage
 			mkt.trades <- event
 		}
@@ -174,16 +184,8 @@ func (mkt *marketEngine) ProcessOrder() {
 // PublishTrades listens for new trades from the trading engine and publishes them to the Kafka server
 func (mkt *marketEngine) PublishTrades() {
 	for event := range mkt.trades {
-		log.Printf(
-			"-> [%s:%d][%s]: generated %d trades\n",
-			event.Order.EventType,
-			event.Order.ID,
-			event.Order.Market,
-			len(event.Trades),
-		)
 		trades := make([]kafka.Message, len(event.Trades))
 		for index, trade := range event.Trades {
-			log.Printf("-> [trade] %s ask:%d bid:%d %d@%d\n", trade.MakerSide, trade.AskID, trade.BidID, trade.Amount, trade.Price)
 			rawTrade, _ := trade.ToBinary() // @todo add better error handling on encoding
 			trades[index] = kafka.Message{
 				Value: rawTrade,
@@ -193,7 +195,6 @@ func (mkt *marketEngine) PublishTrades() {
 		if err != nil {
 			log.Println("[error] [kafka] [market:%s] Unable to publish trades: %v", mkt.name, err)
 		}
-		log.Println("-> offset_commit: ", event.Msg.Offset)
 
 		// Monitor: Update the number of trades processed after sending them back to Kafka
 		tradeCount := float64(len(event.Trades))

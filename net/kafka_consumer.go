@@ -22,7 +22,7 @@ func NewKafkaConsumer(brokers []string, topic string, partition int) KafkaConsum
 		Brokers:   brokers,
 		Topic:     topic,
 		Partition: partition,
-		MinBytes:  10 * 1024,        // 10KB
+		MinBytes:  10,               // 10KB
 		MaxBytes:  10 * 1024 * 1024, // 10MB
 	})
 
