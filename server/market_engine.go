@@ -108,6 +108,7 @@ func (mkt *marketEngine) ScheduleBackup() {
 //
 // Message flow is unidirectional from the messages channel to the orders channel
 func (mkt *marketEngine) DecodeMessage() {
+	log.Printf("[info] [market:%s] [process:1] Starting message decoder process\n", mkt.name)
 	for event := range mkt.messages {
 		event.Decode()
 		messagesQueued.WithLabelValues(mkt.name).Dec()
@@ -115,13 +116,14 @@ func (mkt *marketEngine) DecodeMessage() {
 		ordersQueued.WithLabelValues(mkt.name).Inc()
 		mkt.orders <- event
 	}
-	log.Printf("Closing decoder processor for '%s' market.", mkt.name)
+	log.Printf("[info] [market:%s] [process:1] Closed message decoder process\n", mkt.name)
 }
 
 // ProcessOrder process each order by the trading engine and forward trades to the trades channel
 //
 // Message flow is unidirectional from the orders channel to the trades channel
 func (mkt *marketEngine) ProcessOrder() {
+	log.Printf("[info] [market:%s] [process:2] Starting order matching process\n", mkt.name)
 	var lastTopic string
 	var lastPartition int32
 	var lastOffset int64
@@ -141,7 +143,7 @@ func (mkt *marketEngine) ProcessOrder() {
 			}
 		case event, more := <-mkt.orders:
 			if !more {
-				log.Printf("[info] [market:%s] Closing order processor", mkt.name)
+				log.Printf("[info] [market:%s] [process:2] Closed order matching process\n", mkt.name)
 				return
 			}
 			log.Printf(
@@ -183,6 +185,7 @@ func (mkt *marketEngine) ProcessOrder() {
 
 // PublishTrades listens for new trades from the trading engine and publishes them to the Kafka server
 func (mkt *marketEngine) PublishTrades() {
+	log.Printf("[info] [market:%s] [process:3] Start trade publisher process\n", mkt.name)
 	for event := range mkt.trades {
 		trades := make([]kafka.Message, len(event.Trades))
 		for index, trade := range event.Trades {
@@ -201,6 +204,5 @@ func (mkt *marketEngine) PublishTrades() {
 		tradesQueued.WithLabelValues(mkt.name).Sub(tradeCount)
 		engineTradeCount.WithLabelValues(mkt.name).Add(tradeCount)
 	}
-
-	log.Printf("Closing output event/trade processor for '%s' market.", mkt.name)
+	log.Printf("[info] [market:%s] [process:3] Closed trade publisher process\n", mkt.name)
 }

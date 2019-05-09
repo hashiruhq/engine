@@ -31,22 +31,19 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 	market.FromBinary(content)
 
 	// load all records from the backup into the order book
-	log.Println(
-		"Starting market from backup: \n",
-		"Highest Bid:", market.GetHighestBid(),
-		"Lowest Ask:", market.GetLowestAsk(),
-		"Kafka Topic:", market.GetTopic(),
-		"Kafka Partition:", market.GetPartition(),
-		"Kafka Offset:", market.GetOffset(),
-		"Buy Orders Found:", len(market.GetBuyOrders()),
-		"Sell Orders Found:", len(market.GetSellOrders()),
+	log.Printf(
+		"[info] [market:%s] [init:1] Loaded market from storage with offset:%d bids:%d asks:%d\n",
+		mkt.name,
+		market.GetOffset(),
+		len(market.GetBuyOrders()),
+		len(market.GetSellOrders()),
 	)
 	mkt.LoadMarket(market)
 
 	// mark the last message that has been processed by the engine to the one saved in the backup file
 	err = mkt.consumer.SetOffset(market.Offset + 1)
 	if err != nil {
-		log.Fatalf("Unable to reset offset for the '%s' market on '%s' topic and partition '%d' to offset '%d'", mkt.name, market.Topic, market.Partition, market.Offset)
+		log.Fatalf("[fatal] [market:%s] Unable to reset offset to '%d'\n", mkt.name, market.Offset)
 		return
 	}
 
