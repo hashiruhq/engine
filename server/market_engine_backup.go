@@ -21,21 +21,18 @@ func (mkt *marketEngine) BackupMarket(market engine.MarketBackup) error {
 // LoadMarketFromBackup from a backup file and update the order book with the given data
 // - Also reset the Kafka partition offset to the one from the backup and replay the orders to recreate the latest state
 func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
-	log.Printf("Loading market %s from backup file: %s", mkt.name, mkt.config.config.Backup.Path)
 	file := mkt.config.config.Backup.Path
 	content, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Println("Backup file does not exist:", file)
 		return
 	}
 
 	var market engine.MarketBackup
-	log.Println("Load market from binary. Content size:", len(content))
 	market.FromBinary(content)
 
 	// load all records from the backup into the order book
 	log.Println(
-		"Loading market from market backup. \n",
+		"Starting market from backup: \n",
 		"Highest Bid:", market.GetHighestBid(),
 		"Lowest Ask:", market.GetLowestAsk(),
 		"Kafka Topic:", market.GetTopic(),
@@ -52,8 +49,6 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 		log.Fatalf("Unable to reset offset for the '%s' market on '%s' topic and partition '%d' to offset '%d'", mkt.name, market.Topic, market.Partition, market.Offset)
 		return
 	}
-
-	log.Printf("Market %s loaded from backup", mkt.name)
 
 	return nil
 }
