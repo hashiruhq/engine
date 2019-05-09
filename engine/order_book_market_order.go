@@ -154,20 +154,16 @@ func (book *orderBook) processMarketSell(order Order, trades *[]Trade) Order {
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
-			for order.Amount > 0 && order.Funds > 0 {
+			for order.Amount > 0 {
 				pricePoint := iterator.Value()
 				complete := false
-				// calculate how much we could afford at this price
-				amountAffordable := utils.Divide(order.Funds, iterator.Key(), book.PricePrecision, book.PricePrecision, book.VolumePrecision)
 				for index := 0; index < len(pricePoint.Entries); index++ {
 					buyEntry := &pricePoint.Entries[index]
 
-					amount := utils.Min(order.Amount, amountAffordable)
 					// if we can fill the trade instantly then we add the trade and complete the order
-					if buyEntry.Amount >= amount {
-						// funds := utils.Multiply(order.Amount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
-						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Buy, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, amount, buyEntry.Price))
-						buyEntry.Amount -= amount
+					if buyEntry.Amount >= order.Amount {
+						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Buy, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, order.Amount, buyEntry.Price))
+						buyEntry.Amount -= order.Amount
 						order.Amount = 0
 						order.SetStatus(OrderStatus_Filled)
 						if buyEntry.Amount == 0 {
@@ -179,13 +175,10 @@ func (book *orderBook) processMarketSell(order Order, trades *[]Trade) Order {
 
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
-					if buyEntry.Amount < amount {
-						funds := utils.Multiply(amount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+					if buyEntry.Amount < order.Amount {
 						*trades = append(*trades, NewTrade(book.MarketID, MarketSide_Buy, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, buyEntry.Amount, buyEntry.Price))
 						order.Amount -= buyEntry.Amount
-						amountAffordable -= buyEntry.Amount
 						order.SetStatus(OrderStatus_PartiallyFilled)
-						order.Funds -= funds
 						book.removeBuyBookEntry(buyEntry, pricePoint, index)
 						index--
 						continue
