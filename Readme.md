@@ -1,5 +1,29 @@
 # Trading Engine
 
+## To Do
+
+- !!! When the engine restarts it should fetch the last trade generate for each connected market
+  and only start generating trades from that last trade based on the max(order ids).
+- !! Rerun the benchmarks to check the performance of the new kafka client library and update the current values
+- Add support for multiple communication channels: Apache Kafka(done), RabbitMQ, Redis, Apache Pulsar, AWS SQS, ZeroMQ
+
+### Questions/Improvements
+
+- Q: How do we handle server crashes and maintain the trading lists?
+  A: The engine now uses consumer instead of consumer groups and can automatically restart from any previous offset
+- Q: How/When do we acknowledge orders?
+  A:
+- Q: How do we handle persistance while maintaining the high load?
+  A:
+- Q: How do we handle upgrades and redeployments?
+  A:
+- Q: How do we prevent double spending?
+  A:
+- Q: How do we prevent memory leaks?
+  A:
+- Q: Perform benchmarks on the entire system and check what happens when the load is increased.
+  A:
+
 ## How to build a trading engine
 
 In this section I will try to document step by step how to build a trading engine in Golang from scratch.
@@ -39,16 +63,6 @@ The engine should support the following actions:
 - Handle over 1.000.000 trades/second
 - Done: 100% test converage
 - Fully tested with historical data
-
-### Questions/Improvements
-
-- How do we handle server crashes and maintain the trading lists?
-- How/When do we acknowledge orders?
-- How do we handle persistance while maintaining the high load?
-- How do we handle upgrades and redeployments?
-- How do we prevent double spending?
-- How do we prevent memory leaks?
-- Perform benchmarks on the entire system and check what happens when the load is increased.
 
 ## Benchmarks
 
