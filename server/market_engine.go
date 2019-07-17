@@ -7,6 +7,7 @@ import (
 
 	"gitlab.com/around25/products/matching-engine/engine"
 	"gitlab.com/around25/products/matching-engine/net"
+	"gitlab.com/around25/products/matching-engine/model"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -156,7 +157,7 @@ func (mkt *marketEngine) ProcessOrder() {
 				event.Order.Amount,
 				event.Order.Price,
 			)
-			trades := make([]engine.Trade, 0, 5)
+			trades := make([]model.Trade, 0, 5)
 			// Process each order and generate trades
 			mkt.engine.ProcessEvent(event.Order, &trades)
 			event.SetTrades(trades)

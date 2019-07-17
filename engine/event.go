@@ -1,12 +1,15 @@
 package engine
 
-import "github.com/segmentio/kafka-go"
+import (
+	"github.com/segmentio/kafka-go"
+	"gitlab.com/around25/products/matching-engine/model"
+)
 
 // Event structure for order execution
 type Event struct {
 	Msg    kafka.Message
-	Order  Order
-	Trades []Trade
+	Order  model.Order
+	Trades []model.Trade
 }
 
 // NewEvent Create a new event
@@ -20,7 +23,7 @@ func (event *Event) Decode() {
 }
 
 // SetTrades - sets the generated trades from that order on the current market
-func (event *Event) SetTrades(trades []Trade) {
+func (event *Event) SetTrades(trades []model.Trade) {
 	event.Trades = trades
 }
 

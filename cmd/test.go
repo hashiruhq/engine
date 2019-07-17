@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"gitlab.com/around25/products/matching-engine/engine"
 	"gitlab.com/around25/products/matching-engine/net"
 	"gitlab.com/around25/products/matching-engine/server"
+	"gitlab.com/around25/products/matching-engine/model"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/spf13/cobra"
@@ -64,18 +64,18 @@ func test_gen_orders(timeout, delay, topicCount int) {
 				id := index
 				price := uint64(math.Floor((1 + float64(index) + 10000*rand.Float64()) * 100000000))
 				amount := uint64(math.Floor((10001 - 10000*rand.Float64()) * 100000000))
-				side := engine.MarketSide_Buy
+				side := model.MarketSide_Buy
 				if rand.Intn(2)%2 == 1 {
-					side = engine.MarketSide_Sell
+					side = model.MarketSide_Sell
 				}
-				order := engine.Order{
+				order := model.Order{
 					ID:        uint64(id),
 					Price:     price,
 					Market:    "btcusd",
 					Amount:    amount,
 					Side:      side,
-					EventType: engine.CommandType_NewOrder,
-					Type:      engine.OrderType_Limit,
+					EventType: model.CommandType_NewOrder,
+					Type:      model.OrderType_Limit,
 				}
 				data, _ := order.ToBinary()
 				producer.WriteMessages(context.Background(), kafka.Message{Value: data})

@@ -2,6 +2,7 @@ package engine
 
 import (
 	"testing"
+	"gitlab.com/around25/products/matching-engine/model"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -13,7 +14,7 @@ func TestPricePointCreation(t *testing.T) {
 			order := NewOrder(1, uint64(100000000), uint64(12000000000), 1, 1, 1)
 			bookEntry := order
 			pricePoints.Set(bookEntry.Price, &PricePoint{
-				Entries: []Order{bookEntry},
+				Entries: []model.Order{bookEntry},
 			})
 			So(pricePoints.Len(), ShouldEqual, 1)
 			Convey("And the order added should be the same as the one retrieved", func() {
@@ -32,9 +33,9 @@ func TestPricePointCreation(t *testing.T) {
 		So(iterator.Value(), ShouldBeNil)
 		iterator.Close()
 		// test with list items
-		firstPoint := &PricePoint{Entries: []Order{Order{Amount: 1}}}
-		secondPoint := &PricePoint{Entries: []Order{Order{Amount: 2}}}
-		thirdPoint := &PricePoint{Entries: []Order{Order{Amount: 3}}}
+		firstPoint := &PricePoint{Entries: []model.Order{Order{Amount: 1}}}
+		secondPoint := &PricePoint{Entries: []model.Order{Order{Amount: 2}}}
+		thirdPoint := &PricePoint{Entries: []model.Order{Order{Amount: 3}}}
 		pricePoints.Set(10, firstPoint)
 		pricePoints.Set(13, secondPoint)
 		pricePoints.Set(15, thirdPoint)

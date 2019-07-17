@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"gitlab.com/around25/products/matching-engine/engine"
+	"gitlab.com/around25/products/matching-engine/model"
 	"gitlab.com/around25/products/matching-engine/net"
 )
 
@@ -24,7 +25,7 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 	consumer.Start()
 	defer consumer.Close()
 
-	orders := make(chan engine.Order, 10000)
+	orders := make(chan model.Order, 10000)
 	defer close(orders)
 
 	messages := make(chan []byte, 10000)
@@ -33,13 +34,13 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 	done := make(chan bool)
 	defer close(done)
 
-	decode := func(messages <-chan []byte, orders chan<- engine.Order) {
+	decode := func(messages <-chan []byte, orders chan<- model.Order) {
 		for {
 			msg, more := <-messages
 			if !more {
 				return
 			}
-			var order engine.Order
+			var order model.Order
 			order.FromBinary(msg)
 			orders <- order
 		}
@@ -59,8 +60,8 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 
 	go receiveMessages(messages, benchmark.N)
 	go decode(messages, orders)
-	go func(ngin engine.TradingEngine, orders <-chan engine.Order, n int) {
-		trades := make([]engine.Trade, 1000)
+	go func(ngin engine.TradingEngine, orders <-chan model.Order, n int) {
+		trades := make([]model.Trade, 1000)
 		for {
 			order := <-orders
 			ngin.Process(order, &trades)

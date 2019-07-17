@@ -1,5 +1,5 @@
 syntax = "proto3";
-package engine;
+package model;
 
 import "order.proto";
 
