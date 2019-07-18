@@ -28,7 +28,7 @@ type marketEngine struct {
 	inputs   chan kafka.Message
 	messages chan engine.Event
 	orders   chan engine.Event
-	trades   chan engine.Event
+	events   chan engine.Event
 	backup   chan bool
 	stats    chan bool
 	producer net.KafkaProducer
@@ -53,7 +53,7 @@ func NewMarketEngine(config MarketEngineConfig) MarketEngine {
 		engine:   engine.NewTradingEngine(config.config.MarketID, config.config.PricePrecision, config.config.VolumePrecision),
 		backup:   make(chan bool),
 		orders:   make(chan engine.Event, 20000),
-		trades:   make(chan engine.Event, 20000),
+		events:   make(chan engine.Event, 20000),
 		messages: make(chan engine.Event, 20000),
 	}
 }
@@ -70,10 +70,10 @@ func (mkt *marketEngine) Start(ctx context.Context) {
 	mkt.consumer.Start(ctx)
 	// decode the binary value for each message received into an Order Structure
 	go mkt.DecodeMessage()
-	// process each order by the trading engine and forward trades to the trades channel
+	// process each order by the trading engine and forward events to the events channel
 	go mkt.ProcessOrder()
-	// publish trades to the kafka server
-	go mkt.PublishTrades()
+	// publish events to the kafka server
+	go mkt.PublishEvents()
 	// start the backup scheduler
 	go mkt.ScheduleBackup()
 }
@@ -89,7 +89,7 @@ func (mkt *marketEngine) Process(msg kafka.Message) {
 func (mkt *marketEngine) Close() {
 	close(mkt.messages)
 	close(mkt.orders)
-	close(mkt.trades)
+	close(mkt.events)
 }
 
 // ScheduleBackup sets up an interval at which to automatically back up the market on Kafka
@@ -120,9 +120,9 @@ func (mkt *marketEngine) DecodeMessage() {
 	log.Printf("[info] [market:%s] [process:1] Closed message decoder process\n", mkt.name)
 }
 
-// ProcessOrder process each order by the trading engine and forward trades to the trades channel
+// ProcessOrder process each order by the trading engine and forward events to the events channel
 //
-// Message flow is unidirectional from the orders channel to the trades channel
+// Message flow is unidirectional from the orders channel to the events channel
 func (mkt *marketEngine) ProcessOrder() {
 	log.Printf("[info] [market:%s] [process:2] Starting order matching process\n", mkt.name)
 	var lastTopic string
@@ -157,53 +157,54 @@ func (mkt *marketEngine) ProcessOrder() {
 				event.Order.Amount,
 				event.Order.Price,
 			)
-			trades := make([]model.Trade, 0, 5)
-			// Process each order and generate trades
-			mkt.engine.ProcessEvent(event.Order, &trades)
-			event.SetTrades(trades)
+			events := make([]model.Event, 0, 5)
+			// Process each order and generate events
+			mkt.engine.ProcessEvent(event.Order, &events)
+			event.SetEvents(events)
 			lastTopic = event.Msg.Topic
 			lastPartition = int32(event.Msg.Partition)
 			lastOffset = event.Msg.Offset
 			// Monitor: Update order count for monitoring with prometheus
 			engineOrderCount.WithLabelValues(mkt.name).Inc()
 			ordersQueued.WithLabelValues(mkt.name).Dec()
-			tradesQueued.WithLabelValues(mkt.name).Add(float64(len(event.Trades)))
+			eventsQueued.WithLabelValues(mkt.name).Add(float64(len(event.Events)))
 			log.Printf(
-				"-> [%s:%d][%s]: generated %d trades\n",
+				"-> [%s:%d][%s]: generated %d events\n",
 				event.Order.EventType,
 				event.Order.ID,
 				event.Order.Market,
-				len(event.Trades),
+				len(event.Events),
 			)
-			for _, trade := range event.Trades {
-				log.Printf("-> [trade] %s ask:%d bid:%d %d@%d\n", trade.MakerSide, trade.AskID, trade.BidID, trade.Amount, trade.Price)
-			}
-			// send trades for storage
-			mkt.trades <- event
+			// for _, ev := range event.Events {
+			// 	log.Printf("-> [trade] %s ask:%d bid:%d %d@%d\n", ev.TakerSide, trade.AskID, trade.BidID, trade.Amount, trade.Price)
+			// }
+
+			// send generated events for storage
+			mkt.events <- event
 		}
 	}
 }
 
-// PublishTrades listens for new trades from the trading engine and publishes them to the Kafka server
-func (mkt *marketEngine) PublishTrades() {
-	log.Printf("[info] [market:%s] [process:3] Start trade publisher process\n", mkt.name)
-	for event := range mkt.trades {
-		trades := make([]kafka.Message, len(event.Trades))
-		for index, trade := range event.Trades {
-			rawTrade, _ := trade.ToBinary() // @todo add better error handling on encoding
-			trades[index] = kafka.Message{
+// PublishEvents listens for new events from the trading engine and publishes them to the Kafka server
+func (mkt *marketEngine) PublishEvents() {
+	log.Printf("[info] [market:%s] [process:3] Start event publisher process\n", mkt.name)
+	for event := range mkt.events {
+		events := make([]kafka.Message, len(event.Events))
+		for index, ev := range event.Events {
+			rawTrade, _ := ev.ToBinary() // @todo add better error handling on encoding
+			events[index] = kafka.Message{
 				Value: rawTrade,
 			}
 		}
-		err := mkt.producer.WriteMessages(context.Background(), trades...)
+		err := mkt.producer.WriteMessages(context.Background(), events...)
 		if err != nil {
-			log.Println("[error] [kafka] [market:%s] Unable to publish trades: %v", mkt.name, err)
+			log.Println("[error] [kafka] [market:%s] Unable to publish events: %v", mkt.name, err)
 		}
 
-		// Monitor: Update the number of trades processed after sending them back to Kafka
-		tradeCount := float64(len(event.Trades))
-		tradesQueued.WithLabelValues(mkt.name).Sub(tradeCount)
-		engineTradeCount.WithLabelValues(mkt.name).Add(tradeCount)
+		// Monitor: Update the number of events processed after sending them back to Kafka
+		eventCount := float64(len(event.Events))
+		eventsQueued.WithLabelValues(mkt.name).Sub(eventCount)
+		engineEventCount.WithLabelValues(mkt.name).Add(eventCount)
 	}
-	log.Printf("[info] [market:%s] [process:3] Closed trade publisher process\n", mkt.name)
+	log.Printf("[info] [market:%s] [process:3] Closed event publisher process\n", mkt.name)
 }

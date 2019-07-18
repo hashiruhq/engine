@@ -10,7 +10,6 @@ message Trade {
   uint64 AskOwnerID = 4;
   uint64 BidID = 5;
   uint64 BidOwnerID = 6;
-  MarketSide MakerSide = 7;
+  MarketSide TakerSide = 7;
   string Market = 8;
-  int64 CreatedAt = 9;
 }

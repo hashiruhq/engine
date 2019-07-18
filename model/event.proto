@@ -1,0 +1,33 @@
+syntax = "proto3";
+package model;
+
+import "order.proto";
+import "trade.proto";
+
+enum EventType {
+  // Invalid status for any non set field
+  Unspecified = 0;
+  // An order has changed status, either by being acknowledged by the engine on creation, 
+  // being cancelled by a command or by matching with another order.
+  OrderStatusChange = 1;
+  // A new trade was generated beetween two orders
+  NewTrade = 2;
+  // A stop loss order was activated by the engine due to market change
+  OrderActivated = 3;
+}
+
+message OrderStatusMsg {
+  uint64 ID = 1;
+  uint64 Amount = 2;
+  uint64 Funds = 3;
+  OrderStatus Status = 4;
+}
+
+message Event {
+  EventType Type = 1;
+  oneof Payload {
+    OrderStatusMsg OrderStatus = 2;
+    Trade Trade = 3;
+  }
+  int64 CreatedAt = 9;
+}

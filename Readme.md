@@ -39,6 +39,7 @@ go get github.com/golang/protobuf/protoc-gen-go
 ~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/market.proto
 ~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/order.proto
 ~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/trade.proto
+~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/event.proto
 ```
 
 __Testing__

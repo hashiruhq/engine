@@ -36,11 +36,11 @@ var (
 		// Which market are the orders from?
 		"market",
 	})
-	engineTradeCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+	engineEventCount = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "engine_trade_count",
 		Help: "Trading engine trade count",
 	}, []string{
-		// Which market are the trades from?
+		// Which market are the events from?
 		"market",
 	})
 	messagesQueued = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -57,21 +57,21 @@ var (
 		// Which market are the orders from?
 		"market",
 	})
-	tradesQueued = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	eventsQueued = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "engine_trade_queue_count",
-		Help: "Number of trades waiting to be processed.",
+		Help: "Number of events waiting to be processed.",
 	}, []string{
-		// Which market are the trades from?
+		// Which market are the events from?
 		"market",
 	})
 )
 
 func init() {
 	prometheus.MustRegister(engineOrderCount)
-	prometheus.MustRegister(engineTradeCount)
+	prometheus.MustRegister(engineEventCount)
 	prometheus.MustRegister(messagesQueued)
 	prometheus.MustRegister(ordersQueued)
-	prometheus.MustRegister(tradesQueued)
+	prometheus.MustRegister(eventsQueued)
 }
 
 // NewServer constructor

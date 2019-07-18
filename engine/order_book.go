@@ -7,7 +7,7 @@ import (
 // OrderBook interface
 // Defines what constitudes an order book and how we can interact with it
 type OrderBook interface {
-	Process(model.Order, *[]model.Trade)
+	Process(model.Order, *[]model.Event)
 	Cancel(order model.Order) bool
 	GetHighestBid() uint64
 	GetLowestAsk() uint64
@@ -74,22 +74,22 @@ func (book orderBook) GetMarket() []*SkipList {
 	return []*SkipList{book.BuyEntries, book.SellEntries}
 }
 
-// Process a new received order and return a list of trades make
-func (book *orderBook) Process(order model.Order, trades *[]model.Trade) {
+// Process a new received order and return a list of events make
+func (book *orderBook) Process(order model.Order, events *[]model.Event) {
 	switch order.EventType {
 	case model.CommandType_NewOrder:
-		book.processOrder(order, trades)
+		book.processOrder(order, events)
 	case model.CommandType_CancelOrder:
 		book.Cancel(order)
 	}
 }
 
-// Process a new order and return a list of trades resulted from the exchange
-func (book *orderBook) processOrder(order model.Order, trades *[]model.Trade) {
+// Process a new order and return a list of events resulted from the exchange
+func (book *orderBook) processOrder(order model.Order, events *[]model.Event) {
 	// for limit orders first process the limit order with the orderbook since you
 	// can't have a pending market order and not have an empty order book
 	if order.Type == model.OrderType_Limit && order.Side == model.MarketSide_Buy {
-		book.processLimitBuy(order, trades)
+		book.processLimitBuy(order, events)
 		// if there are sell market orders pending then keep loading the first one until there are
 		// no more pending market orders or the limit order was filled.
 		sellMarketCount := len(book.SellMarketEntries)
@@ -98,7 +98,7 @@ func (book *orderBook) processOrder(order model.Order, trades *[]model.Trade) {
 		}
 		for i := 0; i < sellMarketCount; i++ {
 			mko := book.popMarketSellOrder()
-			mkOrder := book.processMarketSell(*mko, trades)
+			mkOrder := book.processMarketSell(*mko, events)
 			if mkOrder.Status != model.OrderStatus_Filled {
 				book.lpushMarketSellOrder(mkOrder)
 				break
@@ -108,14 +108,14 @@ func (book *orderBook) processOrder(order model.Order, trades *[]model.Trade) {
 	}
 	// similar to the above for sell limit orders
 	if order.Type == model.OrderType_Limit && order.Side == model.MarketSide_Sell {
-		book.processLimitSell(order, trades)
+		book.processLimitSell(order, events)
 		buyMarketCount := len(book.BuyMarketEntries)
 		if buyMarketCount == 0 {
 			return
 		}
 		for i := 0; i < buyMarketCount; i++ {
 			mko := book.popMarketBuyOrder()
-			mkOrder := book.processMarketBuy(*mko, trades)
+			mkOrder := book.processMarketBuy(*mko, events)
 			if mkOrder.Status != model.OrderStatus_Filled {
 				book.lpushMarketBuyOrder(mkOrder)
 				break
@@ -129,7 +129,7 @@ func (book *orderBook) processOrder(order model.Order, trades *[]model.Trade) {
 		if len(book.BuyMarketEntries) > 0 {
 			book.pushMarketBuyOrder(order)
 		} else {
-			order := book.processMarketBuy(order, trades)
+			order := book.processMarketBuy(order, events)
 			if order.Status != model.OrderStatus_Filled {
 				book.pushMarketBuyOrder(order)
 			}
@@ -141,7 +141,7 @@ func (book *orderBook) processOrder(order model.Order, trades *[]model.Trade) {
 		if len(book.SellMarketEntries) > 0 {
 			book.pushMarketSellOrder(order)
 		} else {
-			order := book.processMarketSell(order, trades)
+			order := book.processMarketSell(order, events)
 			if order.Status != model.OrderStatus_Filled {
 				book.pushMarketSellOrder(order)
 			}

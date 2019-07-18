@@ -16,13 +16,13 @@ import (
 	"gitlab.com/around25/products/matching-engine/model"
 )
 
-var arr []engine.Order = make([]model.Order, 0, 2000000)
+var arr []model.Order = make([]model.Order, 0, 2000000)
 var msgs [][]byte = make([][]byte, 0, 2000000)
 var ngin = engine.NewTradingEngine("btcusd", 8, 8)
 
 func init() {
 	rand.Seed(42)
-	testFile := "/Users/cosmin/Incubator/go/src/gitlab.com/around25/products/matching-engine/priv/data/market.txt"
+	testFile := "/Users/cosmin/Incubator/gitlab.com/around25/products/matching-engine/priv/data/btcusd-2000000-limit-10-market.txt"
 	// GenerateRandomRecordsInFile(&testFile, 2000000)
 	fh, err := os.Open(testFile)
 	if err != nil {
@@ -84,15 +84,18 @@ func BenchmarkEncodeToProto(benchmark *testing.B) {
 
 func BenchmarkWithRandomData(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
-	trades := make([]model.Trade, 0, 100)
-	processing_trades := make([]model.Trade, 0, 100)
+	events := make([]model.Event, 0, 100)
+	processing_events := make([]model.Event, 0, 100)
 	// ngin := engine.NewTradingEngine()
+	if benchmark.N > 2000000 {
+		panic("Need more data to test with")
+	}
 	for j := 0; j < benchmark.N; j++ {
-		ngin.Process(arr[j], &trades)
-		if len(trades) >= cap(trades)/2+1 {
-			copy(processing_trades, trades)
-			trades = trades[0:0]
-			processing_trades = processing_trades[0:0]
+		ngin.Process(arr[j], &events)
+		if len(events) >= cap(events)/2+1 {
+			copy(processing_events, events)
+			events = events[0:0]
+			processing_events = processing_events[0:0]
 		}
 	}
 	PrintOrderLogs(ngin, benchmark.N, startTime)
@@ -100,20 +103,20 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 
 func BenchmarkWithDecodeAndEncodeRandomData(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
-	trades := make([]model.Trade, 0, 200)
-	processing_trades := make([]model.Trade, 0, 200)
+	events := make([]model.Event, 0, 200)
+	processing_events := make([]model.Event, 0, 200)
 	// ngin := engine.NewTradingEngine()
 	for j := 0; j < benchmark.N; j++ {
 		order := model.Order{}
 		order.FromBinary(msgs[j])
-		ngin.Process(order, &trades)
-		if len(trades) >= cap(trades)/2+1 {
-			for _, trade := range trades {
-				trade.ToBinary()
+		ngin.Process(order, &events)
+		if len(events) >= cap(events)/2+1 {
+			for _, event := range events {
+				event.ToBinary()
 			}
-			copy(processing_trades, trades)
-			trades = trades[0:0]
-			processing_trades = processing_trades[0:0]
+			copy(processing_events, events)
+			events = events[0:0]
+			processing_events = processing_events[0:0]
 		}
 	}
 	PrintOrderLogs(ngin, benchmark.N, startTime)
@@ -139,9 +142,14 @@ func GenerateRandomRecordsInFile(file *string, n int) {
 		id := uint64(i + 1)
 		price := uint64(10000100-3*i-int(math.Ceil(10000*rand.Float64()))) * 100000000
 		amount := uint64(10001-int(math.Ceil(10000*rand.Float64()))) * 100000000
+		funds := price / 100000000 * amount
 		side := model.MarketSide_Sell
 		if int32(rand.Intn(2)%2) == 0 {
 			side = model.MarketSide_Buy
+		}
+		evType := model.OrderType_Limit
+		if int32(rand.Intn(100)%100) == 0 {
+			evType = model.OrderType_Market
 		}
 		order := &model.Order{
 			ID:        id,
@@ -149,11 +157,11 @@ func GenerateRandomRecordsInFile(file *string, n int) {
 			Amount:    amount,
 			Price:     price,
 			Side:      side,
-			Type:      model.OrderType_Limit,
+			Type:      evType,
 			EventType: model.CommandType_NewOrder,
-			Stop:      model.StopLoss_Loss,
-			StopPrice: 1313231100010201,
-			Funds:     10100010133232313,
+			Stop:      model.StopLoss_None,
+			StopPrice: 0,
+			Funds:     funds,
 		}
 		data, _ := order.ToBinary()
 		str := base64.StdEncoding.EncodeToString(data)

@@ -6,12 +6,12 @@ import(
 
 // TradingEngine contains the current order book and information about the service since it was created
 type TradingEngine interface {
-	Process(order model.Order, trades *[]model.Trade)
+	Process(order model.Order, events *[]model.Event)
 	GetOrderBook() OrderBook
 	BackupMarket() model.MarketBackup
 	LoadMarket(model.MarketBackup) error
 	CancelOrder(order model.Order) bool
-	ProcessEvent(order model.Order, trades *[]model.Trade) interface{}
+	ProcessEvent(order model.Order, events *[]model.Event) interface{}
 }
 
 type tradingEngine struct {
@@ -27,9 +27,9 @@ func NewTradingEngine(marketID string, pricePrecision, volumePrecision int) Trad
 	}
 }
 
-// Process a single order and returned all the trades that can be satisfied instantly
-func (ngin *tradingEngine) Process(order model.Order, trades *[]model.Trade) {
-	ngin.OrderBook.Process(order, trades)
+// Process a single order and returned all the events that can be satisfied instantly
+func (ngin *tradingEngine) Process(order model.Order, events *[]model.Event) {
+	ngin.OrderBook.Process(order, events)
 }
 
 func (ngin *tradingEngine) CancelOrder(order model.Order) bool {
@@ -44,10 +44,10 @@ func (ngin *tradingEngine) BackupMarket() model.MarketBackup {
 	return ngin.GetOrderBook().Backup()
 }
 
-func (ngin *tradingEngine) ProcessEvent(order model.Order, trades *[]model.Trade) interface{} {
+func (ngin *tradingEngine) ProcessEvent(order model.Order, events *[]model.Event) interface{} {
 	switch order.EventType {
 	case model.CommandType_NewOrder:
-		ngin.Process(order, trades)
+		ngin.Process(order, events)
 	case model.CommandType_CancelOrder:
 		return ngin.CancelOrder(order)
 	default:

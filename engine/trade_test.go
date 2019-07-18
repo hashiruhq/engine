@@ -14,7 +14,7 @@ func TestTradeCreation(t *testing.T) {
 		So(trade.AskID, ShouldEqual, 1)
 		So(trade.BidID, ShouldEqual, 2)
 		So(trade.Market, ShouldEqual, "btcusd")
-		So(trade.MakerSide, ShouldEqual, model.MarketSide_Buy)
+		So(trade.TakerSide, ShouldEqual, model.MarketSide_Buy)
 	})
 }
 
@@ -29,7 +29,7 @@ func TestTradeLoadFromBinary(t *testing.T) {
 		So(trade.AskID, ShouldEqual, 1)
 		So(trade.BidID, ShouldEqual, 2)
 		So(trade.Market, ShouldEqual, "btcusd")
-		So(trade.MakerSide, ShouldEqual, model.MarketSide_Buy)
+		So(trade.TakerSide, ShouldEqual, model.MarketSide_Buy)
 	})
 }
 
