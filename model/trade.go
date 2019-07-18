@@ -5,9 +5,8 @@ import (
 )
 
 // NewTrade Creates a new trade between the taker order and the maker order
-func NewTrade(market string, takerSide MarketSide, askID, bidID, askOwnerID, bidOwnerID, amount, price uint64) Trade {
+func NewTrade(takerSide MarketSide, askID, bidID, askOwnerID, bidOwnerID, amount, price uint64) Trade {
 	return Trade{
-		Market:     market,
 		TakerSide:  takerSide,
 		AskID:      askID,
 		AskOwnerID: askOwnerID,

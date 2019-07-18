@@ -11,5 +11,4 @@ message Trade {
   uint64 BidID = 5;
   uint64 BidOwnerID = 6;
   MarketSide TakerSide = 7;
-  string Market = 8;
 }

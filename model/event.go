@@ -25,10 +25,10 @@ func NewOrderStatusEvent(id uint64, amount, funds uint64, status OrderStatus) Ev
 // NewTradeEvent returns a new event set with the trade details
 func NewTradeEvent(market string, takerSide MarketSide, askID, bidID, askOwnerID, bidOwnerID, amount, price uint64) Event {
 	return Event{
-		Type: EventType_NewTrade,
+		Type:   EventType_NewTrade,
+		Market: market,
 		Payload: &Event_Trade{
 			Trade: &Trade{
-				Market:     market,
 				TakerSide:  takerSide,
 				AskID:      askID,
 				AskOwnerID: askOwnerID,

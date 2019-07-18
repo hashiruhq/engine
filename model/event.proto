@@ -25,9 +25,10 @@ message OrderStatusMsg {
 
 message Event {
   EventType Type = 1;
+  string Market = 2;
+  int64 CreatedAt = 3;
   oneof Payload {
-    OrderStatusMsg OrderStatus = 2;
-    Trade Trade = 3;
+    OrderStatusMsg OrderStatus = 4;
+    Trade Trade = 5;
   }
-  int64 CreatedAt = 9;
 }
