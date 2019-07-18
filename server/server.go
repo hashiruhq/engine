@@ -15,6 +15,7 @@ import (
 	"gitlab.com/around25/products/matching-engine/net"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Server interface
@@ -143,7 +144,7 @@ func (srv server) StartProfilling(config MonitoringConfig) {
 	if config.Enabled {
 		go func() {
 			log.Printf("Starting profilling server and listening %s:%s", config.Host, config.Port)
-			http.Handle("/metrics", prometheus.Handler())
+			http.Handle("/metrics", promhttp.Handler())
 			log.Println(http.ListenAndServe(config.Host+":"+config.Port, nil))
 		}()
 	}
