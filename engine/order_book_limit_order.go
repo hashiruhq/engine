@@ -45,17 +45,7 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 				}
 
 				if complete {
-					if len(pricePoint.Entries) != 0 {
-						iterator.Close()
-						return
-					}
-					if ok := iterator.Next(); ok {
-						book.LowestAsk = iterator.Key()
-						iterator.Close()
-						return
-					}
-					book.LowestAsk = 0
-					iterator.Close()
+					book.closeAskIterator(iterator)
 					return
 				}
 
@@ -70,7 +60,7 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 		}
 	}
 
-	// if there are no more ordes just add the buy order to the list
+	// if there are no more orders just add the buy order to the list
 	book.addBuyBookEntry(order)
 	if book.HighestBid < order.Price || book.HighestBid == 0 {
 		book.HighestBid = order.Price
@@ -118,17 +108,7 @@ func (book *orderBook) processLimitSell(order model.Order, events *[]model.Event
 				}
 
 				if complete {
-					if len(pricePoint.Entries) != 0 {
-						iterator.Close()
-						return
-					}
-					if ok := iterator.Previous(); ok {
-						book.HighestBid = iterator.Key()
-						iterator.Close()
-						return
-					}
-					book.HighestBid = 0
-					iterator.Close()
+					book.closeBidIterator(iterator)
 					return
 				}
 
@@ -143,7 +123,7 @@ func (book *orderBook) processLimitSell(order model.Order, events *[]model.Event
 		}
 	}
 
-	// if there are no more ordes just add the buy order to the list
+	// if there are no more orders just add the buy order to the list
 	book.addSellBookEntry(order)
 	if book.LowestAsk > order.Price || book.LowestAsk == 0 {
 		book.LowestAsk = order.Price

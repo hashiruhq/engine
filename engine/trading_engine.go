@@ -1,6 +1,6 @@
 package engine
 
-import(
+import (
 	"gitlab.com/around25/products/matching-engine/model"
 )
 
@@ -10,7 +10,7 @@ type TradingEngine interface {
 	GetOrderBook() OrderBook
 	BackupMarket() model.MarketBackup
 	LoadMarket(model.MarketBackup) error
-	CancelOrder(order model.Order) bool
+	CancelOrder(order model.Order, events *[]model.Event)
 	ProcessEvent(order model.Order, events *[]model.Event) interface{}
 }
 
@@ -32,8 +32,8 @@ func (ngin *tradingEngine) Process(order model.Order, events *[]model.Event) {
 	ngin.OrderBook.Process(order, events)
 }
 
-func (ngin *tradingEngine) CancelOrder(order model.Order) bool {
-	return ngin.OrderBook.Cancel(order)
+func (ngin *tradingEngine) CancelOrder(order model.Order, events *[]model.Event) {
+	ngin.OrderBook.Cancel(order, events)
 }
 
 func (ngin *tradingEngine) LoadMarket(market model.MarketBackup) error {
@@ -49,7 +49,7 @@ func (ngin *tradingEngine) ProcessEvent(order model.Order, events *[]model.Event
 	case model.CommandType_NewOrder:
 		ngin.Process(order, events)
 	case model.CommandType_CancelOrder:
-		return ngin.CancelOrder(order)
+		ngin.CancelOrder(order, events)
 	default:
 		return nil
 	}
