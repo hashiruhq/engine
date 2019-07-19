@@ -7,9 +7,10 @@ import (
 )
 
 // NewOrderStatusEvent returns a new event set with the order status details
-func NewOrderStatusEvent(id uint64, amount, funds uint64, status OrderStatus) Event {
+func NewOrderStatusEvent(market string, id uint64, amount, funds uint64, status OrderStatus) Event {
 	return Event{
-		Type: EventType_OrderStatusChange,
+		Type:   EventType_OrderStatusChange,
+		Market: market,
 		Payload: &Event_OrderStatus{
 			OrderStatus: &OrderStatusMsg{
 				ID:     id,

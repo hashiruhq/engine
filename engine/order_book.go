@@ -172,7 +172,7 @@ func (book *orderBook) cancelLimitOrder(order model.Order, events *[]model.Event
 				if pricePoint.Entries[i].ID == order.ID {
 					ord := pricePoint.Entries[i]
 					ord.SetStatus(model.OrderStatus_Cancelled)
-					*events = append(*events, model.NewOrderStatusEvent(ord.ID, ord.Amount, ord.Funds, ord.Status))
+					*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
 					book.removeBuyBookEntry(&ord, pricePoint, i)
 					// adjust highest bid
 					if len(pricePoint.Entries) == 0 && book.HighestBid == ord.Price {
@@ -190,7 +190,7 @@ func (book *orderBook) cancelLimitOrder(order model.Order, events *[]model.Event
 			if pricePoint.Entries[i].ID == order.ID {
 				ord := pricePoint.Entries[i]
 				ord.SetStatus(model.OrderStatus_Cancelled)
-				*events = append(*events, model.NewOrderStatusEvent(ord.ID, ord.Amount, ord.Funds, ord.Status))
+				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
 				book.removeSellBookEntry(&ord, pricePoint, i)
 				// adjust lowest ask
 				if len(pricePoint.Entries) == 0 && book.LowestAsk == ord.Price {
@@ -210,7 +210,7 @@ func (book *orderBook) cancelMarketOrder(order model.Order, events *[]model.Even
 			if order.ID == book.BuyMarketEntries[i].ID {
 				ord := book.BuyMarketEntries[i]
 				ord.SetStatus(model.OrderStatus_Cancelled)
-				*events = append(*events, model.NewOrderStatusEvent(ord.ID, ord.Amount, ord.Funds, ord.Status))
+				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
 				book.BuyMarketEntries = append(book.BuyMarketEntries[:i], book.BuyMarketEntries[i+1:]...)
 				return
 			}
@@ -221,7 +221,7 @@ func (book *orderBook) cancelMarketOrder(order model.Order, events *[]model.Even
 		if order.ID == book.SellMarketEntries[i].ID {
 			ord := book.SellMarketEntries[i]
 			ord.SetStatus(model.OrderStatus_Cancelled)
-			*events = append(*events, model.NewOrderStatusEvent(ord.ID, ord.Amount, ord.Funds, ord.Status))
+			*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
 			book.SellMarketEntries = append(book.SellMarketEntries[:i], book.SellMarketEntries[i+1:]...)
 			return
 		}
