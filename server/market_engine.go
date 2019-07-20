@@ -95,7 +95,7 @@ func (mkt *marketEngine) Close() {
 // ScheduleBackup sets up an interval at which to automatically back up the market on Kafka
 func (mkt *marketEngine) ScheduleBackup() {
 	if mkt.config.config.Backup.Interval == 0 {
-		log.Printf("[warn] Backup disabled for '%s' market. Please set backup interval to a positive value.", mkt.name)
+		log.Printf("[warn] Backup disabled for '%s' market. Please set backup interval to a positive value.\n", mkt.name)
 		return
 	}
 	for {
@@ -198,7 +198,7 @@ func (mkt *marketEngine) PublishEvents() {
 		}
 		err := mkt.producer.WriteMessages(context.Background(), events...)
 		if err != nil {
-			log.Println("[error] [kafka] [market:%s] Unable to publish events: %v", mkt.name, err)
+			log.Printf("[error] [kafka] [market:%s] Unable to publish events: %v\n", mkt.name, err)
 		}
 
 		// Monitor: Update the number of events processed after sending them back to Kafka

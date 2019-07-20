@@ -2,6 +2,7 @@ package engine
 
 import (
 	"testing"
+
 	"gitlab.com/around25/products/matching-engine/model"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -11,7 +12,7 @@ func TestPricePointCreation(t *testing.T) {
 	Convey("I should be able to create Price Points list", t, func() {
 		pricePoints := NewPricePoints()
 		Convey("And add a new price point to it with a new book", func() {
-			order := NewOrder(1, uint64(100000000), uint64(12000000000), 1, 1, 1)
+			order := model.NewOrder(1, uint64(100000000), uint64(12000000000), 1, 1, 1)
 			bookEntry := order
 			pricePoints.Set(bookEntry.Price, &PricePoint{
 				Entries: []model.Order{bookEntry},
@@ -33,9 +34,9 @@ func TestPricePointCreation(t *testing.T) {
 		So(iterator.Value(), ShouldBeNil)
 		iterator.Close()
 		// test with list items
-		firstPoint := &PricePoint{Entries: []model.Order{Order{Amount: 1}}}
-		secondPoint := &PricePoint{Entries: []model.Order{Order{Amount: 2}}}
-		thirdPoint := &PricePoint{Entries: []model.Order{Order{Amount: 3}}}
+		firstPoint := &PricePoint{Entries: []model.Order{model.Order{Amount: 1}}}
+		secondPoint := &PricePoint{Entries: []model.Order{model.Order{Amount: 2}}}
+		thirdPoint := &PricePoint{Entries: []model.Order{model.Order{Amount: 3}}}
 		pricePoints.Set(10, firstPoint)
 		pricePoints.Set(13, secondPoint)
 		pricePoints.Set(15, thirdPoint)
@@ -128,7 +129,7 @@ func TestPricePointCreation(t *testing.T) {
 		Convey("Should panic at set for key=0", func() {
 			So(func() {
 				pricePoints := NewPricePoints()
-				pricePoints.Set(0, &PricePoint{Entries: []Order{Order{Amount: 1}}})
+				pricePoints.Set(0, &PricePoint{Entries: []model.Order{model.Order{Amount: 1}}})
 			}, ShouldPanic)
 		})
 
