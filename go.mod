@@ -41,6 +41,7 @@ require (
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/shurcooL/webdavfs v0.0.0-20181215192745-5988b2d638f6 // indirect
 	github.com/sirupsen/logrus v1.3.0 // indirect
+	github.com/smartystreets/goconvey v0.0.0-20190710185942-9d28bd7c0945
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.4.0
 	github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8 // indirect

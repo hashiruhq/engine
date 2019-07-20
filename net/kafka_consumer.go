@@ -19,11 +19,12 @@ type kafkaConsumer struct {
 // NewKafkaConsumer return a new Kafka consumer
 func NewKafkaConsumer(brokers []string, topic string, partition int) KafkaConsumer {
 	consumer := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:   brokers,
-		Topic:     topic,
-		Partition: partition,
-		MinBytes:  10,               // 10KB
-		MaxBytes:  10 * 1024 * 1024, // 10MB
+		Brokers:       brokers,
+		Topic:         topic,
+		Partition:     partition,
+		QueueCapacity: 10000,
+		MinBytes:      10,               // 10KB
+		MaxBytes:      10 * 1024 * 1024, // 10MB
 	})
 
 	return &kafkaConsumer{
@@ -57,7 +58,6 @@ func (conn *kafkaConsumer) CommitMessages(ctx context.Context, msgs ...kafka.Mes
 // Close the consumer connection
 func (conn *kafkaConsumer) Close() error {
 	err := conn.consumer.Close()
-	close(conn.inputs)
 	return err
 }
 
@@ -77,7 +77,9 @@ func (conn *kafkaConsumer) superviseReadingMessages(ctx context.Context) {
 	}
 	// closing the connection
 	conn.Close()
+	close(conn.inputs)
 }
+
 func (conn *kafkaConsumer) handleMessages(ctx context.Context) error {
 	for {
 		msg, err := conn.consumer.ReadMessage(ctx)

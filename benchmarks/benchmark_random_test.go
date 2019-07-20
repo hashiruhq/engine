@@ -5,9 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"math"
-	"math/rand"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -21,10 +20,12 @@ var msgs [][]byte = make([][]byte, 0, 2000000)
 var ngin = engine.NewTradingEngine("btcusd", 8, 8)
 
 func init() {
-	rand.Seed(42)
-	testFile := "/Users/cosmin/Incubator/gitlab.com/around25/products/matching-engine/priv/data/btcusd-2000000-limit-10-market.txt"
-	// GenerateRandomRecordsInFile(&testFile, 2000000)
-	fh, err := os.Open(testFile)
+	GenerateRandomRecordsInFile(BENCHMARK_TEST_FILE, KAFKA_CONSUMER_MARKET, 2000000)
+	file, err := filepath.Abs(BENCHMARK_TEST_FILE)
+	if err != nil {
+		panic(err.Error())
+	}
+	fh, err := os.Open(file)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -125,50 +126,6 @@ func BenchmarkWithDecodeAndEncodeRandomData(benchmark *testing.B) {
 func BenchmarkTimestamp(benchmark *testing.B) {
 	for j := 0; j < benchmark.N; j++ {
 		time.Now().UTC().Unix()
-	}
-}
-
-// GenerateRandomRecordsInFile create N orders and stores them in the given file
-// Use "~/Incubator/go/src/engine/priv/data/market.txt" locally
-// The file is opened with append and 0644 permissions
-func GenerateRandomRecordsInFile(file *string, n int) {
-	rand.Seed(42)
-	fh, err := os.OpenFile(*file, os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer fh.Close()
-	for i := 0; i < n; i++ {
-		id := uint64(i + 1)
-		price := uint64(10000100-3*i-int(math.Ceil(10000*rand.Float64()))) * 100000000
-		amount := uint64(10001-int(math.Ceil(10000*rand.Float64()))) * 100000000
-		funds := price / 100000000 * amount
-		side := model.MarketSide_Sell
-		if int32(rand.Intn(2)%2) == 0 {
-			side = model.MarketSide_Buy
-		}
-		evType := model.OrderType_Limit
-		if int32(rand.Intn(100)%100) == 0 {
-			evType = model.OrderType_Market
-		}
-		order := &model.Order{
-			ID:        id,
-			Market:    "btc-usd",
-			Amount:    amount,
-			Price:     price,
-			Side:      side,
-			Type:      evType,
-			EventType: model.CommandType_NewOrder,
-			Stop:      model.StopLoss_None,
-			StopPrice: 0,
-			Funds:     funds,
-		}
-		data, _ := order.ToBinary()
-		str := base64.StdEncoding.EncodeToString(data)
-		fh.WriteString(str)
-		if i < n {
-			fh.WriteString("\n")
-		}
 	}
 }
 

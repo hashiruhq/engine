@@ -44,8 +44,14 @@ go get github.com/golang/protobuf/protoc-gen-go
 
 __Testing__
 
-`go test -bench=^BenchmarkWithRandomData -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m" ./benchmarks`
-`go-torch benchmarks.test cpu.prof`
+```bash
+# local benchmarks using data loaded from a file
+go test -bench=^BenchmarkWithRandomData -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m" ./benchmarks --gen
+go-torch benchmarks.test cpu.prof
+# local benckmarks using data from Apache Kafka
+go test -bench=^BenchmarkKafkaConsumer -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m" ./benchmarks --gen
+# if the sample data was already generated remove the --gen flag from the commands above
+```
 
 __Create flame chart out of active server__
 
