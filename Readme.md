@@ -1,5 +1,71 @@
 # Trading Engine
 
+## To Do
+
+- !!! When the engine restarts it should fetch the last trade generate for each connected market
+  and only start generating trades from that last trade based on the max(order ids).
+- !! Rerun the benchmarks to check the performance of the new kafka client library and update the current values
+- Add support for multiple communication channels: Apache Kafka(done), RabbitMQ, Redis, Apache Pulsar, AWS SQS, ZeroMQ
+- Possibly replace protobuf with https://capnproto.org/ ??
+- Add support for fix protocol... check http://cyan.ly/blog/gotrade-fix-trading-system-golang-2016 and https://github.com/cyanly/gotrade/blob/master/proto/order/order.proto
+- 
+
+### Questions/Improvements
+
+- Q: How do we handle server crashes and maintain the trading lists?
+  A: The engine now uses consumer instead of consumer groups and can automatically restart from any previous offset
+- Q: How/When do we acknowledge orders?
+  A:
+- Q: How do we handle persistance while maintaining the high load?
+  A:
+- Q: How do we handle upgrades and redeployments?
+  A:
+- Q: How do we prevent double spending?
+  A:
+- Q: How do we prevent memory leaks?
+  A:
+- Q: Perform benchmarks on the entire system and check what happens when the load is increased.
+  A:
+
+## Development Notes
+
+__Generate protobuf classes__
+
+```bash
+# install protoc 
+go get github.com/golang/protobuf/protoc-gen-go
+
+# regenerate the golang classes based on the proto model
+~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/market.proto
+~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/order.proto
+~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/trade.proto
+~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/event.proto
+```
+
+__Testing__
+
+```bash
+# local benchmarks using data loaded from a file
+go test -bench=^BenchmarkWithRandomData -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m" ./benchmarks --gen
+go-torch benchmarks.test cpu.prof
+# local benckmarks using data from Apache Kafka
+go test -bench=^BenchmarkKafkaConsumer -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m" ./benchmarks --gen
+# if the sample data was already generated remove the --gen flag from the commands above
+```
+
+__Create flame chart out of active server__
+
+```
+go-torch -u http://127.0.0.1:6060
+```
+
+__Start GoConvey__
+
+```
+govendor install
+goconvey .
+```
+
 ## How to build a trading engine
 
 In this section I will try to document step by step how to build a trading engine in Golang from scratch.
@@ -39,16 +105,6 @@ The engine should support the following actions:
 - Handle over 1.000.000 trades/second
 - Done: 100% test converage
 - Fully tested with historical data
-
-### Questions/Improvements
-
-- How do we handle server crashes and maintain the trading lists?
-- How/When do we acknowledge orders?
-- How do we handle persistance while maintaining the high load?
-- How do we handle upgrades and redeployments?
-- How do we prevent double spending?
-- How do we prevent memory leaks?
-- Perform benchmarks on the entire system and check what happens when the load is increased.
 
 ## Benchmarks
 
@@ -230,23 +286,6 @@ Duration (seconds): 1.205161
 
 - https://github.com/HydroProtocol/amm-bots
 
-## Testing
-
-`go test -bench=^BenchmarkWithRandomData -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m" ./benchmarks`
-`go-torch benchmarks.test cpu.prof`
-
-**Create flame chart out of active server**
-
-```
-go-torch -u http://127.0.0.1:6060
-```
-
-**Start GoConvey**
-
-```
-govendor install
-goconvey .
-```
 
 ### Testing References
 

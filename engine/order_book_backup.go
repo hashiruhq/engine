@@ -1,6 +1,10 @@
 package engine
 
-func (book *orderBook) Load(market MarketBackup) error {
+import (
+	"gitlab.com/around25/products/matching-engine/model"
+)
+
+func (book *orderBook) Load(market model.MarketBackup) error {
 	book.LowestAsk = market.LowestAsk
 	book.HighestBid = market.HighestBid
 
@@ -16,12 +20,12 @@ func (book *orderBook) Load(market MarketBackup) error {
 }
 
 // Backup the order book in another structure for exporting
-func (book *orderBook) Backup() MarketBackup {
-	market := MarketBackup{
+func (book *orderBook) Backup() model.MarketBackup {
+	market := model.MarketBackup{
 		LowestAsk:  book.LowestAsk,
 		HighestBid: book.HighestBid,
-		BuyOrders:  make([]*Order, 0, book.BuyEntries.Len()),
-		SellOrders: make([]*Order, 0, book.SellEntries.Len()),
+		BuyOrders:  make([]*model.Order, 0, book.BuyEntries.Len()),
+		SellOrders: make([]*model.Order, 0, book.SellEntries.Len()),
 	}
 
 	if market.LowestAsk != 0 {

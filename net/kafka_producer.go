@@ -19,8 +19,8 @@ func NewKafkaProducer(brokers []string, topic string) KafkaProducer {
 	producer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:          brokers,
 		Topic:            topic,
-		QueueCapacity:    20000,
-		BatchSize:        20000,
+		QueueCapacity:    2000,
+		BatchSize:        2000,
 		BatchTimeout:     time.Duration(100) * time.Millisecond,
 		Async:            false,
 		CompressionCodec: snappy.NewCompressionCodec(),

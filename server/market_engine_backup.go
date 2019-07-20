@@ -5,12 +5,12 @@ import (
 	"log"
 	"os"
 
-	"gitlab.com/around25/products/matching-engine/engine"
+	"gitlab.com/around25/products/matching-engine/model"
 )
 
 // BackupMarket saves the given snapshot of the order book as binary into the backups folder with the name of the market pair
 // - It first saves into a temporary file before moving the file to the final localtion
-func (mkt *marketEngine) BackupMarket(market engine.MarketBackup) error {
+func (mkt *marketEngine) BackupMarket(market model.MarketBackup) error {
 	file := mkt.config.config.Backup.Path + ".tmp"
 	rawMarket, _ := market.ToBinary()
 	ioutil.WriteFile(file, rawMarket, 0644)
@@ -27,7 +27,7 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 		return
 	}
 
-	var market engine.MarketBackup
+	var market model.MarketBackup
 	market.FromBinary(content)
 
 	// load all records from the backup into the order book
@@ -50,6 +50,6 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 	return nil
 }
 
-func (mkt *marketEngine) LoadMarket(market engine.MarketBackup) {
+func (mkt *marketEngine) LoadMarket(market model.MarketBackup) {
 	mkt.engine.LoadMarket(market)
 }

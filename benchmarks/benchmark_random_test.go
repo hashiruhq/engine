@@ -5,25 +5,27 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"math"
-	"math/rand"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/golang/protobuf/proto"
 	"gitlab.com/around25/products/matching-engine/engine"
+	"gitlab.com/around25/products/matching-engine/model"
 )
 
-var arr []engine.Order = make([]engine.Order, 0, 2000000)
+var arr []model.Order = make([]model.Order, 0, 2000000)
 var msgs [][]byte = make([][]byte, 0, 2000000)
 var ngin = engine.NewTradingEngine("btcusd", 8, 8)
 
 func init() {
-	rand.Seed(42)
-	testFile := "/Users/cosmin/Incubator/go/src/gitlab.com/around25/products/matching-engine/priv/data/market.txt"
-	// GenerateRandomRecordsInFile(&testFile, 2000000)
-	fh, err := os.Open(testFile)
+	GenerateRandomRecordsInFile(BENCHMARK_TEST_FILE, KAFKA_CONSUMER_MARKET, 2000000)
+	file, err := filepath.Abs(BENCHMARK_TEST_FILE)
+	if err != nil {
+		panic(err.Error())
+	}
+	fh, err := os.Open(file)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -36,7 +38,7 @@ func init() {
 		}
 		data := make([]byte, 1000)
 		base64.StdEncoding.Decode(data, msg)
-		order := engine.Order{}
+		order := model.Order{}
 		order.FromBinary(data)
 		data, _ = order.ToBinary()
 		msgs = append(msgs, data)
@@ -45,15 +47,15 @@ func init() {
 }
 
 func BenchmarkDecodeFromProto(benchmark *testing.B) {
-	order := &engine.Order{
+	order := &model.Order{
 		ID:        1,
 		Market:    "btc-usd",
 		Amount:    848382829993942,
 		Price:     131221300010201,
-		Side:      engine.MarketSide_Buy,
-		Type:      engine.OrderType_Limit,
-		EventType: engine.CommandType_NewOrder,
-		Stop:      engine.StopLoss_Loss,
+		Side:      model.MarketSide_Buy,
+		Type:      model.OrderType_Limit,
+		EventType: model.CommandType_NewOrder,
+		Stop:      model.StopLoss_Loss,
 		StopPrice: 1313231100010201,
 		Funds:     10100010133232313,
 	}
@@ -64,15 +66,15 @@ func BenchmarkDecodeFromProto(benchmark *testing.B) {
 }
 
 func BenchmarkEncodeToProto(benchmark *testing.B) {
-	order := &engine.Order{
+	order := &model.Order{
 		ID:        1,
 		Market:    "btc-usd",
 		Amount:    848382829993942,
 		Price:     131221300010201,
-		Side:      engine.MarketSide_Buy,
-		Type:      engine.OrderType_Limit,
-		EventType: engine.CommandType_NewOrder,
-		Stop:      engine.StopLoss_Loss,
+		Side:      model.MarketSide_Buy,
+		Type:      model.OrderType_Limit,
+		EventType: model.CommandType_NewOrder,
+		Stop:      model.StopLoss_Loss,
 		StopPrice: 1313231100010201,
 		Funds:     10100010133232313,
 	}
@@ -83,15 +85,18 @@ func BenchmarkEncodeToProto(benchmark *testing.B) {
 
 func BenchmarkWithRandomData(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
-	trades := make([]engine.Trade, 0, 100)
-	processing_trades := make([]engine.Trade, 0, 100)
+	events := make([]model.Event, 0, 100)
+	processing_events := make([]model.Event, 0, 100)
 	// ngin := engine.NewTradingEngine()
+	if benchmark.N > 2000000 {
+		panic("Need more data to test with")
+	}
 	for j := 0; j < benchmark.N; j++ {
-		ngin.Process(arr[j], &trades)
-		if len(trades) >= cap(trades)/2+1 {
-			copy(processing_trades, trades)
-			trades = trades[0:0]
-			processing_trades = processing_trades[0:0]
+		ngin.Process(arr[j], &events)
+		if len(events) >= cap(events)/2+1 {
+			copy(processing_events, events)
+			events = events[0:0]
+			processing_events = processing_events[0:0]
 		}
 	}
 	PrintOrderLogs(ngin, benchmark.N, startTime)
@@ -99,20 +104,20 @@ func BenchmarkWithRandomData(benchmark *testing.B) {
 
 func BenchmarkWithDecodeAndEncodeRandomData(benchmark *testing.B) {
 	startTime := time.Now().UnixNano()
-	trades := make([]engine.Trade, 0, 200)
-	processing_trades := make([]engine.Trade, 0, 200)
+	events := make([]model.Event, 0, 200)
+	processing_events := make([]model.Event, 0, 200)
 	// ngin := engine.NewTradingEngine()
 	for j := 0; j < benchmark.N; j++ {
-		order := engine.Order{}
+		order := model.Order{}
 		order.FromBinary(msgs[j])
-		ngin.Process(order, &trades)
-		if len(trades) >= cap(trades)/2+1 {
-			for _, trade := range trades {
-				trade.ToBinary()
+		ngin.Process(order, &events)
+		if len(events) >= cap(events)/2+1 {
+			for _, event := range events {
+				event.ToBinary()
 			}
-			copy(processing_trades, trades)
-			trades = trades[0:0]
-			processing_trades = processing_trades[0:0]
+			copy(processing_events, events)
+			events = events[0:0]
+			processing_events = processing_events[0:0]
 		}
 	}
 	PrintOrderLogs(ngin, benchmark.N, startTime)
@@ -121,45 +126,6 @@ func BenchmarkWithDecodeAndEncodeRandomData(benchmark *testing.B) {
 func BenchmarkTimestamp(benchmark *testing.B) {
 	for j := 0; j < benchmark.N; j++ {
 		time.Now().UTC().Unix()
-	}
-}
-
-// GenerateRandomRecordsInFile create N orders and stores them in the given file
-// Use "~/Incubator/go/src/engine/priv/data/market.txt" locally
-// The file is opened with append and 0644 permissions
-func GenerateRandomRecordsInFile(file *string, n int) {
-	rand.Seed(42)
-	fh, err := os.OpenFile(*file, os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		panic(err.Error())
-	}
-	defer fh.Close()
-	for i := 0; i < n; i++ {
-		id := uint64(i + 1)
-		price := uint64(10000100-3*i-int(math.Ceil(10000*rand.Float64()))) * 100000000
-		amount := uint64(10001-int(math.Ceil(10000*rand.Float64()))) * 100000000
-		side := engine.MarketSide_Sell
-		if int32(rand.Intn(2)%2) == 0 {
-			side = engine.MarketSide_Buy
-		}
-		order := &engine.Order{
-			ID:        id,
-			Market:    "btc-usd",
-			Amount:    amount,
-			Price:     price,
-			Side:      side,
-			Type:      engine.OrderType_Limit,
-			EventType: engine.CommandType_NewOrder,
-			Stop:      engine.StopLoss_Loss,
-			StopPrice: 1313231100010201,
-			Funds:     10100010133232313,
-		}
-		data, _ := order.ToBinary()
-		str := base64.StdEncoding.EncodeToString(data)
-		fh.WriteString(str)
-		if i < n {
-			fh.WriteString("\n")
-		}
 	}
 }
 
