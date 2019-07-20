@@ -1,14 +1,17 @@
 package engine
 
+import (
+	"gitlab.com/around25/products/matching-engine/model"
+)
+
 // TradingEngine contains the current order book and information about the service since it was created
 type TradingEngine interface {
-	Process(order Order, trades *[]Trade)
+	Process(order model.Order, events *[]model.Event)
 	GetOrderBook() OrderBook
-	BackupMarket() MarketBackup
-	GetMarketDepth() *MarketDepth
-	LoadMarket(MarketBackup) error
-	CancelOrder(order Order) bool
-	ProcessEvent(order Order, trades *[]Trade) interface{}
+	BackupMarket() model.MarketBackup
+	LoadMarket(model.MarketBackup) error
+	CancelOrder(order model.Order, events *[]model.Event)
+	ProcessEvent(order model.Order, events *[]model.Event) interface{}
 }
 
 type tradingEngine struct {
@@ -24,33 +27,29 @@ func NewTradingEngine(marketID string, pricePrecision, volumePrecision int) Trad
 	}
 }
 
-// Process a single order and returned all the trades that can be satisfied instantly
-func (ngin *tradingEngine) Process(order Order, trades *[]Trade) {
-	ngin.OrderBook.Process(order, trades)
+// Process a single order and returned all the events that can be satisfied instantly
+func (ngin *tradingEngine) Process(order model.Order, events *[]model.Event) {
+	ngin.OrderBook.Process(order, events)
 }
 
-func (ngin *tradingEngine) CancelOrder(order Order) bool {
-	return ngin.OrderBook.Cancel(order)
+func (ngin *tradingEngine) CancelOrder(order model.Order, events *[]model.Event) {
+	ngin.OrderBook.Cancel(order, events)
 }
 
-func (ngin *tradingEngine) LoadMarket(market MarketBackup) error {
+func (ngin *tradingEngine) LoadMarket(market model.MarketBackup) error {
 	return ngin.GetOrderBook().Load(market)
 }
 
-func (ngin *tradingEngine) BackupMarket() MarketBackup {
+func (ngin *tradingEngine) BackupMarket() model.MarketBackup {
 	return ngin.GetOrderBook().Backup()
 }
 
-func (ngin *tradingEngine) GetMarketDepth() *MarketDepth {
-	return ngin.OrderBook.GetMarketDepth()
-}
-
-func (ngin *tradingEngine) ProcessEvent(order Order, trades *[]Trade) interface{} {
+func (ngin *tradingEngine) ProcessEvent(order model.Order, events *[]model.Event) interface{} {
 	switch order.EventType {
-	case CommandType_NewOrder:
-		ngin.Process(order, trades)
-	case CommandType_CancelOrder:
-		return ngin.CancelOrder(order)
+	case model.CommandType_NewOrder:
+		ngin.Process(order, events)
+	case model.CommandType_CancelOrder:
+		ngin.CancelOrder(order, events)
 	default:
 		return nil
 	}

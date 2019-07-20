@@ -15,6 +15,7 @@ import (
 	"gitlab.com/around25/products/matching-engine/net"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Server interface
@@ -36,11 +37,11 @@ var (
 		// Which market are the orders from?
 		"market",
 	})
-	engineTradeCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+	engineEventCount = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "engine_trade_count",
 		Help: "Trading engine trade count",
 	}, []string{
-		// Which market are the trades from?
+		// Which market are the events from?
 		"market",
 	})
 	messagesQueued = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -57,21 +58,21 @@ var (
 		// Which market are the orders from?
 		"market",
 	})
-	tradesQueued = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	eventsQueued = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "engine_trade_queue_count",
-		Help: "Number of trades waiting to be processed.",
+		Help: "Number of events waiting to be processed.",
 	}, []string{
-		// Which market are the trades from?
+		// Which market are the events from?
 		"market",
 	})
 )
 
 func init() {
 	prometheus.MustRegister(engineOrderCount)
-	prometheus.MustRegister(engineTradeCount)
+	prometheus.MustRegister(engineEventCount)
 	prometheus.MustRegister(messagesQueued)
 	prometheus.MustRegister(ordersQueued)
-	prometheus.MustRegister(tradesQueued)
+	prometheus.MustRegister(eventsQueued)
 }
 
 // NewServer constructor
@@ -143,7 +144,7 @@ func (srv server) StartProfilling(config MonitoringConfig) {
 	if config.Enabled {
 		go func() {
 			log.Printf("Starting profilling server and listening %s:%s", config.Host, config.Port)
-			http.Handle("/metrics", prometheus.Handler())
+			http.Handle("/metrics", promhttp.Handler())
 			log.Println(http.ListenAndServe(config.Host+":"+config.Port, nil))
 		}()
 	}

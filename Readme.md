@@ -6,6 +6,9 @@
   and only start generating trades from that last trade based on the max(order ids).
 - !! Rerun the benchmarks to check the performance of the new kafka client library and update the current values
 - Add support for multiple communication channels: Apache Kafka(done), RabbitMQ, Redis, Apache Pulsar, AWS SQS, ZeroMQ
+- Possibly replace protobuf with https://capnproto.org/ ??
+- Add support for fix protocol... check http://cyan.ly/blog/gotrade-fix-trading-system-golang-2016 and https://github.com/cyanly/gotrade/blob/master/proto/order/order.proto
+- 
 
 ### Questions/Improvements
 
@@ -23,6 +26,45 @@
   A:
 - Q: Perform benchmarks on the entire system and check what happens when the load is increased.
   A:
+
+## Development Notes
+
+__Generate protobuf classes__
+
+```bash
+# install protoc 
+go get github.com/golang/protobuf/protoc-gen-go
+
+# regenerate the golang classes based on the proto model
+~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/market.proto
+~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/order.proto
+~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/trade.proto
+~/tools/protoc/bin/protoc -I=./model --go_out=./model ./model/event.proto
+```
+
+__Testing__
+
+```bash
+# local benchmarks using data loaded from a file
+go test -bench=^BenchmarkWithRandomData -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m" ./benchmarks --gen
+go-torch benchmarks.test cpu.prof
+# local benckmarks using data from Apache Kafka
+go test -bench=^BenchmarkKafkaConsumer -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m" ./benchmarks --gen
+# if the sample data was already generated remove the --gen flag from the commands above
+```
+
+__Create flame chart out of active server__
+
+```
+go-torch -u http://127.0.0.1:6060
+```
+
+__Start GoConvey__
+
+```
+govendor install
+goconvey .
+```
 
 ## How to build a trading engine
 
@@ -244,23 +286,6 @@ Duration (seconds): 1.205161
 
 - https://github.com/HydroProtocol/amm-bots
 
-## Testing
-
-`go test -bench=^BenchmarkWithRandomData -run=^$ -timeout 10s -benchmem -cpu 8 -cpuprofile cpu.prof -memprofile mem.prof -gcflags="-m" ./benchmarks`
-`go-torch benchmarks.test cpu.prof`
-
-**Create flame chart out of active server**
-
-```
-go-torch -u http://127.0.0.1:6060
-```
-
-**Start GoConvey**
-
-```
-govendor install
-goconvey .
-```
 
 ### Testing References
 

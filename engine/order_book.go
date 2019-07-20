@@ -1,15 +1,18 @@
 package engine
 
+import (
+	"gitlab.com/around25/products/matching-engine/model"
+)
+
 // OrderBook interface
 // Defines what constitudes an order book and how we can interact with it
 type OrderBook interface {
-	Process(Order, *[]Trade)
-	Cancel(order Order) bool
+	Process(model.Order, *[]model.Event)
+	Cancel(model.Order, *[]model.Event)
 	GetHighestBid() uint64
 	GetLowestAsk() uint64
-	Load(MarketBackup) error
-	Backup() MarketBackup
-	GetMarketDepth() *MarketDepth
+	Load(model.MarketBackup) error
+	Backup() model.MarketBackup
 	GetMarket() []*SkipList
 	GetMarketID() string
 	GetPricePrecision() int
@@ -24,8 +27,8 @@ type orderBook struct {
 	SellEntries       *SkipList
 	LowestAsk         uint64
 	HighestBid        uint64
-	BuyMarketEntries  []Order
-	SellMarketEntries []Order
+	BuyMarketEntries  []model.Order
+	SellMarketEntries []model.Order
 }
 
 // NewOrderBook Creates a new empty order book for the trading engine
@@ -38,8 +41,8 @@ func NewOrderBook(marketID string, pricePrecision, volumePrecision int) OrderBoo
 		HighestBid:        0,
 		BuyEntries:        NewPricePoints(),
 		SellEntries:       NewPricePoints(),
-		BuyMarketEntries:  make([]Order, 0, 0),
-		SellMarketEntries: make([]Order, 0, 0),
+		BuyMarketEntries:  make([]model.Order, 0, 0),
+		SellMarketEntries: make([]model.Order, 0, 0),
 	}
 }
 
@@ -71,22 +74,22 @@ func (book orderBook) GetMarket() []*SkipList {
 	return []*SkipList{book.BuyEntries, book.SellEntries}
 }
 
-// Process a new received order and return a list of trades make
-func (book *orderBook) Process(order Order, trades *[]Trade) {
+// Process a new received order and return a list of events make
+func (book *orderBook) Process(order model.Order, events *[]model.Event) {
 	switch order.EventType {
-	case CommandType_NewOrder:
-		book.processOrder(order, trades)
-	case CommandType_CancelOrder:
-		book.Cancel(order)
+	case model.CommandType_NewOrder:
+		book.processOrder(order, events)
+	case model.CommandType_CancelOrder:
+		book.Cancel(order, events)
 	}
 }
 
-// Process a new order and return a list of trades resulted from the exchange
-func (book *orderBook) processOrder(order Order, trades *[]Trade) {
+// Process a new order and return a list of events resulted from the exchange
+func (book *orderBook) processOrder(order model.Order, events *[]model.Event) {
 	// for limit orders first process the limit order with the orderbook since you
 	// can't have a pending market order and not have an empty order book
-	if order.Type == OrderType_Limit && order.Side == MarketSide_Buy {
-		book.processLimitBuy(order, trades)
+	if order.Type == model.OrderType_Limit && order.Side == model.MarketSide_Buy {
+		book.processLimitBuy(order, events)
 		// if there are sell market orders pending then keep loading the first one until there are
 		// no more pending market orders or the limit order was filled.
 		sellMarketCount := len(book.SellMarketEntries)
@@ -95,8 +98,8 @@ func (book *orderBook) processOrder(order Order, trades *[]Trade) {
 		}
 		for i := 0; i < sellMarketCount; i++ {
 			mko := book.popMarketSellOrder()
-			mkOrder := book.processMarketSell(*mko, trades)
-			if mkOrder.Status != OrderStatus_Filled {
+			mkOrder := book.processMarketSell(*mko, events)
+			if mkOrder.Status != model.OrderStatus_Filled {
 				book.lpushMarketSellOrder(mkOrder)
 				break
 			}
@@ -104,16 +107,16 @@ func (book *orderBook) processOrder(order Order, trades *[]Trade) {
 		return
 	}
 	// similar to the above for sell limit orders
-	if order.Type == OrderType_Limit && order.Side == MarketSide_Sell {
-		book.processLimitSell(order, trades)
+	if order.Type == model.OrderType_Limit && order.Side == model.MarketSide_Sell {
+		book.processLimitSell(order, events)
 		buyMarketCount := len(book.BuyMarketEntries)
 		if buyMarketCount == 0 {
 			return
 		}
 		for i := 0; i < buyMarketCount; i++ {
 			mko := book.popMarketBuyOrder()
-			mkOrder := book.processMarketBuy(*mko, trades)
-			if mkOrder.Status != OrderStatus_Filled {
+			mkOrder := book.processMarketBuy(*mko, events)
+			if mkOrder.Status != model.OrderStatus_Filled {
 				book.lpushMarketBuyOrder(mkOrder)
 				break
 			}
@@ -122,24 +125,24 @@ func (book *orderBook) processOrder(order Order, trades *[]Trade) {
 	}
 
 	// market order either get filly filled or they get added to the pending market order list
-	if order.Type == OrderType_Market && order.Side == MarketSide_Buy {
+	if order.Type == model.OrderType_Market && order.Side == model.MarketSide_Buy {
 		if len(book.BuyMarketEntries) > 0 {
 			book.pushMarketBuyOrder(order)
 		} else {
-			order := book.processMarketBuy(order, trades)
-			if order.Status != OrderStatus_Filled {
+			order := book.processMarketBuy(order, events)
+			if order.Status != model.OrderStatus_Filled {
 				book.pushMarketBuyOrder(order)
 			}
 			return
 		}
 	}
 	// exactly the same for sell market orders
-	if order.Type == OrderType_Market && order.Side == MarketSide_Sell {
+	if order.Type == model.OrderType_Market && order.Side == model.MarketSide_Sell {
 		if len(book.SellMarketEntries) > 0 {
 			book.pushMarketSellOrder(order)
 		} else {
-			order := book.processMarketSell(order, trades)
-			if order.Status != OrderStatus_Filled {
+			order := book.processMarketSell(order, events)
+			if order.Status != model.OrderStatus_Filled {
 				book.pushMarketSellOrder(order)
 			}
 			return
@@ -151,122 +154,140 @@ func (book *orderBook) processOrder(order Order, trades *[]Trade) {
 //
 // @todo This method does not properly implement the cancelation of an order
 // - Improve this by also calculating the new LowestAsk and HighestBid after the order is removed
-func (book *orderBook) Cancel(order Order) bool {
+func (book *orderBook) Cancel(order model.Order, events *[]model.Event) {
 	switch order.Type {
-	case OrderType_Limit:
-		return book.cancelLimitOrder(order)
-	case OrderType_Market:
-		return book.cancelMarketOrder(order)
+	case model.OrderType_Limit:
+		book.cancelLimitOrder(order, events)
+	case model.OrderType_Market:
+		book.cancelMarketOrder(order, events)
 	default:
-		return false
 	}
 }
 
-// Cancel a limit order based in order attributes
-func (book *orderBook) cancelLimitOrder(order Order) bool {
-	if order.Side == MarketSide_Buy {
+// Cancel a limit order based on a given order ID and set price
+func (book *orderBook) cancelLimitOrder(order model.Order, events *[]model.Event) {
+	if order.Side == model.MarketSide_Buy {
 		if pricePoint, ok := book.BuyEntries.Get(order.Price); ok {
 			for i := 0; i < len(pricePoint.Entries); i++ {
 				if pricePoint.Entries[i].ID == order.ID {
 					ord := pricePoint.Entries[i]
+					ord.SetStatus(model.OrderStatus_Cancelled)
+					*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
 					book.removeBuyBookEntry(&ord, pricePoint, i)
-					return true
+					// adjust highest bid
+					if len(pricePoint.Entries) == 0 && book.HighestBid == ord.Price {
+						iterator := book.BuyEntries.Seek(book.HighestBid)
+						book.closeBidIterator(iterator)
+					}
+					return
 				}
 			}
 		}
-		return false
+		return
 	}
 	if pricePoint, ok := book.SellEntries.Get(order.Price); ok {
 		for i := 0; i < len(pricePoint.Entries); i++ {
 			if pricePoint.Entries[i].ID == order.ID {
 				ord := pricePoint.Entries[i]
+				ord.SetStatus(model.OrderStatus_Cancelled)
+				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
 				book.removeSellBookEntry(&ord, pricePoint, i)
-				return true
+				// adjust lowest ask
+				if len(pricePoint.Entries) == 0 && book.LowestAsk == ord.Price {
+					iterator := book.SellEntries.Seek(book.LowestAsk)
+					book.closeAskIterator(iterator)
+				}
+				return
 			}
 		}
 	}
-	return false
 }
 
-func (book *orderBook) cancelMarketOrder(order Order) bool {
-	if order.Side == MarketSide_Buy {
+// Cancel a market order based on a given order ID
+func (book *orderBook) cancelMarketOrder(order model.Order, events *[]model.Event) {
+	if order.Side == model.MarketSide_Buy {
 		for i := 0; i < len(book.BuyMarketEntries); i++ {
 			if order.ID == book.BuyMarketEntries[i].ID {
+				ord := book.BuyMarketEntries[i]
+				ord.SetStatus(model.OrderStatus_Cancelled)
+				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
 				book.BuyMarketEntries = append(book.BuyMarketEntries[:i], book.BuyMarketEntries[i+1:]...)
-				return true
+				return
 			}
 		}
-		return false
+		return
 	}
 	for i := 0; i < len(book.SellMarketEntries); i++ {
 		if order.ID == book.SellMarketEntries[i].ID {
+			ord := book.SellMarketEntries[i]
+			ord.SetStatus(model.OrderStatus_Cancelled)
+			*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
 			book.SellMarketEntries = append(book.SellMarketEntries[:i], book.SellMarketEntries[i+1:]...)
-			return true
+			return
 		}
 	}
-	return false
 }
 
 // Add a new book entry in the order book
 // If the price point already exists then the book entry is simply added at the end of the pricepoint
 // If the price point does not exist yet it will be created
 
-func (book *orderBook) addBuyBookEntry(order Order) {
+func (book *orderBook) addBuyBookEntry(order model.Order) {
 	price := order.Price
 	if pricePoint, ok := book.BuyEntries.Get(price); ok {
 		pricePoint.Entries = append(pricePoint.Entries, order)
 		return
 	}
 	book.BuyEntries.Set(price, &PricePoint{
-		Entries: []Order{order},
+		Entries: []model.Order{order},
 	})
 }
 
-func (book *orderBook) addSellBookEntry(order Order) {
+func (book *orderBook) addSellBookEntry(order model.Order) {
 	price := order.Price
 	if pricePoint, ok := book.SellEntries.Get(price); ok {
 		pricePoint.Entries = append(pricePoint.Entries, order)
 		return
 	}
 	book.SellEntries.Set(price, &PricePoint{
-		Entries: []Order{order},
+		Entries: []model.Order{order},
 	})
 }
 
 // Remove a book entry from the order book
 // The method will also remove the price point entry if both book entry lists are empty
 
-func (book *orderBook) removeBuyBookEntry(order *Order, pricePoint *PricePoint, index int) {
+func (book *orderBook) removeBuyBookEntry(order *model.Order, pricePoint *PricePoint, index int) {
 	pricePoint.Entries = append(pricePoint.Entries[:index], pricePoint.Entries[index+1:]...)
 	if len(pricePoint.Entries) == 0 {
 		book.BuyEntries.Delete(order.Price)
 	}
 }
 
-func (book *orderBook) removeSellBookEntry(order *Order, pricePoint *PricePoint, index int) {
+func (book *orderBook) removeSellBookEntry(order *model.Order, pricePoint *PricePoint, index int) {
 	pricePoint.Entries = append(pricePoint.Entries[:index], pricePoint.Entries[index+1:]...)
 	if len(pricePoint.Entries) == 0 {
 		book.SellEntries.Delete(order.Price)
 	}
 }
 
-func (book *orderBook) pushMarketBuyOrder(order Order) {
+func (book *orderBook) pushMarketBuyOrder(order model.Order) {
 	book.BuyMarketEntries = append(book.BuyMarketEntries, order)
 }
 
-func (book *orderBook) pushMarketSellOrder(order Order) {
+func (book *orderBook) pushMarketSellOrder(order model.Order) {
 	book.SellMarketEntries = append(book.SellMarketEntries, order)
 }
 
-func (book *orderBook) lpushMarketBuyOrder(order Order) {
-	book.BuyMarketEntries = append([]Order{order}, book.BuyMarketEntries...)
+func (book *orderBook) lpushMarketBuyOrder(order model.Order) {
+	book.BuyMarketEntries = append([]model.Order{order}, book.BuyMarketEntries...)
 }
 
-func (book *orderBook) lpushMarketSellOrder(order Order) {
-	book.SellMarketEntries = append([]Order{order}, book.SellMarketEntries...)
+func (book *orderBook) lpushMarketSellOrder(order model.Order) {
+	book.SellMarketEntries = append([]model.Order{order}, book.SellMarketEntries...)
 }
 
-func (book *orderBook) popMarketSellOrder() *Order {
+func (book *orderBook) popMarketSellOrder() *model.Order {
 	if len(book.SellMarketEntries) == 0 {
 		return nil
 	}
@@ -276,7 +297,7 @@ func (book *orderBook) popMarketSellOrder() *Order {
 	return &order
 }
 
-func (book *orderBook) popMarketBuyOrder() *Order {
+func (book *orderBook) popMarketBuyOrder() *model.Order {
 	if len(book.BuyMarketEntries) == 0 {
 		return nil
 	}
@@ -284,4 +305,42 @@ func (book *orderBook) popMarketBuyOrder() *Order {
 	order := book.BuyMarketEntries[0]
 	book.BuyMarketEntries = append(book.BuyMarketEntries[:index], book.BuyMarketEntries[index+1:]...)
 	return &order
+}
+
+func (book *orderBook) closeBidIterator(iterator Iterator) {
+	if iterator == nil {
+		return
+	}
+	pricePoint := iterator.Value()
+	if len(pricePoint.Entries) != 0 {
+		iterator.Close()
+		return
+	}
+	if ok := iterator.Previous(); ok {
+		book.HighestBid = iterator.Key()
+		iterator.Close()
+		return
+	}
+	book.HighestBid = 0
+	iterator.Close()
+	return
+}
+
+func (book *orderBook) closeAskIterator(iterator Iterator) {
+	if iterator == nil {
+		return
+	}
+	pricePoint := iterator.Value()
+	if len(pricePoint.Entries) != 0 {
+		iterator.Close()
+		return
+	}
+	if ok := iterator.Next(); ok {
+		book.LowestAsk = iterator.Key()
+		iterator.Close()
+		return
+	}
+	book.LowestAsk = 0
+	iterator.Close()
+	return
 }
