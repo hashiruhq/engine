@@ -19,7 +19,7 @@ test:
 	go test
 
 coverage-test:
-	go test gitlab.com/around25/products/matching-engine/engine -coverprofile=coverage.out
+	go test ./... -coverprofile=coverage.out
 	go tool cover -func=coverage.out
 	go tool cover -html=coverage.out
 	rm coverage.out

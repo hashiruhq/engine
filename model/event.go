@@ -23,6 +23,27 @@ func NewOrderStatusEvent(market string, id uint64, amount, funds uint64, status 
 	}
 }
 
+// NewOrderActivatedEvent returns a new event set with the order status details
+func NewOrderActivatedEvent(market string, orderType OrderType, side MarketSide, id, ownerID uint64, price, amount, funds uint64, status OrderStatus) Event {
+	return Event{
+		Type:   EventType_OrderActivated,
+		Market: market,
+		Payload: &Event_OrderActivation{
+			OrderActivation: &StopOrderActivatedMsg{
+				ID:      id,
+				Type:    orderType,
+				Side:    side,
+				OwnerID: ownerID,
+				Amount:  amount,
+				Funds:   funds,
+				Price:   price,
+				Status:  status,
+			},
+		},
+		CreatedAt: time.Now().UTC().Unix(),
+	}
+}
+
 // NewTradeEvent returns a new event set with the trade details
 func NewTradeEvent(market string, takerSide MarketSide, askID, bidID, askOwnerID, bidOwnerID, amount, price uint64) Event {
 	return Event{

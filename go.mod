@@ -15,7 +15,7 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/pprof v0.0.0-20190208070709-b421f19a5c07 // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
-	github.com/gopherjs/gopherjs v0.0.0-20181103185306-d547d1d9531e // indirect
+	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
 	github.com/gorilla/mux v1.7.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
@@ -41,19 +41,22 @@ require (
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/shurcooL/webdavfs v0.0.0-20181215192745-5988b2d638f6 // indirect
 	github.com/sirupsen/logrus v1.3.0 // indirect
-	github.com/smartystreets/goconvey v0.0.0-20190710185942-9d28bd7c0945
+	github.com/smartystreets/assertions v1.0.1 // indirect
+	github.com/smartystreets/goconvey v0.0.0-20190731233626-505e41936337
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.4.0
 	github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8 // indirect
 	go.opencensus.io v0.19.0 // indirect
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
 	golang.org/x/build v0.0.0-20190214165022-ebe19e37a462 // indirect
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/exp v0.0.0-20190212162250-21964bba6549 // indirect
+	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
 	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635 // indirect
 	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
-	golang.org/x/sys v0.0.0-20190508100423-12bbe5a7a520 // indirect
+	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
 	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/tools v0.0.0-20190508150211-cf84161cff3f // indirect
+	golang.org/x/tools v0.0.0-20190806215303-88ddfcebc769 // indirect
 	honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
