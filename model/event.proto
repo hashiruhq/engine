@@ -18,13 +18,6 @@ enum EventType {
 
 message OrderStatusMsg {
   uint64 ID = 1;
-  uint64 Amount = 2;
-  uint64 Funds = 3;
-  OrderStatus Status = 4;
-}
-
-message StopOrderActivatedMsg {
-  uint64 ID = 1;
   // The type of the order: 0=limit 1=market
   OrderType Type = 2;
 	// The side of the market: 0=buy 1=sell
@@ -44,6 +37,6 @@ message Event {
   oneof Payload {
     OrderStatusMsg OrderStatus = 4;
     Trade Trade = 5;
-    StopOrderActivatedMsg OrderActivation = 6;
+    OrderStatusMsg OrderActivation = 6;
   }
 }

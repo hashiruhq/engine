@@ -7,16 +7,20 @@ import (
 )
 
 // NewOrderStatusEvent returns a new event set with the order status details
-func NewOrderStatusEvent(market string, id uint64, amount, funds uint64, status OrderStatus) Event {
+func NewOrderStatusEvent(market string, orderType OrderType, side MarketSide, id, ownerID uint64, price, amount, funds uint64, status OrderStatus) Event {
 	return Event{
 		Type:   EventType_OrderStatusChange,
 		Market: market,
 		Payload: &Event_OrderStatus{
 			OrderStatus: &OrderStatusMsg{
-				ID:     id,
-				Amount: amount,
-				Funds:  funds,
-				Status: status,
+				ID:      id,
+				Type:    orderType,
+				Side:    side,
+				OwnerID: ownerID,
+				Price:   price,
+				Amount:  amount,
+				Funds:   funds,
+				Status:  status,
 			},
 		},
 		CreatedAt: time.Now().UTC().Unix(),
@@ -29,7 +33,7 @@ func NewOrderActivatedEvent(market string, orderType OrderType, side MarketSide,
 		Type:   EventType_OrderActivated,
 		Market: market,
 		Payload: &Event_OrderActivation{
-			OrderActivation: &StopOrderActivatedMsg{
+			OrderActivation: &OrderStatusMsg{
 				ID:      id,
 				Type:    orderType,
 				Side:    side,

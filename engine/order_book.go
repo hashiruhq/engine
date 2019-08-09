@@ -106,6 +106,9 @@ func (book orderBook) GetMarket() []*SkipList {
 func (book *orderBook) Process(order model.Order, events *[]model.Event) {
 	switch order.EventType {
 	case model.CommandType_NewOrder:
+		// add acknowledgement event with status pending for stop orders and status untouched for limit/market orders
+		order = ackOrder(order, events)
+		// process the order normally
 		book.processOrder(order, events)
 		// process activated stop orders
 		if events != nil && len(*events) > 0 {
@@ -122,6 +125,15 @@ func (book *orderBook) Process(order model.Order, events *[]model.Event) {
 	case model.CommandType_CancelOrder:
 		book.Cancel(order, events)
 	}
+}
+
+func ackOrder(order model.Order, events *[]model.Event) model.Order {
+	if order.Stop == model.StopLoss_None {
+		order.Status = model.OrderStatus_Untouched
+	}
+	event := model.NewOrderStatusEvent(order.Market, order.Type, order.Side, order.ID, order.OwnerID, order.Price, order.Amount, order.Funds, order.Status)
+	*events = append(*events, event)
+	return order
 }
 
 // Process a new order and return a list of events resulted from the exchange
@@ -226,7 +238,7 @@ func (book *orderBook) cancelStopOrder(order model.Order, events *[]model.Event)
 				if pricePoint.Entries[i].ID == order.ID {
 					ord := pricePoint.Entries[i]
 					ord.SetStatus(model.OrderStatus_Cancelled)
-					*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
+					*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
 					book.StopLossOrders.removeEntryByPriceAndIndex(price, pricePoint, i)
 					return
 				}
@@ -239,7 +251,7 @@ func (book *orderBook) cancelStopOrder(order model.Order, events *[]model.Event)
 			if pricePoint.Entries[i].ID == order.ID {
 				ord := pricePoint.Entries[i]
 				ord.SetStatus(model.OrderStatus_Cancelled)
-				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
+				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
 				book.StopEntryOrders.removeEntryByPriceAndIndex(price, pricePoint, i)
 				return
 			}
@@ -258,7 +270,7 @@ func (book *orderBook) cancelLimitOrder(order model.Order, events *[]model.Event
 				if pricePoint.Entries[i].ID == order.ID {
 					ord := pricePoint.Entries[i]
 					ord.SetStatus(model.OrderStatus_Cancelled)
-					*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
+					*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
 					book.removeBuyBookEntry(ord.Price, pricePoint, i)
 					// adjust highest bid
 					if len(pricePoint.Entries) == 0 && book.HighestBid == ord.Price {
@@ -276,7 +288,7 @@ func (book *orderBook) cancelLimitOrder(order model.Order, events *[]model.Event
 			if pricePoint.Entries[i].ID == order.ID {
 				ord := pricePoint.Entries[i]
 				ord.SetStatus(model.OrderStatus_Cancelled)
-				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
+				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
 				book.removeSellBookEntry(ord.Price, pricePoint, i)
 				// adjust lowest ask
 				if len(pricePoint.Entries) == 0 && book.LowestAsk == ord.Price {
@@ -296,7 +308,7 @@ func (book *orderBook) cancelMarketOrder(order model.Order, events *[]model.Even
 			if order.ID == book.BuyMarketEntries[i].ID {
 				ord := book.BuyMarketEntries[i]
 				ord.SetStatus(model.OrderStatus_Cancelled)
-				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
+				*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
 				book.BuyMarketEntries = append(book.BuyMarketEntries[:i], book.BuyMarketEntries[i+1:]...)
 				return
 			}
@@ -307,7 +319,7 @@ func (book *orderBook) cancelMarketOrder(order model.Order, events *[]model.Even
 		if order.ID == book.SellMarketEntries[i].ID {
 			ord := book.SellMarketEntries[i]
 			ord.SetStatus(model.OrderStatus_Cancelled)
-			*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.ID, ord.Amount, ord.Funds, ord.Status))
+			*events = append(*events, model.NewOrderStatusEvent(book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
 			book.SellMarketEntries = append(book.SellMarketEntries[:i], book.SellMarketEntries[i+1:]...)
 			return
 		}
