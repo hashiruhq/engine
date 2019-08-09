@@ -318,25 +318,11 @@ func (book *orderBook) cancelMarketOrder(order model.Order, events *[]model.Even
 // If the price point already exists then the book entry is simply added at the end of the pricepoint
 // If the price point does not exist yet it will be created
 func (book *orderBook) addBuyBookEntry(order model.Order) {
-	price := order.Price
-	if pricePoint, ok := book.BuyEntries.Get(price); ok {
-		pricePoint.Entries = append(pricePoint.Entries, order)
-		return
-	}
-	book.BuyEntries.Set(price, &PricePoint{
-		Entries: []model.Order{order},
-	})
+	book.BuyEntries.addOrder(order.Price, order)
 }
 
 func (book *orderBook) addSellBookEntry(order model.Order) {
-	price := order.Price
-	if pricePoint, ok := book.SellEntries.Get(price); ok {
-		pricePoint.Entries = append(pricePoint.Entries, order)
-		return
-	}
-	book.SellEntries.Set(price, &PricePoint{
-		Entries: []model.Order{order},
-	})
+	book.SellEntries.addOrder(order.Price, order)
 }
 
 // Remove a book entry from the order book
