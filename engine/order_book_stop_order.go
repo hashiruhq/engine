@@ -86,8 +86,14 @@ func (book *orderBook) addStopOrder(order model.Order) {
 	switch order.Stop {
 	case model.StopLoss_Loss:
 		book.StopLossOrders.addOrder(order.StopPrice, order)
+		if book.HighestLossPrice == 0 || order.StopPrice > book.HighestLossPrice {
+			book.HighestLossPrice = order.StopPrice
+		}
 	case model.StopLoss_Entry:
 		book.StopEntryOrders.addOrder(order.StopPrice, order)
+		if book.LowestEntryPrice == 0 || order.StopPrice < book.LowestEntryPrice {
+			book.LowestEntryPrice = order.StopPrice
+		}
 	}
 }
 
@@ -120,14 +126,10 @@ func (book *orderBook) ActivateStopOrders(price uint64, events *[]model.Event) *
 	if price == 0 {
 		return orders
 	}
-	if price >= book.LowestEntryPrice {
-		// activate stop entry orders
-		book.activateStopEntryOrders(price, events, orders)
-	}
-	if price <= book.HighestLossPrice {
-		// activate stop loss price
-		book.activateStopLossOrders(price, events, orders)
-	}
+	// activate stop entry orders
+	book.activateStopEntryOrders(price, events, orders)
+	// activate stop loss price
+	book.activateStopLossOrders(price, events, orders)
 	return orders
 }
 

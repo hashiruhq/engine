@@ -9,6 +9,7 @@ require (
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
 	github.com/ericlagergren/decimal v0.0.0-20181231230500-73749d4874d5
+	github.com/gin-gonic/gin v1.4.0 // indirect
 	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
 	github.com/golang/protobuf v1.3.1

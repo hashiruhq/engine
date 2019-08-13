@@ -154,7 +154,7 @@ func (mkt *marketEngine) ProcessOrder() {
 					order.EventType, order.ID, order.Market, order.Side, order.Type, order.Amount, order.Price)
 				continue
 			}
-			log.Printf("[%s:%d][%s] %s:%s %d@%d\n", order.EventType, order.ID, order.Market, order.Side, order.Type, order.Amount, order.Price)
+			log.Printf("[%s:%d][%s] %s:%s [Stop:%s@%d] %d@%d\n", order.EventType, order.ID, order.Market, order.Side, order.Type, order.Stop, order.StopPrice, order.Amount, order.Price)
 			events := make([]model.Event, 0, 5)
 			// Process each order and generate events
 			mkt.engine.ProcessEvent(event.Order, &events)
