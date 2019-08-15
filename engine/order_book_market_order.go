@@ -92,7 +92,7 @@ func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event
 						order.SetStatus(model.OrderStatus_Filled)
 						if sellEntry.Amount == 0 {
 							sellEntry.SetStatus(model.OrderStatus_Filled)
-							book.removeSellBookEntry(sellEntry, pricePoint, index)
+							book.removeSellBookEntry(sellEntry.Price, pricePoint, index)
 						} else {
 							sellEntry.SetStatus(model.OrderStatus_PartiallyFilled)
 						}
@@ -109,7 +109,7 @@ func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event
 					amountAffordable -= sellEntry.Amount
 					order.SetStatus(model.OrderStatus_PartiallyFilled)
 					order.Funds -= funds
-					book.removeSellBookEntry(sellEntry, pricePoint, index)
+					book.removeSellBookEntry(sellEntry.Price, pricePoint, index)
 					index--
 				}
 
@@ -169,7 +169,7 @@ func (book *orderBook) processMarketSell(order model.Order, events *[]model.Even
 						order.SetStatus(model.OrderStatus_Filled)
 						if buyEntry.Amount == 0 {
 							buyEntry.SetStatus(model.OrderStatus_Filled)
-							book.removeBuyBookEntry(buyEntry, pricePoint, index)
+							book.removeBuyBookEntry(buyEntry.Price, pricePoint, index)
 						} else {
 							buyEntry.SetStatus(model.OrderStatus_PartiallyFilled)
 						}
@@ -183,7 +183,7 @@ func (book *orderBook) processMarketSell(order model.Order, events *[]model.Even
 					order.Amount -= buyEntry.Amount
 					order.SetStatus(model.OrderStatus_PartiallyFilled)
 					buyEntry.SetStatus(model.OrderStatus_Filled)
-					book.removeBuyBookEntry(buyEntry, pricePoint, index)
+					book.removeBuyBookEntry(buyEntry.Price, pricePoint, index)
 					index--
 				}
 

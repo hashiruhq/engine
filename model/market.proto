@@ -7,8 +7,17 @@ message MarketBackup {
   string Topic = 1;
   int32 Partition = 2;
   int64 Offset = 3;
-  uint64 LowestAsk = 4;
-  uint64 HighestBid = 5;
-  repeated Order BuyOrders = 6;
-  repeated Order SellOrders = 7;
+  string MarketID = 4;
+  int32 PricePrecision = 5;
+  int32 VolumePrecision = 6;
+  uint64 LowestAsk = 7;
+  uint64 HighestBid = 8;
+  uint64 LowestEntryPrice = 9;
+  uint64 HighestLossPrice = 10;
+  repeated Order BuyOrders = 11;
+  repeated Order SellOrders = 12;
+  repeated Order BuyMarketEntries = 13;
+  repeated Order SellMarketEntries = 14;
+  repeated Order StopEntryOrders = 15;
+  repeated Order StopLossOrders = 16;
 }
