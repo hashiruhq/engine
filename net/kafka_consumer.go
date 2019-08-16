@@ -81,6 +81,7 @@ func (conn *kafkaConsumer) superviseReadingMessages(ctx context.Context) {
 }
 
 func (conn *kafkaConsumer) handleMessages(ctx context.Context) error {
+	log.Printf("[info] [kafka] [topic:%s] Start message topic consumer from offset %d\n", conn.topic, conn.consumer.Offset())
 	for {
 		msg, err := conn.consumer.ReadMessage(ctx)
 		// context exited or stream ended
@@ -96,7 +97,7 @@ func (conn *kafkaConsumer) handleMessages(ctx context.Context) error {
 				time.Sleep(time.Second)
 				continue
 			} else {
-				log.Fatalf("[fatal] Unable to read message from kafka server: %v", err)
+				log.Printf("[fatal] Unable to read message from kafka server: %v", err)
 				return err
 			}
 		}

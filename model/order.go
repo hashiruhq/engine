@@ -9,6 +9,28 @@ func NewOrder(id, price, amount uint64, side MarketSide, category OrderType, eve
 	return Order{ID: id, Price: price, Amount: amount, Side: side, Type: category, EventType: eventType}
 }
 
+// Valid checks if the order is valid based on the type of the order and the price/amount/funds
+func (order *Order) Valid() bool {
+	if order.EventType == CommandType_NewOrder && order.Type == OrderType_Limit && (order.Price == 0 || order.Amount == 0) {
+		return false
+	}
+	if order.EventType == CommandType_NewOrder && order.Type == OrderType_Market && (order.Funds == 0 || order.Amount == 0) {
+		return false
+	}
+	return true
+}
+
+// Filled checks if the order can be considered filled
+func (order *Order) Filled() bool {
+	if order.EventType != CommandType_NewOrder {
+		return false
+	}
+	if order.Type == OrderType_Market && (order.Amount == 0 || order.Funds == 0) {
+		return true
+	}
+	return false
+}
+
 //***************************
 // Interface Implementations
 //***************************

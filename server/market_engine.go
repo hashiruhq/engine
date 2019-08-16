@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"gitlab.com/around25/products/matching-engine/engine"
-	"gitlab.com/around25/products/matching-engine/net"
 	"gitlab.com/around25/products/matching-engine/model"
+	"gitlab.com/around25/products/matching-engine/net"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -147,40 +147,32 @@ func (mkt *marketEngine) ProcessOrder() {
 				log.Printf("[info] [market:%s] [process:2] Closed order matching process\n", mkt.name)
 				return
 			}
-			log.Printf(
-				"[%s:%d][%s] %s:%s %d@%d\n",
-				event.Order.EventType,
-				event.Order.ID,
-				event.Order.Market,
-				event.Order.Side,
-				event.Order.Type,
-				event.Order.Amount,
-				event.Order.Price,
-			)
+			order := event.Order
+			if !order.Valid() {
+				log.Printf(
+					"[warn] Invalid order received, skipping: [%s:%d][%s] %s:%s %d@%d\n",
+					order.EventType, order.ID, order.Market, order.Side, order.Type, order.Amount, order.Price)
+				continue
+			}
+			log.Printf("[%s:%d][%s] %s:%s [Stop:%s@%d] %d@%d\n", order.EventType, order.ID, order.Market, order.Side, order.Type, order.Stop, order.StopPrice, order.Amount, order.Price)
 			events := make([]model.Event, 0, 5)
 			// Process each order and generate events
 			mkt.engine.ProcessEvent(event.Order, &events)
 			event.SetEvents(events)
-			lastTopic = event.Msg.Topic
-			lastPartition = int32(event.Msg.Partition)
-			lastOffset = event.Msg.Offset
 			// Monitor: Update order count for monitoring with prometheus
 			engineOrderCount.WithLabelValues(mkt.name).Inc()
 			ordersQueued.WithLabelValues(mkt.name).Dec()
 			eventsQueued.WithLabelValues(mkt.name).Add(float64(len(event.Events)))
-			log.Printf(
-				"-> [%s:%d][%s]: generated %d events\n",
-				event.Order.EventType,
-				event.Order.ID,
-				event.Order.Market,
-				len(event.Events),
-			)
+			log.Printf("-> [%s:%d][%s]: generated %d events\n", event.Order.EventType, event.Order.ID, event.Order.Market, len(event.Events))
 			// for _, ev := range event.Events {
 			// 	log.Printf("-> [trade] %s ask:%d bid:%d %d@%d\n", ev.TakerSide, trade.AskID, trade.BidID, trade.Amount, trade.Price)
 			// }
 
 			// send generated events for storage
 			mkt.events <- event
+			lastTopic = event.Msg.Topic
+			lastPartition = int32(event.Msg.Partition)
+			lastOffset = event.Msg.Offset
 		}
 	}
 }
