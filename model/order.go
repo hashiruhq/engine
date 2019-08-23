@@ -11,11 +11,35 @@ func NewOrder(id, price, amount uint64, side MarketSide, category OrderType, eve
 
 // Valid checks if the order is valid based on the type of the order and the price/amount/funds
 func (order *Order) Valid() bool {
-	if order.EventType == CommandType_NewOrder && order.Type == OrderType_Limit && (order.Price == 0 || order.Amount == 0) {
+	if order.ID == 0 {
 		return false
 	}
-	if order.EventType == CommandType_NewOrder && order.Type == OrderType_Market && (order.Funds == 0 || order.Amount == 0) {
-		return false
+	switch order.EventType {
+	case CommandType_NewOrder:
+		{
+			if order.Stop != StopLoss_None {
+				if order.StopPrice == 0 {
+					return false
+				}
+			}
+			switch order.Type {
+			case OrderType_Limit:
+				return order.Price != 0 && order.Amount != 0
+			case OrderType_Market:
+				return order.Funds != 0 && order.Amount != 0
+			}
+		}
+	case CommandType_CancelOrder:
+		{
+			if order.Stop != StopLoss_None {
+				if order.StopPrice == 0 {
+					return false
+				}
+			}
+			if order.Type == OrderType_Limit {
+				return order.Price != 0
+			}
+		}
 	}
 	return true
 }
