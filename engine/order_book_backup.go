@@ -55,8 +55,8 @@ func (book *orderBook) Backup() model.MarketBackup {
 		HighestLossPrice:  book.HighestLossPrice,
 		BuyOrders:         make([]*model.Order, 0, book.BuyEntries.Len()),
 		SellOrders:        make([]*model.Order, 0, book.SellEntries.Len()),
-		BuyMarketEntries:  make([]*model.Order, 0, len(book.BuyMarketEntries)),
-		SellMarketEntries: make([]*model.Order, 0, len(book.SellMarketEntries)),
+		BuyMarketEntries:  make([]*model.Order, len(book.BuyMarketEntries)),
+		SellMarketEntries: make([]*model.Order, len(book.SellMarketEntries)),
 		StopEntryOrders:   make([]*model.Order, 0, 0),
 		StopLossOrders:    make([]*model.Order, 0, 0),
 	}
