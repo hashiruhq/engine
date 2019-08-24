@@ -21,10 +21,10 @@ require (
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/openzipkin/zipkin-go v0.1.5 // indirect
-	github.com/pkg/errors v0.8.1 // indirect
 	github.com/prometheus/client_golang v1.0.0
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
+	github.com/rs/zerolog v1.15.0
 	github.com/russross/blackfriday v2.0.0+incompatible // indirect
 	github.com/segmentio/kafka-go v0.2.4
 	github.com/shurcooL/go v0.0.0-20190121191506-3fef8c783dec // indirect

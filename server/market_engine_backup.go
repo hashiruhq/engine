@@ -2,8 +2,9 @@ package server
 
 import (
 	"io/ioutil"
-	"log"
 	"os"
+
+	"github.com/rs/zerolog/log"
 
 	"gitlab.com/around25/products/matching-engine/model"
 )
@@ -30,20 +31,28 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 	var market model.MarketBackup
 	market.FromBinary(content)
 
+	// the next message to read is given by the market... add +1 if offset>=0 to not read the last message again
+	offset := market.Offset
+	if offset >= 0 {
+		offset++
+	}
+
 	// load all records from the backup into the order book
-	log.Printf(
-		"[info] [market:%s] [init:1] Loaded market from storage with offset:%d bids:%d asks:%d\n",
-		mkt.name,
-		market.GetOffset(),
-		len(market.GetBuyOrders()),
-		len(market.GetSellOrders()),
-	)
+	log.Info().
+		Str("section", "backup").Str("action", "import").
+		Str("market", mkt.name).
+		Int64("offset", offset).
+		Int("limit_buy_count", len(market.GetBuyOrders())).
+		Int("limit_sell_count", len(market.GetSellOrders())).
+		Msg("Loading market from backup")
 	mkt.LoadMarket(market)
 
 	// mark the last message that has been processed by the engine to the one saved in the backup file
-	err = mkt.consumer.SetOffset(market.Offset + 1)
+	err = mkt.consumer.SetOffset(offset)
 	if err != nil {
-		log.Fatalf("[fatal] [market:%s] Unable to reset offset to '%d'\n", mkt.name, market.Offset)
+		log.Fatal().Err(err).Str("section", "backup").Str("action", "import").
+			Str("market", mkt.name).
+			Int64("offset", offset).Msg("Unable to reset offset")
 		return
 	}
 

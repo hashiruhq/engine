@@ -2,7 +2,8 @@ package server
 
 import (
 	"context"
-	"log"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"time"
 
 	"gitlab.com/around25/products/matching-engine/engine"
@@ -95,7 +96,7 @@ func (mkt *marketEngine) Close() {
 // ScheduleBackup sets up an interval at which to automatically back up the market on Kafka
 func (mkt *marketEngine) ScheduleBackup() {
 	if mkt.config.config.Backup.Interval == 0 {
-		log.Printf("[warn] Backup disabled for '%s' market. Please set backup interval to a positive value.\n", mkt.name)
+		log.Warn().Str("section", "backup").Str("action", "schedule").Str("market", mkt.name).Msg("Backup disabled for market")
 		return
 	}
 	for {
@@ -109,7 +110,7 @@ func (mkt *marketEngine) ScheduleBackup() {
 //
 // Message flow is unidirectional from the messages channel to the orders channel
 func (mkt *marketEngine) DecodeMessage() {
-	log.Printf("[info] [market:%s] [process:1] Starting message decoder process\n", mkt.name)
+	log.Debug().Str("section", "server").Str("action", "init").Str("market", mkt.name).Msg("Starting message decoder process")
 	for event := range mkt.messages {
 		event.Decode()
 		messagesQueued.WithLabelValues(mkt.name).Dec()
@@ -117,14 +118,14 @@ func (mkt *marketEngine) DecodeMessage() {
 		ordersQueued.WithLabelValues(mkt.name).Inc()
 		mkt.orders <- event
 	}
-	log.Printf("[info] [market:%s] [process:1] Closed message decoder process\n", mkt.name)
+	log.Debug().Str("section", "server").Str("action", "terminate").Str("market", mkt.name).Msg("Closed message decoder process")
 }
 
 // ProcessOrder process each order by the trading engine and forward events to the events channel
 //
 // Message flow is unidirectional from the orders channel to the events channel
 func (mkt *marketEngine) ProcessOrder() {
-	log.Printf("[info] [market:%s] [process:2] Starting order matching process\n", mkt.name)
+	log.Debug().Str("section", "server").Str("action", "init").Str("market", mkt.name).Msg("Starting order matching process")
 	var lastTopic string
 	var lastPartition int32
 	var lastOffset int64
@@ -140,21 +141,51 @@ func (mkt *marketEngine) ProcessOrder() {
 				market.Offset = lastOffset
 				prevOffset = lastOffset
 				mkt.BackupMarket(market)
-				log.Printf("[Backup] [%s] Snapshot created\n", mkt.name)
+				log.Debug().Str("section", "backup").Str("action", "export").Str("market", mkt.name).Msg("Snapshot created")
 			}
 		case event, more := <-mkt.orders:
 			if !more {
-				log.Printf("[info] [market:%s] [process:2] Closed order matching process\n", mkt.name)
+				log.Debug().Str("section", "server").Str("action", "terminate").Str("market", mkt.name).Msg("Closed order matching process")
 				return
 			}
 			order := event.Order
 			if !order.Valid() {
-				log.Printf(
-					"[warn] Invalid order received, skipping: [%s:%d][%s] %s:%s %d@%d\n",
-					order.EventType, order.ID, order.Market, order.Side, order.Type, order.Amount, order.Price)
+				log.Warn().
+					Str("section", "server").Str("action", "process_order").
+					Str("market", mkt.name).
+					Dict("event", zerolog.Dict().
+						Str("event_type", order.EventType.String()).
+						Str("side", order.Side.String()).
+						Str("type", order.Type.String()).
+						Str("event_type", order.EventType.String()).
+						Str("market", order.Market).
+						Uint64("id", order.ID).
+						Uint64("amount", order.Amount).
+						Str("stop", order.Stop.String()).
+						Uint64("stop_price", order.StopPrice).
+						Uint64("funds", order.Funds).
+						Uint64("price", order.Price),
+					).
+					Msg("Invalid order received, ignoring")
 				continue
 			}
-			log.Printf("[%s:%d][%s] %s:%s [Stop:%s@%d] %d@%d\n", order.EventType, order.ID, order.Market, order.Side, order.Type, order.Stop, order.StopPrice, order.Amount, order.Price)
+			log.Debug().
+				Str("section", "server").Str("action", "process_order").
+				Str("market", mkt.name).
+				Dict("event", zerolog.Dict().
+					Str("event_type", order.EventType.String()).
+					Str("side", order.Side.String()).
+					Str("type", order.Type.String()).
+					Str("event_type", order.EventType.String()).
+					Str("market", order.Market).
+					Uint64("id", order.ID).
+					Uint64("amount", order.Amount).
+					Str("stop", order.Stop.String()).
+					Uint64("stop_price", order.StopPrice).
+					Uint64("funds", order.Funds).
+					Uint64("price", order.Price),
+				).
+				Msg("New order")
 			events := make([]model.Event, 0, 5)
 			// Process each order and generate events
 			mkt.engine.ProcessEvent(event.Order, &events)
@@ -163,11 +194,6 @@ func (mkt *marketEngine) ProcessOrder() {
 			engineOrderCount.WithLabelValues(mkt.name).Inc()
 			ordersQueued.WithLabelValues(mkt.name).Dec()
 			eventsQueued.WithLabelValues(mkt.name).Add(float64(len(event.Events)))
-			log.Printf("-> [%s:%d][%s]: generated %d events\n", event.Order.EventType, event.Order.ID, event.Order.Market, len(event.Events))
-			// for _, ev := range event.Events {
-			// 	log.Printf("-> [trade] %s ask:%d bid:%d %d@%d\n", ev.TakerSide, trade.AskID, trade.BidID, trade.Amount, trade.Price)
-			// }
-
 			// send generated events for storage
 			mkt.events <- event
 			lastTopic = event.Msg.Topic
@@ -179,10 +205,56 @@ func (mkt *marketEngine) ProcessOrder() {
 
 // PublishEvents listens for new events from the trading engine and publishes them to the Kafka server
 func (mkt *marketEngine) PublishEvents() {
-	log.Printf("[info] [market:%s] [process:3] Start event publisher process\n", mkt.name)
+	log.Debug().Str("section", "server").Str("action", "init").Str("market", mkt.name).Msg("Starting event publisher process")
 	for event := range mkt.events {
 		events := make([]kafka.Message, len(event.Events))
 		for index, ev := range event.Events {
+			logEvent := zerolog.Dict()
+			switch ev.Type {
+			case model.EventType_OrderStatusChange: {
+				payload := ev.GetOrderStatus()
+				logEvent = logEvent.
+					Uint64("id", payload.ID).
+					Uint64("owner_id", payload.OwnerID).
+					Str("type", payload.Type.String()).
+					Str("side", payload.Side.String()).
+					Str("status", payload.Status.String()).
+					Uint64("price", payload.Price).
+					Uint64("funds", payload.Funds).
+					Uint64("amount", payload.Amount)
+			}
+			case model.EventType_OrderActivated: {
+				payload := ev.GetOrderActivation()
+				logEvent = logEvent.
+					Uint64("id", payload.ID).
+					Uint64("owner_id", payload.OwnerID).
+					Str("type", payload.Type.String()).
+					Str("side", payload.Side.String()).
+					Str("status", payload.Status.String()).
+					Uint64("price", payload.Price).
+					Uint64("funds", payload.Funds).
+					Uint64("amount", payload.Amount)
+			}
+			case model.EventType_NewTrade: {
+				trade := ev.GetTrade()
+				logEvent = logEvent.
+					Str("taker_side", trade.TakerSide.String()).
+					Uint64("ask_id", trade.AskID).
+					Uint64("ask_owner_id", trade.AskOwnerID).
+					Uint64("bid_id", trade.BidID).
+					Uint64("bid_owner_id", trade.BidOwnerID).
+					Uint64("price", trade.Price).
+					Uint64("amount", trade.Amount)
+			}
+			}
+			log.Debug().Str("section", "server").Str("action", "publish").
+				Str("market", mkt.name).
+				Uint64("last_order_id", event.Order.ID).
+				Str("kafka_topic",event.Msg.Topic).
+				Int("kafka_partition",event.Msg.Partition).
+				Int64("kafka_offset",event.Msg.Offset).
+				Dict("event", logEvent).
+				Msg("Generated event")
 			rawTrade, _ := ev.ToBinary() // @todo add better error handling on encoding
 			events[index] = kafka.Message{
 				Value: rawTrade,
@@ -190,7 +262,7 @@ func (mkt *marketEngine) PublishEvents() {
 		}
 		err := mkt.producer.WriteMessages(context.Background(), events...)
 		if err != nil {
-			log.Printf("[error] [kafka] [market:%s] Unable to publish events: %v\n", mkt.name, err)
+			log.Fatal().Err(err).Str("section", "server").Str("action", "publish").Str("market", mkt.name).Msg("Unable to publish events")
 		}
 
 		// Monitor: Update the number of events processed after sending them back to Kafka
@@ -198,5 +270,5 @@ func (mkt *marketEngine) PublishEvents() {
 		eventsQueued.WithLabelValues(mkt.name).Sub(eventCount)
 		engineEventCount.WithLabelValues(mkt.name).Add(eventCount)
 	}
-	log.Printf("[info] [market:%s] [process:3] Closed event publisher process\n", mkt.name)
+	log.Info().Str("section", "server").Str("action", "terminate").Str("market", mkt.name).Msg("Closing event publisher process")
 }

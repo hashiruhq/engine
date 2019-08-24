@@ -1,13 +1,17 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
+// LogLevel Flag
+var LogLevel = "info"
+var LogFormat = "json"
 var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "trading_engine",
@@ -18,8 +22,12 @@ For a complete documentation and available licenses please contact https://aroun
 }
 
 func init() {
+	// set log level
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./.engine.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&LogLevel, "log-level", "", "info", "logging level to show (options: debug|info|warn|error|fatal|panic, default: info)")
+	rootCmd.PersistentFlags().StringVarP(&LogFormat, "log-format", "", "info", "log format to generate (Options: json|pretty, default: json)")
 	viper.SetConfigName(".engine")
 	viper.AddConfigPath(".")                    // First try to load the config from the current directory
 	viper.AddConfigPath("$HOME")                // Then try to load it from the HOME directory
@@ -33,18 +41,39 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	}
 
+	customizeLogger()
 	// viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Can't read config:", err)
-		os.Exit(1)
+		log.Fatal().Err(err).Msg("Can't read configuration file")
 	}
 }
 
 // Execute the commands
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal().Err(err).Msg("Unable to execute command")
+	}
+}
+
+func customizeLogger() {
+	if LogFormat == "pretty" {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	}
+	switch LogLevel {
+	case "debug":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	case "info":
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	case "warn":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "error":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "fatal":
+		zerolog.SetGlobalLevel(zerolog.FatalLevel)
+	case "panic":
+		zerolog.SetGlobalLevel(zerolog.PanicLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
 }

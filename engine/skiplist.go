@@ -15,10 +15,11 @@
 package engine
 
 import (
-	"log"
 	"math"
 	"math/rand"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // TODO(ryszard):
@@ -457,8 +458,17 @@ func (s *SkipList) getPath(current *node, update []*node, key uint64) *node {
 // Sets set the value associated with key in s.
 func (s *SkipList) Set(key uint64, value *PricePoint) {
 	if key == 0 {
-		log.Println(value)
-		panic("goskiplist: nil keys are not supported")
+		orderID := uint64(0)
+		if value != nil && len(value.Entries) >= 1 {
+			orderID = value.Entries[0].ID
+		}
+		log.Error().
+			Str("section", "internal:data").
+			Str("action", "set").
+			Uint64("key", key).
+			Uint64("order_id", orderID).
+			Msg("nil/0 keys are not supported")
+		return
 	}
 	// s.level starts from 0, so we need to allocate one.
 	update := make([]*node, s.level()+1, s.effectiveMaxLevel()+1)
@@ -514,7 +524,12 @@ func (s *SkipList) Set(key uint64, value *PricePoint) {
 // It returns the old value and whether the node was present.
 func (s *SkipList) Delete(key uint64) (value *PricePoint, ok bool) {
 	if key == 0 {
-		panic("goskiplist: nil keys are not supported")
+		log.Error().
+			Str("section", "internal:data").
+			Str("action", "delete").
+			Uint64("key", key).
+			Msg("nil/0 keys are not supported")
+		return
 	}
 	update := make([]*node, s.level()+1, s.effectiveMaxLevel())
 	candidate := s.getPath(s.header, update, key)

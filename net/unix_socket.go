@@ -2,7 +2,6 @@ package net
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 	"os"
 	"time"
@@ -59,7 +58,6 @@ func (socket *unixSocket) Dial() error {
 	if err != nil {
 		return err
 	}
-	log.Println("Connected to socket: ", socket.address)
 	socket.conn = conn
 	socket.decoder = json.NewDecoder(conn)
 	socket.encoder = json.NewEncoder(conn)

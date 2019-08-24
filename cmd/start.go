@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"log"
-
 	"gitlab.com/around25/products/matching-engine/server"
-
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,16 +17,16 @@ var serverCmd = &cobra.Command{
 	Long:  `Connect to the configured message queue and listen for new requests and generate events like trades and market state`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// load server configuration from server
-		log.Printf("Loading server configuration...\n")
+		log.Debug().Str("section", "server").Str("action", "init").Msg("Loading server configuration")
 		if viper.ConfigFileUsed() != "" {
-			log.Printf("Configuration file found at '%s'\n", viper.ConfigFileUsed())
+			log.Debug().Str("section", "server").Str("action", "init").Str("path", viper.ConfigFileUsed()).Msg("Configuration file loaded")
 		}
 		cfg := server.LoadConfig(viper.GetViper())
 		// start a new server
-		log.Printf("Starting new server instance\n")
+		log.Debug().Str("section", "server").Str("action", "init").Msg("Starting new server instance")
 		srv := server.NewServer(cfg)
 		// listen for new messages
-		log.Printf("Listening for incomming orders...\n")
+		log.Info().Str("section", "server").Str("action", "init").Msg("Listening for incoming orders")
 		srv.Listen()
 	},
 }
