@@ -253,6 +253,7 @@ func (mkt *marketEngine) PublishEvents() {
 				Str("kafka_topic",event.Msg.Topic).
 				Int("kafka_partition",event.Msg.Partition).
 				Int64("kafka_offset",event.Msg.Offset).
+				Str("event_type", ev.Type.String()).
 				Dict("event", logEvent).
 				Msg("Generated event")
 			rawTrade, _ := ev.ToBinary() // @todo add better error handling on encoding
