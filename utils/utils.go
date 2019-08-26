@@ -1,8 +1,7 @@
 package utils
 
 import (
-	"fmt"
-
+	"github.com/rs/zerolog/log"
 	"github.com/ericlagergren/decimal"
 )
 
@@ -22,7 +21,13 @@ func Multiply(x, y uint64, xprec, yprec, prec int) uint64 {
 	xDec.Quo(xDec, decimal.New(10, -1*(xprec+yprec-prec-1))).RoundToInt()
 	z, ok := xDec.Uint64()
 	if !ok {
-		fmt.Println("Unable to convert to uint64, number probably exceeds alowed bounds", xDec)
+		log.Warn().
+			Str("section", "math").
+			Str("action", "multiply").
+			Uint64("x", x).Uint64("y", y).
+			Int("xprec", xprec).Int("yprec", yprec).Int("prec", prec).
+			Str("result", xDec.String()).
+			Msg("Unable to convert to uint64, number probably exceeds alowed bounds")
 	}
 	return z
 }

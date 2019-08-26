@@ -31,4 +31,4 @@ EXPOSE 6060
 RUN mkdir -p /root/backups
 WORKDIR /root/
 
-CMD ["./matching_engine", "server"]
+CMD ["./matching_engine", "--log-level=debug", "server"]

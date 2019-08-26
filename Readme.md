@@ -4,10 +4,11 @@
 
 - !!! When the engine restarts it should fetch the last trade generate for each connected market
   and only start generating trades from that last trade based on the max(order ids).
+- !!!Replace the current price point with a more performant data structure, like: https://github.com/gammazero/deque or https://github.com/edwingeng/deque
+- Revisit skip lists and try to optimize their usage by reusing the same iterator: https://github.com/ryszard/goskiplist
 - Add support for multiple communication channels: Apache Kafka(done), RabbitMQ, Redis, Apache Pulsar, AWS SQS, ZeroMQ
 - Possibly replace protobuf with https://capnproto.org/ ??
 - Add support for fix protocol... check http://cyan.ly/blog/gotrade-fix-trading-system-golang-2016 and https://github.com/cyanly/gotrade/blob/master/proto/order/order.proto
-- 
 
 ### Stop implementation
 

@@ -3,9 +3,9 @@ package net
 import (
 	"context"
 	"io"
-	"log"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -23,7 +23,7 @@ func NewKafkaConsumer(brokers []string, topic string, partition int) KafkaConsum
 		Topic:         topic,
 		Partition:     partition,
 		QueueCapacity: 10000,
-		MinBytes:      10,               // 10KB
+		MinBytes:      10,               // 10B
 		MaxBytes:      10 * 1024 * 1024, // 10MB
 	})
 
@@ -69,10 +69,18 @@ func (conn *kafkaConsumer) superviseReadingMessages(ctx context.Context) {
 		err := conn.handleMessages(ctx)
 		if err == io.EOF {
 			// context exited or stream ended
-			log.Printf("[info] [kafka] [topic:%s] Closing kafka reader: %v\n", conn.topic, err)
+			log.Info().
+				Err(err).
+				Str("section", "kafka").
+				Str("topic", conn.topic).
+				Msg("Context exited of message stream ended. Closing consumer")
 			break
 		}
-		log.Printf("[fatal] [kafka] [topic:%s] Unable to read message from reader connection with %v\n", conn.topic, err)
+		log.Error().
+			Err(err).
+			Str("section", "kafka").
+			Str("topic", conn.topic).
+			Msg("Unable to read message from reader connection. Closing consumer")
 		break
 	}
 	// closing the connection
@@ -81,7 +89,11 @@ func (conn *kafkaConsumer) superviseReadingMessages(ctx context.Context) {
 }
 
 func (conn *kafkaConsumer) handleMessages(ctx context.Context) error {
-	log.Printf("[info] [kafka] [topic:%s] Start message topic consumer from offset %d\n", conn.topic, conn.consumer.Offset())
+	log.Info().
+		Str("section", "kafka").
+		Str("topic", conn.topic).
+		Int64("offset", conn.consumer.Offset()).
+		Msg("Starting message consumer")
 	for {
 		msg, err := conn.consumer.ReadMessage(ctx)
 		// context exited or stream ended
@@ -92,12 +104,22 @@ func (conn *kafkaConsumer) handleMessages(ctx context.Context) error {
 		if err != nil {
 			kafkaErr, ok := err.(kafka.Error)
 			if ok && kafkaErr.Temporary() {
-				log.Printf("[warn] Unable to read message from kafka server, retrying in 1 second: %v", err)
+				log.Warn().
+					Err(kafkaErr).
+					Str("section", "kafka").
+					Str("topic", conn.topic).
+					Bool("temp", true).
+					Msg("Unable to read message from reader connection. Retrying in 1 second")
 				// wait some time before retrying
 				time.Sleep(time.Second)
 				continue
 			} else {
-				log.Printf("[fatal] Unable to read message from kafka server: %v", err)
+				log.Error().
+					Err(err).
+					Str("section", "kafka").
+					Str("topic", conn.topic).
+					Bool("temp", false).
+					Msg("Unable to read message from kafka server. Exiting message reader loop.")
 				return err
 			}
 		}

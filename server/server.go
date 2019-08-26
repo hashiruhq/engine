@@ -2,9 +2,10 @@ package server
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	// import http profilling when the server profilling configuration is set
 	_ "net/http/pprof"
@@ -97,6 +98,8 @@ func NewServer(config Config) Server {
 
 // Listen for new events that affect the market and process them
 func (srv *server) Listen() {
+	// start prometheus profilling metrics
+	go loopProfillingServer(srv.config.Server.Monitoring)
 	// start all markets and listen for incomming events
 	for _, market := range srv.markets {
 		market.Start(srv.ctx)
@@ -104,8 +107,6 @@ func (srv *server) Listen() {
 
 	// listen for messages and ditribute them to the correct markets
 	go srv.ReceiveMessages()
-
-	srv.StartProfilling(srv.config.Server.Monitoring)
 	srv.stopOnSignal()
 }
 
@@ -119,34 +120,56 @@ func (srv *server) stopOnSignal() {
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
 	sig := <-sigc
-	log.Printf("Caught signal %s: Shutting down...", sig)
+	log.Info().Str("section", "server").Str("action", "terminate").Str("signal", sig.String()).Msg("Received termination signal. Closing services")
 	srv.closeMarkets()
 	time.Sleep(time.Second)
-	log.Println("Exiting the trading engine... Have a nice day!")
+	log.Info().Str("section", "server").Str("action", "terminate").Msg("Exiting")
 	os.Exit(0)
 }
 
 func (srv *server) ReceiveMessages() {
 	for key := range srv.markets {
 		// listen for incomming events and fwd them to the correct market
-		go func(key string, market MarketEngine) {
-			for msg := range market.GetMessageChan() {
-				// send the message for processing by the specific market
-				market.Process(msg)
-			}
-			log.Println("Closing consumer processor. Message channel closed")
-		}(key, srv.markets[key])
+		go loopMarketReceive(key, srv.markets[key])
 	}
 }
 
-// StartProfilling enables the engine to be pulled for metrics by prometheus or golang profilling
-func (srv server) StartProfilling(config MonitoringConfig) {
-	if config.Enabled {
-		go func() {
-			log.Printf("Starting profilling server and listening %s:%s", config.Host, config.Port)
-			http.Handle("/metrics", promhttp.Handler())
-			log.Println(http.ListenAndServe(config.Host+":"+config.Port, nil))
-		}()
+func loopMarketReceive(key string, market MarketEngine) {
+	for msg := range market.GetMessageChan() {
+		// send the message for processing by the specific market
+		market.Process(msg)
+	}
+	log.Info().
+		Str("section", "server").
+		Str("action", "terminate").
+		Str("goroutine", "server.ReceiveMessages").
+		Str("market", key).
+		Msg("Closing market consumer channel")
+}
+
+func loopProfillingServer(config MonitoringConfig) {
+	if !config.Enabled {
+		return
+	}
+	log.Debug().
+		Str("section", "server").
+		Str("action", "init").
+		Str("goroutine", "server.profiling").
+		Str("host", config.Host).
+		Str("port", config.Port).
+		Str("path", "/metrics").
+		Msg("Starting profilling server")
+	http.Handle("/metrics", promhttp.Handler())
+	err := http.ListenAndServe(config.Host+":"+config.Port, nil)
+	if err != nil {
+		log.Error().Err(err).
+			Str("section", "server").
+			Str("action", "init").
+			Str("goroutine", "server.profiling").
+			Str("host", config.Host).
+			Str("port", config.Port).
+			Str("path", "/metrics").
+			Msg("Error starting metrics server")
 	}
 }
 

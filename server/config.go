@@ -1,8 +1,7 @@
 package server
 
 import (
-	"log"
-
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -76,7 +75,7 @@ func LoadConfig(viperConf *viper.Viper) Config {
 
 	err := viperConf.Unmarshal(&config)
 	if err != nil {
-		log.Fatalf("unable to decode into struct, %v", err)
+		log.Fatal().Err(err).Msg("Unable to parse configuration file")
 	}
 	return config
 }
