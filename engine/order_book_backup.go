@@ -60,6 +60,7 @@ func (book *orderBook) Backup() model.MarketBackup {
 		StopEntryOrders:   make([]*model.Order, 0, 0),
 		StopLossOrders:    make([]*model.Order, 0, 0),
 	}
+	log.Println("Sell market len:", book.MarketID, len(book.SellMarketEntries))
 
 	// backup limit orders
 	if market.LowestAsk != 0 {
@@ -98,7 +99,10 @@ func (book *orderBook) Backup() model.MarketBackup {
 	for i, order := range book.BuyMarketEntries {
 		market.BuyMarketEntries[i] = &order
 	}
+
+	log.Println("Sell market len:", book.MarketID, len(book.SellMarketEntries))
 	for i, order := range book.SellMarketEntries {
+		log.Println("Sell market item:", i, order)
 		market.SellMarketEntries[i] = &order
 	}
 
