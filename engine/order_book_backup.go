@@ -2,6 +2,7 @@ package engine
 
 import (
 	"log"
+
 	"gitlab.com/around25/products/matching-engine/model"
 )
 
@@ -24,11 +25,11 @@ func (book *orderBook) Load(market model.MarketBackup) error {
 	}
 
 	// load market orders
-	book.BuyMarketEntries = make([]model.Order, 0, len(market.BuyMarketEntries))
+	book.BuyMarketEntries = make([]model.Order, len(market.BuyMarketEntries))
 	for i, order := range market.BuyMarketEntries {
 		book.BuyMarketEntries[i] = *order
 	}
-	book.SellMarketEntries = make([]model.Order, 0, len(market.SellMarketEntries))
+	book.SellMarketEntries = make([]model.Order, len(market.SellMarketEntries))
 	for i, order := range market.SellMarketEntries {
 		book.SellMarketEntries[i] = *order
 	}
@@ -103,7 +104,7 @@ func (book *orderBook) Backup() model.MarketBackup {
 
 	log.Println("Sell market len:", book.MarketID, len(book.SellMarketEntries))
 	for i, order := range book.SellMarketEntries {
-		log.Println("Sell market item:", i, order)
+		log.Printf("Sell market item: %d %#v\n", i, order)
 		market.SellMarketEntries[i] = &order
 	}
 

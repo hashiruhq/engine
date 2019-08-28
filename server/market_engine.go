@@ -2,9 +2,10 @@ package server
 
 import (
 	"context"
+	"time"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"time"
 
 	"gitlab.com/around25/products/matching-engine/engine"
 	"gitlab.com/around25/products/matching-engine/model"
@@ -167,6 +168,13 @@ func (mkt *marketEngine) ProcessOrder() {
 						Uint64("price", order.Price),
 					).
 					Msg("Invalid order received, ignoring")
+
+				// Monitor: Update order count for monitoring with prometheus
+				engineOrderCount.WithLabelValues(mkt.name).Inc()
+				ordersQueued.WithLabelValues(mkt.name).Dec()
+				lastTopic = event.Msg.Topic
+				lastPartition = int32(event.Msg.Partition)
+				lastOffset = event.Msg.Offset
 				continue
 			}
 			log.Debug().
@@ -211,48 +219,51 @@ func (mkt *marketEngine) PublishEvents() {
 		for index, ev := range event.Events {
 			logEvent := zerolog.Dict()
 			switch ev.Type {
-			case model.EventType_OrderStatusChange: {
-				payload := ev.GetOrderStatus()
-				logEvent = logEvent.
-					Uint64("id", payload.ID).
-					Uint64("owner_id", payload.OwnerID).
-					Str("type", payload.Type.String()).
-					Str("side", payload.Side.String()).
-					Str("status", payload.Status.String()).
-					Uint64("price", payload.Price).
-					Uint64("funds", payload.Funds).
-					Uint64("amount", payload.Amount)
-			}
-			case model.EventType_OrderActivated: {
-				payload := ev.GetOrderActivation()
-				logEvent = logEvent.
-					Uint64("id", payload.ID).
-					Uint64("owner_id", payload.OwnerID).
-					Str("type", payload.Type.String()).
-					Str("side", payload.Side.String()).
-					Str("status", payload.Status.String()).
-					Uint64("price", payload.Price).
-					Uint64("funds", payload.Funds).
-					Uint64("amount", payload.Amount)
-			}
-			case model.EventType_NewTrade: {
-				trade := ev.GetTrade()
-				logEvent = logEvent.
-					Str("taker_side", trade.TakerSide.String()).
-					Uint64("ask_id", trade.AskID).
-					Uint64("ask_owner_id", trade.AskOwnerID).
-					Uint64("bid_id", trade.BidID).
-					Uint64("bid_owner_id", trade.BidOwnerID).
-					Uint64("price", trade.Price).
-					Uint64("amount", trade.Amount)
-			}
+			case model.EventType_OrderStatusChange:
+				{
+					payload := ev.GetOrderStatus()
+					logEvent = logEvent.
+						Uint64("id", payload.ID).
+						Uint64("owner_id", payload.OwnerID).
+						Str("type", payload.Type.String()).
+						Str("side", payload.Side.String()).
+						Str("status", payload.Status.String()).
+						Uint64("price", payload.Price).
+						Uint64("funds", payload.Funds).
+						Uint64("amount", payload.Amount)
+				}
+			case model.EventType_OrderActivated:
+				{
+					payload := ev.GetOrderActivation()
+					logEvent = logEvent.
+						Uint64("id", payload.ID).
+						Uint64("owner_id", payload.OwnerID).
+						Str("type", payload.Type.String()).
+						Str("side", payload.Side.String()).
+						Str("status", payload.Status.String()).
+						Uint64("price", payload.Price).
+						Uint64("funds", payload.Funds).
+						Uint64("amount", payload.Amount)
+				}
+			case model.EventType_NewTrade:
+				{
+					trade := ev.GetTrade()
+					logEvent = logEvent.
+						Str("taker_side", trade.TakerSide.String()).
+						Uint64("ask_id", trade.AskID).
+						Uint64("ask_owner_id", trade.AskOwnerID).
+						Uint64("bid_id", trade.BidID).
+						Uint64("bid_owner_id", trade.BidOwnerID).
+						Uint64("price", trade.Price).
+						Uint64("amount", trade.Amount)
+				}
 			}
 			log.Debug().Str("section", "server").Str("action", "publish").
 				Str("market", mkt.name).
 				Uint64("last_order_id", event.Order.ID).
-				Str("kafka_topic",event.Msg.Topic).
-				Int("kafka_partition",event.Msg.Partition).
-				Int64("kafka_offset",event.Msg.Offset).
+				Str("kafka_topic", event.Msg.Topic).
+				Int("kafka_partition", event.Msg.Partition).
+				Int64("kafka_offset", event.Msg.Offset).
 				Str("event_type", ev.Type.String()).
 				Dict("event", logEvent).
 				Msg("Generated event")
