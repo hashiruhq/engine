@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"log"
 	"gitlab.com/around25/products/matching-engine/model"
 )
 
