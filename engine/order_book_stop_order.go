@@ -148,7 +148,8 @@ func (book *orderBook) activateStopEntryOrders(lastPrice uint64, events *[]model
 		pricePoint := iterator.Value()
 		*orders = append(*orders, pricePoint.Entries...)
 		for _, order := range pricePoint.Entries {
-			*events = append(*events, model.NewOrderActivatedEvent(order.Market, order.Type, order.Side, order.ID, order.OwnerID, order.Price, order.Amount, order.Funds, order.Status))
+			book.LastEventSeqID++
+			*events = append(*events, model.NewOrderActivatedEvent(book.LastEventSeqID, order.Market, order.Type, order.Side, order.ID, order.OwnerID, order.Price, order.Amount, order.Funds, order.Status))
 		}
 		book.StopEntryOrders.Delete(price)
 
@@ -177,7 +178,8 @@ func (book *orderBook) activateStopLossOrders(lastPrice uint64, events *[]model.
 		pricePoint := iterator.Value()
 		*orders = append(*orders, pricePoint.Entries...)
 		for _, order := range pricePoint.Entries {
-			*events = append(*events, model.NewOrderActivatedEvent(order.Market, order.Type, order.Side, order.ID, order.OwnerID, order.Price, order.Amount, order.Funds, order.Status))
+			book.LastEventSeqID++
+			*events = append(*events, model.NewOrderActivatedEvent(book.LastEventSeqID, order.Market, order.Type, order.Side, order.ID, order.OwnerID, order.Price, order.Amount, order.Funds, order.Status))
 		}
 		book.StopLossOrders.Delete(price)
 

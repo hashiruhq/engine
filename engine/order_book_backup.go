@@ -15,6 +15,8 @@ func (book *orderBook) Load(market model.MarketBackup) error {
 	book.HighestBid = market.HighestBid
 	book.LowestEntryPrice = market.LowestEntryPrice
 	book.HighestLossPrice = market.HighestLossPrice
+	book.LastEventSeqID = market.EventSeqID
+	book.LastTradeSeqID = market.TradeSeqID
 
 	// load limit orders
 	for _, buyBookEntry := range market.BuyOrders {
@@ -51,6 +53,8 @@ func (book *orderBook) Backup() model.MarketBackup {
 		MarketID:          book.MarketID,
 		PricePrecision:    int32(book.PricePrecision),
 		VolumePrecision:   int32(book.VolumePrecision),
+		EventSeqID:        book.LastEventSeqID,
+		TradeSeqID:        book.LastTradeSeqID,
 		LowestAsk:         book.LowestAsk,
 		HighestBid:        book.HighestBid,
 		LowestEntryPrice:  book.LowestEntryPrice,

@@ -44,6 +44,10 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 		Int64("offset", offset).
 		Int("limit_buy_count", len(market.GetBuyOrders())).
 		Int("limit_sell_count", len(market.GetSellOrders())).
+		Int("market_buy_count", len(market.GetBuyMarketEntries())).
+		Int("market_sell_count", len(market.GetSellMarketEntries())).
+		Int("stop_entry_count", len(market.GetStopEntryOrders())).
+		Int("stop_loss_count", len(market.GetStopLossOrders())).
 		Msg("Loading market from backup")
 	mkt.LoadMarket(market)
 
