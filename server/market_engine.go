@@ -266,7 +266,6 @@ func (mkt *marketEngine) PublishEvents() {
 							Int("kafka_partition", event.Msg.Partition).
 							Int64("kafka_offset", event.Msg.Offset).
 							Str("event_type", ev.Type.String()).
-							Uint64("event_seqid", ev.SeqID).
 							Int64("event_timestamp", ev.CreatedAt).
 							Dict("event", logEvent).
 							Msg("An bid order matched with the same sell order twice. Orderbook is in an inconsistent state.")
