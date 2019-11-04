@@ -50,7 +50,6 @@ func (mkt *marketEngine) LoadMarketFromBackup() (err error) {
 		Int("stop_loss_count", len(market.GetStopLossOrders())).
 		Msg("Loading market from backup")
 	mkt.LoadMarket(market)
-
 	// mark the last message that has been processed by the engine to the one saved in the backup file
 	err = mkt.consumer.SetOffset(offset)
 	if err != nil {

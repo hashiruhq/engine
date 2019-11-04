@@ -1,8 +1,6 @@
 package engine
 
 import (
-	"log"
-
 	"gitlab.com/around25/products/matching-engine/model"
 )
 
@@ -25,7 +23,7 @@ func (book *orderBook) Load(market model.MarketBackup) error {
 	for _, sellBookEntry := range market.SellOrders {
 		book.addSellBookEntry(*sellBookEntry)
 	}
-
+	
 	// load market orders
 	book.BuyMarketEntries = make([]model.Order, len(market.BuyMarketEntries))
 	for i, order := range market.BuyMarketEntries {
@@ -66,7 +64,6 @@ func (book *orderBook) Backup() model.MarketBackup {
 		StopEntryOrders:   make([]*model.Order, 0, 0),
 		StopLossOrders:    make([]*model.Order, 0, 0),
 	}
-	log.Println("Sell market len:", book.MarketID, len(book.SellMarketEntries))
 
 	// backup limit orders
 	if market.LowestAsk != 0 {
@@ -75,7 +72,8 @@ func (book *orderBook) Backup() model.MarketBackup {
 			for {
 				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.Entries {
-					market.SellOrders = append(market.SellOrders, &entry)
+					var order = entry
+					market.SellOrders = append(market.SellOrders, &order)
 				}
 				if ok := iterator.Next(); !ok {
 					break
@@ -91,7 +89,8 @@ func (book *orderBook) Backup() model.MarketBackup {
 			for {
 				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.Entries {
-					market.BuyOrders = append(market.BuyOrders, &entry)
+					var order = entry
+					market.BuyOrders = append(market.BuyOrders, &order)
 				}
 				if ok := iterator.Previous(); !ok {
 					break
@@ -102,13 +101,13 @@ func (book *orderBook) Backup() model.MarketBackup {
 	}
 
 	// backup market orders
-	for i, order := range book.BuyMarketEntries {
+	for i, entry := range book.BuyMarketEntries {
+		var order = entry
 		market.BuyMarketEntries[i] = &order
 	}
 
-	log.Println("Sell market len:", book.MarketID, len(book.SellMarketEntries))
-	for i, order := range book.SellMarketEntries {
-		log.Printf("Sell market item: %d %#v\n", i, order)
+	for i, entry := range book.SellMarketEntries {
+		var order = entry
 		market.SellMarketEntries[i] = &order
 	}
 
@@ -119,7 +118,8 @@ func (book *orderBook) Backup() model.MarketBackup {
 			for {
 				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.Entries {
-					market.StopEntryOrders = append(market.StopEntryOrders, &entry)
+					var order = entry
+					market.StopEntryOrders = append(market.StopEntryOrders, &order)
 				}
 				if ok := iterator.Next(); !ok {
 					break
@@ -130,12 +130,13 @@ func (book *orderBook) Backup() model.MarketBackup {
 	}
 
 	if market.HighestLossPrice != 0 {
-		iterator := book.BuyEntries.Seek(market.HighestLossPrice)
+		iterator := book.StopLossOrders.Seek(market.HighestLossPrice)
 		if iterator != nil {
 			for {
 				pricePoint := iterator.Value()
 				for _, entry := range pricePoint.Entries {
-					market.StopLossOrders = append(market.StopLossOrders, &entry)
+					var order = entry
+					market.StopLossOrders = append(market.StopLossOrders, &order)
 				}
 				if ok := iterator.Previous(); !ok {
 					break

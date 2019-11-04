@@ -224,6 +224,8 @@ func (mkt *marketEngine) ProcessOrder() {
 // PublishEvents listens for new events from the trading engine and publishes them to the Kafka server
 func (mkt *marketEngine) PublishEvents() {
 	log.Debug().Str("section", "server").Str("action", "init").Str("market", mkt.name).Msg("Starting event publisher process")
+	var lastAskID uint64
+	var lastBidID uint64
 	for event := range mkt.events {
 		events := make([]kafka.Message, len(event.Events))
 		for index, ev := range event.Events {
@@ -267,6 +269,21 @@ func (mkt *marketEngine) PublishEvents() {
 						Uint64("bid_owner_id", trade.BidOwnerID).
 						Uint64("price", trade.Price).
 						Uint64("amount", trade.Amount)
+					if lastAskID == trade.AskID && lastBidID == trade.BidID {
+						log.Error().Str("section", "engine").Str("action", "post:trade:check").
+							Str("market", mkt.name).
+							Uint64("last_order_id", event.Order.ID).
+							Str("kafka_topic", event.Msg.Topic).
+							Int("kafka_partition", event.Msg.Partition).
+							Int64("kafka_offset", event.Msg.Offset).
+							Str("event_type", ev.Type.String()).
+							Uint64("event_seqid", ev.SeqID).
+							Int64("event_timestamp", ev.CreatedAt).
+							Dict("event", logEvent).
+							Msg("An bid order matched with the same sell order twice. Orderbook is in an inconsistent state.")
+					}
+					lastBidID = trade.BidID
+					lastAskID = trade.AskID
 				}
 			}
 			log.Debug().Str("section", "server").Str("action", "publish").
