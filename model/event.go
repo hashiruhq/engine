@@ -7,8 +7,9 @@ import (
 )
 
 // NewOrderStatusEvent returns a new event set with the order status details
-func NewOrderStatusEvent(market string, orderType OrderType, side MarketSide, id, ownerID uint64, price, amount, funds uint64, status OrderStatus) Event {
+func NewOrderStatusEvent(seqID uint64, market string, orderType OrderType, side MarketSide, id, ownerID uint64, price, amount, funds uint64, status OrderStatus) Event {
 	return Event{
+		SeqID:  seqID,
 		Type:   EventType_OrderStatusChange,
 		Market: market,
 		Payload: &Event_OrderStatus{
@@ -23,13 +24,14 @@ func NewOrderStatusEvent(market string, orderType OrderType, side MarketSide, id
 				Status:  status,
 			},
 		},
-		CreatedAt: time.Now().UTC().Unix(),
+		CreatedAt: time.Now().UTC().UnixNano(),
 	}
 }
 
 // NewOrderActivatedEvent returns a new event set with the order status details
-func NewOrderActivatedEvent(market string, orderType OrderType, side MarketSide, id, ownerID uint64, price, amount, funds uint64, status OrderStatus) Event {
+func NewOrderActivatedEvent(seqID uint64, market string, orderType OrderType, side MarketSide, id, ownerID uint64, price, amount, funds uint64, status OrderStatus) Event {
 	return Event{
+		SeqID:  seqID,
 		Type:   EventType_OrderActivated,
 		Market: market,
 		Payload: &Event_OrderActivation{
@@ -44,13 +46,14 @@ func NewOrderActivatedEvent(market string, orderType OrderType, side MarketSide,
 				Status:  status,
 			},
 		},
-		CreatedAt: time.Now().UTC().Unix(),
+		CreatedAt: time.Now().UTC().UnixNano(),
 	}
 }
 
 // NewTradeEvent returns a new event set with the trade details
-func NewTradeEvent(market string, takerSide MarketSide, askID, bidID, askOwnerID, bidOwnerID, amount, price uint64) Event {
+func NewTradeEvent(seqID uint64, market string, tradeSeqID uint64, takerSide MarketSide, askID, bidID, askOwnerID, bidOwnerID, amount, price uint64) Event {
 	return Event{
+		SeqID:  seqID,
 		Type:   EventType_NewTrade,
 		Market: market,
 		Payload: &Event_Trade{
@@ -62,9 +65,10 @@ func NewTradeEvent(market string, takerSide MarketSide, askID, bidID, askOwnerID
 				BidOwnerID: bidOwnerID,
 				Amount:     amount,
 				Price:      price,
+				SeqID:		  tradeSeqID,
 			},
 		},
-		CreatedAt: time.Now().UTC().Unix(),
+		CreatedAt: time.Now().UTC().UnixNano(),
 	}
 }
 

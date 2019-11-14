@@ -67,9 +67,13 @@ func (mkt *marketEngine) GetMessageChan() <-chan kafka.Message {
 // Start the engine for this market
 func (mkt *marketEngine) Start(ctx context.Context) {
 	// load last market snapshot from the backup files and update offset for the trading engine consumer
-	mkt.LoadMarketFromBackup()
-	mkt.producer.Start()
-	mkt.consumer.Start(ctx)
+	mkt.LoadMarketFromBackup() 
+	if err := mkt.producer.Start(); err != nil {
+		log.Fatal().Err(err).Str("section", "init:market").Str("action", "start_producer").Str("market", mkt.name).Msg("Unable to start producer")
+	}
+	if err := mkt.consumer.Start(ctx); err != nil {
+		log.Fatal().Err(err).Str("section", "init:market").Str("action", "start_consumer").Str("market", mkt.name).Msg("Unable to start consumer")
+	}
 	// decode the binary value for each message received into an Order Structure
 	go mkt.DecodeMessage()
 	// process each order by the trading engine and forward events to the events channel
@@ -154,6 +158,9 @@ func (mkt *marketEngine) ProcessOrder() {
 				log.Warn().
 					Str("section", "server").Str("action", "process_order").
 					Str("market", mkt.name).
+					Str("kafka_topic", event.Msg.Topic).
+					Int("kafka_partition", event.Msg.Partition).
+					Int64("kafka_offset", event.Msg.Offset).
 					Dict("event", zerolog.Dict().
 						Str("event_type", order.EventType.String()).
 						Str("side", order.Side.String()).
@@ -180,6 +187,9 @@ func (mkt *marketEngine) ProcessOrder() {
 			log.Debug().
 				Str("section", "server").Str("action", "process_order").
 				Str("market", mkt.name).
+				Str("kafka_topic", event.Msg.Topic).
+				Int("kafka_partition", event.Msg.Partition).
+				Int64("kafka_offset", event.Msg.Offset).
 				Dict("event", zerolog.Dict().
 					Str("event_type", order.EventType.String()).
 					Str("side", order.Side.String()).
@@ -251,6 +261,7 @@ func (mkt *marketEngine) PublishEvents() {
 				{
 					trade := ev.GetTrade()
 					logEvent = logEvent.
+						Uint64("seqid", trade.SeqID).
 						Str("taker_side", trade.TakerSide.String()).
 						Uint64("ask_id", trade.AskID).
 						Uint64("ask_owner_id", trade.AskOwnerID).
@@ -266,6 +277,7 @@ func (mkt *marketEngine) PublishEvents() {
 							Int("kafka_partition", event.Msg.Partition).
 							Int64("kafka_offset", event.Msg.Offset).
 							Str("event_type", ev.Type.String()).
+							Uint64("event_seqid", ev.SeqID).
 							Int64("event_timestamp", ev.CreatedAt).
 							Dict("event", logEvent).
 							Msg("An bid order matched with the same sell order twice. Orderbook is in an inconsistent state.")
@@ -281,6 +293,8 @@ func (mkt *marketEngine) PublishEvents() {
 				Int("kafka_partition", event.Msg.Partition).
 				Int64("kafka_offset", event.Msg.Offset).
 				Str("event_type", ev.Type.String()).
+				Uint64("event_seqid", ev.SeqID).
+				Int64("event_timestamp", ev.CreatedAt).
 				Dict("event", logEvent).
 				Msg("Generated event")
 			rawTrade, _ := ev.ToBinary() // @todo add better error handling on encoding
