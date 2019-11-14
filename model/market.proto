@@ -20,4 +20,6 @@ message MarketBackup {
   repeated Order SellMarketEntries = 14;
   repeated Order StopEntryOrders = 15;
   repeated Order StopLossOrders = 16;
+  uint64 EventSeqID = 17;
+  uint64 TradeSeqID = 18;
 }

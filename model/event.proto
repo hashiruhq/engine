@@ -39,4 +39,9 @@ message Event {
     Trade Trade = 5;
     OrderStatusMsg OrderActivation = 6;
   }
+  uint64 SeqID = 7;
+}
+
+message Events {
+  repeated Event Events = 1;
 }

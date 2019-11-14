@@ -38,7 +38,8 @@ The processing flow for stop orders is as follows:
 - **Q: How do we handle server crashes and maintain the trading lists?**
   A: The engine now uses consumer instead of consumer groups and can automatically restart from any previous offset
 - **Q: How/When do we acknowledge orders?**
-  A:
+  A: Each order received generated a status update event with "untouched" for initial confirmation and then the list of trades.
+     Stop orders generate a "pending" status update and a order activated event when the condition was met.
 - **Q: How do we handle persistance while maintaining the high load?**
   A:
 - **Q: How do we handle upgrades and redeployments?**
@@ -55,7 +56,8 @@ The processing flow for stop orders is as follows:
 __Generate protobuf classes__
 
 ```bash
-# install protoc 
+# download protoc C++ binaries for mac from https://github.com/protocolbuffers/protobuf/releases
+# install protoc for golang
 go get github.com/golang/protobuf/protoc-gen-go
 
 # regenerate the golang classes based on the proto model
