@@ -10,7 +10,7 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
-			for order.Price >= book.LowestAsk {
+			for order.Price >= iterator.Key() {
 				pricePoint := iterator.Value()
 				complete := false
 				for index := 0; index < len(pricePoint.Entries); index++ {
@@ -100,7 +100,7 @@ func (book *orderBook) processLimitSell(order model.Order, events *[]model.Event
 
 		// traverse orders to find a matching one based on the sell order list
 		if iterator != nil {
-			for order.Price <= book.HighestBid {
+			for order.Price <= iterator.Key() {
 				pricePoint := iterator.Value()
 				complete := false
 				for index := 0; index < len(pricePoint.Entries); index++ {
