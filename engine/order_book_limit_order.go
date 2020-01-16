@@ -82,6 +82,7 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 					break
 				}
 			}
+			
 			iterator.Close()
 		}
 	}

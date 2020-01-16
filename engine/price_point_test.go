@@ -130,14 +130,14 @@ func TestPricePointCreation(t *testing.T) {
 			So(func() {
 				pricePoints := NewPricePoints()
 				pricePoints.Set(0, &PricePoint{Entries: []model.Order{model.Order{Amount: 1}}})
-			}, ShouldPanic)
+			}, ShouldNotPanic)
 		})
 
 		Convey("Should panic at delete for key=0", func() {
 			So(func() {
 				pricePoints := NewPricePoints()
 				pricePoints.Delete(0)
-			}, ShouldPanic)
+			}, ShouldNotPanic)
 		})
 	})
 }

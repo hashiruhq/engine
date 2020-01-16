@@ -10,7 +10,6 @@ require (
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
 	github.com/ericlagergren/decimal v0.0.0-20181231230500-73749d4874d5
 	github.com/gin-gonic/gin v1.4.0 // indirect
-	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
 	github.com/golang/protobuf v1.3.2
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
@@ -19,13 +18,14 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
 	github.com/gorilla/mux v1.7.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2 // indirect
 	github.com/openzipkin/zipkin-go v0.1.5 // indirect
 	github.com/prometheus/client_golang v1.0.0
-	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a
 	github.com/rs/zerolog v1.15.0
 	github.com/russross/blackfriday v2.0.0+incompatible // indirect
+	github.com/securego/gosec v0.0.0-20200106085552-9cb83e10afad // indirect
 	github.com/segmentio/kafka-go v0.2.4
 	github.com/shurcooL/go v0.0.0-20190121191506-3fef8c783dec // indirect
 	github.com/shurcooL/gofontwoff v0.0.0-20181114050219-180f79e6909d // indirect
@@ -43,21 +43,19 @@ require (
 	github.com/shurcooL/webdavfs v0.0.0-20181215192745-5988b2d638f6 // indirect
 	github.com/sirupsen/logrus v1.3.0 // indirect
 	github.com/smartystreets/assertions v1.0.1 // indirect
-	github.com/smartystreets/goconvey v0.0.0-20190731233626-505e41936337
+	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.4.0
 	github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8 // indirect
 	go.opencensus.io v0.19.0 // indirect
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
 	golang.org/x/build v0.0.0-20190214165022-ebe19e37a462 // indirect
-	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
 	golang.org/x/exp v0.0.0-20190212162250-21964bba6549 // indirect
-	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
 	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635 // indirect
 	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
-	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
-	golang.org/x/text v0.3.2 // indirect
-	golang.org/x/tools v0.0.0-20190806215303-88ddfcebc769 // indirect
+	golang.org/x/tools v0.0.0-20200115165105-de0b1760071a // indirect
 	honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
+
+go 1.13

@@ -18,8 +18,8 @@ func TestTradingEngineCreation(t *testing.T) {
 			tradingEngine.Process(model.NewOrder(2, uint64(110000000), uint64(12000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
 			events = events[0:0]
 			tradingEngine.Process(model.NewOrder(3, uint64(90000000), uint64(12000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 1)
-			event := events[0]
+			So(len(events), ShouldEqual, 2)
+			event := events[1]
 			So(event.GetTrade().Amount, ShouldEqual, 12000000000)
 			So(event.GetTrade().Price, ShouldEqual, 100000000)
 
