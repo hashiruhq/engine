@@ -21,6 +21,8 @@ type OrderBook interface {
 	GetMarketID() string
 	GetPricePrecision() int
 	GetVolumePrecision() int
+	GetHighestLossPrice() uint64
+	GetLowestEntryPrice() uint64
 }
 
 type orderBook struct {
@@ -243,39 +245,88 @@ func (book *orderBook) Cancel(order model.Order, events *[]model.Event) {
 	}
 }
 
+// Cancel a stop loss order and return true if the order was found
+func (book *orderBook) cancelStopLossOrder(order model.Order, events *[]model.Event) bool {
+	price := order.StopPrice
+	iterator := book.StopLossOrders.Seek(price)
+	// price is outside the bounds of the list
+	if iterator == nil {
+		return false
+	}
+	// price is in the range but does not exist in the list
+	if iterator.Key() != price {
+		iterator.Close()
+		return false
+	}
+	pricePoint := iterator.Value()
+	for i := 0; i < len(pricePoint.Entries); i++ {
+		if pricePoint.Entries[i].ID == order.ID {
+			ord := pricePoint.Entries[i]
+			ord.SetStatus(model.OrderStatus_Cancelled)
+			book.LastEventSeqID++
+			*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
+			book.StopLossOrders.removeEntryByPriceAndIndex(price, pricePoint, i)
+			if len(pricePoint.Entries) == 0 && book.HighestLossPrice == price {
+				if ok := iterator.Previous(); ok {
+					book.HighestLossPrice = iterator.Key()
+				} else {
+					book.HighestLossPrice = 0
+				}
+			}
+			iterator.Close()
+			return true
+		}
+	}
+	iterator.Close()
+	return false
+}
+
+// Cancel stop entry order and return true if found
+func (book *orderBook) cancelStopEntryOrder(order model.Order, events *[]model.Event) bool {
+	price := order.StopPrice
+	iterator := book.StopEntryOrders.Seek(price)
+	// price is outside the bounds of the list
+	if iterator == nil {
+		return false
+	}
+	// price is in the range but does not exist in the list
+	if iterator.Key() != price {
+		iterator.Close()
+		return false
+	}
+	pricePoint := iterator.Value()
+	for i := 0; i < len(pricePoint.Entries); i++ {
+		if pricePoint.Entries[i].ID == order.ID {
+			ord := pricePoint.Entries[i]
+			ord.SetStatus(model.OrderStatus_Cancelled)
+			book.LastEventSeqID++
+			*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
+			book.StopEntryOrders.removeEntryByPriceAndIndex(price, pricePoint, i)
+			if len(pricePoint.Entries) == 0 && book.LowestEntryPrice == price {
+				if ok := iterator.Next(); ok {
+					book.LowestEntryPrice = iterator.Key()
+				} else {
+					book.LowestEntryPrice = 0
+				}
+			}
+			iterator.Close()
+			return true
+		}
+	}
+	iterator.Close()
+	return false
+}
+
 // Cancel a stop order based on a given order ID and set price
 func (book *orderBook) cancelStopOrder(order model.Order, events *[]model.Event) {
 	if order.Stop == model.StopLoss_None {
 		return
 	}
-	price := order.StopPrice
-
-	if order.Stop == model.StopLoss_Loss {
-		if pricePoint, ok := book.StopLossOrders.Get(price); ok {
-			for i := 0; i < len(pricePoint.Entries); i++ {
-				if pricePoint.Entries[i].ID == order.ID {
-					ord := pricePoint.Entries[i]
-					ord.SetStatus(model.OrderStatus_Cancelled)
-					book.LastEventSeqID++
-					*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
-					book.StopLossOrders.removeEntryByPriceAndIndex(price, pricePoint, i)
-					return
-				}
-			}
-		}
+	if order.Stop == model.StopLoss_Loss && book.cancelStopLossOrder(order, events) {
 		return
 	}
-	if pricePoint, ok := book.StopEntryOrders.Get(order.Price); ok {
-		for i := 0; i < len(pricePoint.Entries); i++ {
-			if pricePoint.Entries[i].ID == order.ID {
-				ord := pricePoint.Entries[i]
-				ord.SetStatus(model.OrderStatus_Cancelled)
-				book.LastEventSeqID++
-				*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
-				book.StopEntryOrders.removeEntryByPriceAndIndex(price, pricePoint, i)
-				return
-			}
-		}
+	if order.Stop == model.StopLoss_Entry && book.cancelStopEntryOrder(order, events) {
+		return
 	}
 	// if nothing was cancelled is possible the order was already activated and we should cancel it from the market
 	order.Stop = model.StopLoss_None
@@ -285,42 +336,63 @@ func (book *orderBook) cancelStopOrder(order model.Order, events *[]model.Event)
 // Cancel a limit order based on a given order ID and set price
 func (book *orderBook) cancelLimitOrder(order model.Order, events *[]model.Event) {
 	if order.Side == model.MarketSide_Buy {
-		if pricePoint, ok := book.BuyEntries.Get(order.Price); ok {
-			for i := 0; i < len(pricePoint.Entries); i++ {
-				if pricePoint.Entries[i].ID == order.ID {
-					ord := pricePoint.Entries[i]
-					ord.SetStatus(model.OrderStatus_Cancelled)
-					book.LastEventSeqID++
-					*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
-					book.removeBuyBookEntry(ord.Price, pricePoint, i)
-					// adjust highest bid
-					if len(pricePoint.Entries) == 0 && book.HighestBid == ord.Price {
-						iterator := book.BuyEntries.Seek(book.HighestBid)
-						book.closeBidIterator(iterator)
-					}
-					return
-				}
-			}
+		iterator := book.BuyEntries.Seek(order.Price)
+		// price is outside the bounds of the list
+		if iterator == nil {
+			return
 		}
-		return
-	}
-	if pricePoint, ok := book.SellEntries.Get(order.Price); ok {
+		// price is in the range but does not exist in the list
+		if iterator.Key() != order.Price {
+			iterator.Close()
+			return
+		}
+		pricePoint := iterator.Value()
 		for i := 0; i < len(pricePoint.Entries); i++ {
 			if pricePoint.Entries[i].ID == order.ID {
 				ord := pricePoint.Entries[i]
 				ord.SetStatus(model.OrderStatus_Cancelled)
 				book.LastEventSeqID++
 				*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
-				book.removeSellBookEntry(ord.Price, pricePoint, i)
-				// adjust lowest ask
-				if len(pricePoint.Entries) == 0 && book.LowestAsk == ord.Price {
-					iterator := book.SellEntries.Seek(book.LowestAsk)
-					book.closeAskIterator(iterator)
+				book.removeBuyBookEntry(ord.Price, pricePoint, i)
+				// adjust highest bid
+				if len(pricePoint.Entries) == 0 && book.HighestBid == ord.Price {
+					book.closeBidIterator(iterator)
 				}
 				return
 			}
 		}
+		iterator.Close()
+		return
 	}
+
+	// cancel sell limit order
+
+	iterator := book.SellEntries.Seek(order.Price)
+	// price is outside the bounds of the list
+	if iterator == nil {
+		return
+	}
+	// price is in the range but does not exist in the list
+	if iterator.Key() != order.Price {
+		iterator.Close()
+		return
+	}
+	pricePoint := iterator.Value()
+	for i := 0; i < len(pricePoint.Entries); i++ {
+		if pricePoint.Entries[i].ID == order.ID {
+			ord := pricePoint.Entries[i]
+			ord.SetStatus(model.OrderStatus_Cancelled)
+			book.LastEventSeqID++
+			*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
+			book.removeSellBookEntry(ord.Price, pricePoint, i)
+			// adjust lowest ask
+			if len(pricePoint.Entries) == 0 && book.LowestAsk == ord.Price {
+				book.closeAskIterator(iterator)
+			}
+			return
+		}
+	}
+	iterator.Close()
 }
 
 // Cancel a market order based on a given order ID
@@ -418,12 +490,10 @@ func (book *orderBook) closeBidIterator(iterator Iterator) {
 	}
 	if ok := iterator.Previous(); ok {
 		book.HighestBid = iterator.Key()
-		iterator.Close()
-		return
+	} else {
+		book.HighestBid = 0
 	}
-	book.HighestBid = 0
 	iterator.Close()
-	return
 }
 
 func (book *orderBook) closeAskIterator(iterator Iterator) {
@@ -437,10 +507,8 @@ func (book *orderBook) closeAskIterator(iterator Iterator) {
 	}
 	if ok := iterator.Next(); ok {
 		book.LowestAsk = iterator.Key()
-		iterator.Close()
-		return
+	} else {
+		book.LowestAsk = 0
 	}
-	book.LowestAsk = 0
 	iterator.Close()
-	return
 }

@@ -67,81 +67,75 @@ removed from the pending list and since the limit order was filled it would not 
 // orderbook and then each pending market order will be executed until the available amount is depleted or
 // all market orders are completed
 func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event) model.Order {
-	if book.LowestAsk != 0 {
-		iterator := book.SellEntries.Seek(book.LowestAsk)
+	if book.LowestAsk == 0 {
+		return order
+	}
 
-		// traverse orders to find a matching one based on the sell order list
-		if iterator != nil {
-			for order.Amount > 0 && order.Funds > 0 {
-				pricePoint := iterator.Value()
-				complete := false
-				// calculate how much we could afford at this price
-				amountAffordable := utils.Divide(order.Funds, iterator.Key(), book.PricePrecision, book.PricePrecision, book.VolumePrecision)
-				for index := 0; index < len(pricePoint.Entries); index++ {
-					sellEntry := &pricePoint.Entries[index]
+	iterator := book.SellEntries.Seek(book.LowestAsk)
 
-					amount := utils.Min(order.Amount, amountAffordable)
+	if iterator == nil {
+		return order
+	}
 
-					// if we can fill the amount instantly and we have the necessary funds then fill the order and return trade
-					// if we can fill the amount instantly, but we don't have the necessary funds then fill as much as we can afford and return the trade
-					if sellEntry.Amount >= amount {
-						// funds := utils.Multiply(amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
-						book.LastEventSeqID++
-						book.LastTradeSeqID++	
-						*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Buy, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, amount, sellEntry.Price))
-						sellEntry.Amount -= amount
-						order.Amount -= amount
-						order.SetStatus(model.OrderStatus_Filled)
-						if sellEntry.Amount == 0 {
-							sellEntry.SetStatus(model.OrderStatus_Filled)
-							book.removeSellBookEntry(sellEntry.Price, pricePoint, index)
-						} else {
-							sellEntry.SetStatus(model.OrderStatus_PartiallyFilled)
-						}
-						complete = true
-						break
-					}
+	// traverse orders to find a matching one based on the sell order list
+	for order.Amount > 0 && order.Funds > 0 {
+		pricePoint := iterator.Value()
+		complete := false
+		// calculate how much we could afford at this price
+		amountAffordable := utils.Divide(order.Funds, iterator.Key(), book.PricePrecision, book.PricePrecision, book.VolumePrecision)
+		for index := 0; index < len(pricePoint.Entries); index++ {
+			sellEntry := &pricePoint.Entries[index]
 
-					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
-					// we complete the sell order and we move to the next order
-					// @todo CH: check for overflow issues
-					funds := utils.Multiply(amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
-					book.LastEventSeqID++
-					book.LastTradeSeqID++	
-					*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Buy, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, sellEntry.Amount, sellEntry.Price))
-					order.Amount -= sellEntry.Amount
-					amountAffordable -= sellEntry.Amount
-					order.SetStatus(model.OrderStatus_PartiallyFilled)
-					order.Funds -= funds
+			amount := utils.Min(order.Amount, amountAffordable)
+
+			// if we can fill the amount instantly and we have the necessary funds then fill the order and return trade
+			// if we can fill the amount instantly, but we don't have the necessary funds then fill as much as we can afford and return the trade
+			if sellEntry.Amount >= amount {
+				// funds := utils.Multiply(amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+				book.LastEventSeqID++
+				book.LastTradeSeqID++
+				*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Buy, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, amount, sellEntry.Price))
+				sellEntry.Amount -= amount
+				order.Amount -= amount
+				order.SetStatus(model.OrderStatus_Filled)
+				if sellEntry.Amount == 0 {
+					sellEntry.SetStatus(model.OrderStatus_Filled)
 					book.removeSellBookEntry(sellEntry.Price, pricePoint, index)
-					index--
-				}
-
-				if complete {
-					if len(pricePoint.Entries) != 0 {
-						iterator.Close()
-						return order
-					}
-					if ok := iterator.Next(); ok {
-						book.LowestAsk = iterator.Key()
-						iterator.Close()
-						return order
-					}
-					book.LowestAsk = 0
-					iterator.Close()
-					return order
-				}
-
-				if ok := iterator.Next(); ok {
-					book.LowestAsk = iterator.Key()
 				} else {
-					book.LowestAsk = 0
-					break
+					sellEntry.SetStatus(model.OrderStatus_PartiallyFilled)
 				}
+				complete = true
+				break
 			}
-			iterator.Close()
+
+			// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
+			// we complete the sell order and we move to the next order
+			// @todo CH: check for overflow issues
+			funds := utils.Multiply(amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+			book.LastEventSeqID++
+			book.LastTradeSeqID++
+			*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Buy, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, sellEntry.Amount, sellEntry.Price))
+			order.Amount -= sellEntry.Amount
+			amountAffordable -= sellEntry.Amount
+			order.SetStatus(model.OrderStatus_PartiallyFilled)
+			order.Funds -= funds
+			book.removeSellBookEntry(sellEntry.Price, pricePoint, index)
+			index--
+		}
+
+		if complete {
+			book.closeAskIterator(iterator)
+			return order
+		}
+
+		if ok := iterator.Next(); ok {
+			book.LowestAsk = iterator.Key()
+		} else {
+			book.LowestAsk = 0
+			break
 		}
 	}
+	iterator.Close()
 
 	return order
 }
@@ -154,72 +148,65 @@ func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event
 // orderbook and then each pending market order will be executed until the available amount is depleted or
 // all market orders are completed
 func (book *orderBook) processMarketSell(order model.Order, events *[]model.Event) model.Order {
-	if book.HighestBid != 0 {
-		iterator := book.BuyEntries.Seek(book.HighestBid)
+	if book.HighestBid == 0 {
+		return order
+	}
 
-		// traverse orders to find a matching one based on the sell order list
-		if iterator != nil {
-			for order.Amount > 0 {
-				pricePoint := iterator.Value()
-				complete := false
-				for index := 0; index < len(pricePoint.Entries); index++ {
-					buyEntry := &pricePoint.Entries[index]
+	iterator := book.BuyEntries.Seek(book.HighestBid)
+	if iterator == nil {
+		return order
+	}
 
-					// if we can fill the trade instantly then we add the trade and complete the order
-					if buyEntry.Amount >= order.Amount {
-						book.LastEventSeqID++
-						book.LastTradeSeqID++	
-						*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Sell, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, order.Amount, buyEntry.Price))
-						buyEntry.Amount -= order.Amount
-						order.Amount = 0
-						order.SetStatus(model.OrderStatus_Filled)
-						if buyEntry.Amount == 0 {
-							buyEntry.SetStatus(model.OrderStatus_Filled)
-							book.removeBuyBookEntry(buyEntry.Price, pricePoint, index)
-						} else {
-							buyEntry.SetStatus(model.OrderStatus_PartiallyFilled)
-						}
-						complete = true
-						break
-					}
+	// traverse orders to find a matching one based on the sell order list
+	for order.Amount > 0 {
+		pricePoint := iterator.Value()
+		complete := false
+		for index := 0; index < len(pricePoint.Entries); index++ {
+			buyEntry := &pricePoint.Entries[index]
 
-					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
-					// we complete the sell order and we move to the next order
-					book.LastEventSeqID++
-					book.LastTradeSeqID++	
-					*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Sell, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, buyEntry.Amount, buyEntry.Price))
-					order.Amount -= buyEntry.Amount
-					order.SetStatus(model.OrderStatus_PartiallyFilled)
+			// if we can fill the trade instantly then we add the trade and complete the order
+			if buyEntry.Amount >= order.Amount {
+				book.LastEventSeqID++
+				book.LastTradeSeqID++
+				*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Sell, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, order.Amount, buyEntry.Price))
+				buyEntry.Amount -= order.Amount
+				order.Amount = 0
+				order.SetStatus(model.OrderStatus_Filled)
+				if buyEntry.Amount == 0 {
 					buyEntry.SetStatus(model.OrderStatus_Filled)
 					book.removeBuyBookEntry(buyEntry.Price, pricePoint, index)
-					index--
-				}
-
-				if complete {
-					if len(pricePoint.Entries) != 0 {
-						iterator.Close()
-						return order
-					}
-					if ok := iterator.Previous(); ok {
-						book.HighestBid = iterator.Key()
-						iterator.Close()
-						return order
-					}
-					book.HighestBid = 0
-					iterator.Close()
-					return order
-				}
-
-				if ok := iterator.Previous(); ok {
-					book.HighestBid = iterator.Key()
 				} else {
-					book.HighestBid = 0
-					break
+					buyEntry.SetStatus(model.OrderStatus_PartiallyFilled)
 				}
+				complete = true
+				break
 			}
-			iterator.Close()
+
+			// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
+			// we complete the sell order and we move to the next order
+			book.LastEventSeqID++
+			book.LastTradeSeqID++
+			*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Sell, order.ID, buyEntry.ID, order.OwnerID, buyEntry.OwnerID, buyEntry.Amount, buyEntry.Price))
+			order.Amount -= buyEntry.Amount
+			order.SetStatus(model.OrderStatus_PartiallyFilled)
+			buyEntry.SetStatus(model.OrderStatus_Filled)
+			book.removeBuyBookEntry(buyEntry.Price, pricePoint, index)
+			index--
+		}
+
+		if complete {
+			book.closeBidIterator(iterator)
+			return order
+		}
+
+		if ok := iterator.Previous(); ok {
+			book.HighestBid = iterator.Key()
+		} else {
+			book.HighestBid = 0
+			break
 		}
 	}
+	iterator.Close()
 
 	return order
 }
