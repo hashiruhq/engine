@@ -2,7 +2,7 @@ package net
 
 import (
 	"context"
-	"time"
+	// "time"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/snappy"
