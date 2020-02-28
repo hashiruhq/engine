@@ -26,7 +26,7 @@ require (
 	github.com/rs/zerolog v1.15.0
 	github.com/russross/blackfriday v2.0.0+incompatible // indirect
 	github.com/securego/gosec v0.0.0-20200106085552-9cb83e10afad // indirect
-	github.com/segmentio/kafka-go v0.2.4
+	github.com/segmentio/kafka-go v0.3.5
 	github.com/shurcooL/go v0.0.0-20190121191506-3fef8c783dec // indirect
 	github.com/shurcooL/gofontwoff v0.0.0-20181114050219-180f79e6909d // indirect
 	github.com/shurcooL/highlight_diff v0.0.0-20181222201841-111da2e7d480 // indirect

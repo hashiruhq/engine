@@ -22,12 +22,12 @@ func NewKafkaConsumer(cfg KafkaReaderConfig, brokers []string, topic string, par
 		Brokers:        brokers,
 		Topic:          topic,
 		Partition:      partition,
-		MaxWait:        time.Duration(cfg.MaxWait) * time.Milisecond,
+		MaxWait:        time.Duration(cfg.MaxWait) * time.Millisecond,
 		QueueCapacity:  cfg.QueueCapacity,
 		MinBytes:       cfg.MinBytes,
 		MaxBytes:       cfg.MaxBytes,
-		ReadBackoffMin: time.Duration(cfg.ReadBackoffMin) * time.Milisecond,
-		ReadBackoffMax: time.Duration(cfg.ReadBackoffMax) * time.Milisecond,
+		ReadBackoffMin: time.Duration(cfg.ReadBackoffMin) * time.Millisecond,
+		ReadBackoffMax: time.Duration(cfg.ReadBackoffMax) * time.Millisecond,
 	})
 
 	return &kafkaConsumer{
