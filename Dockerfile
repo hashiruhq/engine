@@ -27,8 +27,11 @@ RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 COPY --from=build /usr/bin/matching_engine /root/
 COPY --from=build /build/matching-engine/.engine.yml /root/
 
+ENV LOG_LEVEL="info"
+ENV LOG_FORMAT="json"
+
 EXPOSE 6060
 RUN mkdir -p /root/backups
 WORKDIR /root/
 
-CMD ["./matching_engine", "--log-level=debug", "server"]
+CMD ["./matching_engine", "--log-level=${LOG_LEVEL}", "--log-format=${LOG_FORMAT}", "server"]
