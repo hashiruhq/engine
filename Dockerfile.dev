@@ -5,6 +5,9 @@ WORKDIR /build/matching-engine/
 # Force the go compiler to use modules
 ENV GO111MODULE=on
 
+ENV LOG_LEVEL="debug"
+ENV LOG_FORMAT="pretty"
+
 # We want to populate the module cache based on the go.{mod,sum} files.
 COPY go.mod .
 # COPY go.sum .
@@ -18,7 +21,7 @@ RUN go mod download
 
 # Add code refresh package
 RUN go get github.com/cespare/reflex
-RUN echo "-r '(\.go$|go\.mod)' -s -- sh -c 'go run . --log-level=debug --log-format=pretty server'" >> /reflex.conf
+RUN echo "-r '(\.go$|go\.mod)' -s -- sh -c 'go run . --log-level=${LOG_LEVEL} --log-format=${LOG_FORMAT} server'" >> /reflex.conf
 ENTRYPOINT ["reflex", "--decoration=none", "-c", "/reflex.conf"]
  
 COPY . .
