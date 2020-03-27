@@ -1,4 +1,4 @@
-FROM golang:1.12.7 as build
+FROM golang:1.13 as build
 RUN mkdir -p /build/matching-engine
 WORKDIR /build/matching-engine/
 

@@ -17,21 +17,24 @@ type kafkaConsumer struct {
 }
 
 // NewKafkaConsumer return a new Kafka consumer
-func NewKafkaConsumer(brokers []string, topic string, partition int) KafkaConsumer {
+func NewKafkaConsumer(cfg KafkaReaderConfig, brokers []string, topic string, partition int) KafkaConsumer {
 	consumer := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:       brokers,
-		Topic:         topic,
-		Partition:     partition,
-		QueueCapacity: 10000,
-		MinBytes:      10,               // 10B
-		MaxBytes:      10 * 1024 * 1024, // 10MB
+		Brokers:        brokers,
+		Topic:          topic,
+		Partition:      partition,
+		MaxWait:        time.Duration(cfg.MaxWait) * time.Millisecond,
+		QueueCapacity:  cfg.QueueCapacity,
+		MinBytes:       cfg.MinBytes,
+		MaxBytes:       cfg.MaxBytes,
+		ReadBackoffMin: time.Duration(cfg.ReadBackoffMin) * time.Millisecond,
+		ReadBackoffMax: time.Duration(cfg.ReadBackoffMax) * time.Millisecond,
 	})
 
 	return &kafkaConsumer{
 		brokers:  brokers,
 		topic:    topic,
 		consumer: consumer,
-		inputs:   make(chan kafka.Message, 20000),
+		inputs:   make(chan kafka.Message, cfg.ChannelSize),
 	}
 }
 

@@ -2,7 +2,7 @@ package net
 
 import (
 	"context"
-	// "time"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/snappy"
@@ -15,14 +15,14 @@ type kafkaProducer struct {
 }
 
 // NewKafkaProducer returns a new producer
-func NewKafkaProducer(brokers []string, topic string) KafkaProducer {
+func NewKafkaProducer(cfg KafkaWriterConfig, brokers []string, topic string) KafkaProducer {
 	producer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:          brokers,
 		Topic:            topic,
-		QueueCapacity:    60000,
-		BatchSize:        40000,
-		// BatchTimeout:     time.Duration(100) * time.Millisecond,
-		Async:            false,
+		QueueCapacity:    cfg.QueueCapacity,
+		BatchSize:        cfg.BatchSize,
+		BatchTimeout:     time.Duration(cfg.BatchTimeout) * time.Millisecond,
+		Async:            cfg.Async,
 		CompressionCodec: snappy.NewCompressionCodec(),
 	})
 	return &kafkaProducer{

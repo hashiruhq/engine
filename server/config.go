@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"gitlab.com/around25/products/matching-engine/net"
 )
 
 // ConsumerConfig structure
@@ -67,6 +68,7 @@ type Config struct {
 	Markets map[string]MarketConfig
 	Brokers BrokersConfig
 	Server  ServerConfig
+	Kafka   net.KafkaConfig
 }
 
 // LoadConfig Load server configuration from the yaml file
