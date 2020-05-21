@@ -20,8 +20,9 @@ func BenchmarkKafkaConsumer(benchmark *testing.B) {
 	eventsCompleted := 0
 
 	ngin := engine.NewTradingEngine(KAFKA_CONSUMER_MARKET, 8, 8)
+	readerConfig := net.KafkaReaderConfig{}
 
-	consumer := net.NewKafkaConsumer([]string{KAFKA_BROKER}, KAFKA_CONSUMER_TOPIC, 0)
+	consumer := net.NewKafkaConsumer(readerConfig, []string{KAFKA_BROKER}, KAFKA_CONSUMER_TOPIC, 0)
 	consumer.SetOffset(-2) // oldest offset available
 	consumer.Start(context.Background())
 	defer consumer.Close()
