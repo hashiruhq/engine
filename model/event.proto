@@ -7,7 +7,7 @@ import "trade.proto";
 enum EventType {
   // Invalid status for any non set field
   Unspecified = 0;
-  // An order has changed status, either by being acknowledged by the engine on creation, 
+  // An order has changed status, either by being acknowledged by the engine on creation,
   // being cancelled by a command or by matching with another order.
   OrderStatusChange = 1;
   // A new trade was generated beetween two orders

@@ -1,10 +1,10 @@
 package engine
 
 import (
-	"testing"
+	. "github.com/smartystreets/goconvey/convey"
 	"gitlab.com/around25/products/matching-engine/model"
 	"gitlab.com/around25/products/matching-engine/utils"
-	. "github.com/smartystreets/goconvey/convey"
+	"testing"
 )
 
 func TestBuyMarketOrderIssue(t *testing.T) {
@@ -29,16 +29,16 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			events = events[0:0]
 			order1 := model.NewOrder(90664015, uint64(12255), uint64(11045), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
 			orderBook.Process(order1, &events)
-			
+
 			order2 := model.NewOrder(90664015, uint64(12259), uint64(10605), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
 			events = events[0:0]
 			orderBook.Process(order2, &events)
-			
+
 			events = events[0:0]
 			lockedFunds := uint64(19900000)
 			marketOrder := model.Order{ID: 90664126, Amount: 16704, Funds: lockedFunds, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}
 			orderBook.Process(marketOrder, &events)
-			
+
 			So(len(events), ShouldEqual, 4)
 			So(events[0].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Untouched)
 			trade1 := events[1].GetTrade()
@@ -61,7 +61,7 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			events = events[0:0]
 			order1 := model.NewOrder(92454370, uint64(19034), uint64(16434), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
 			orderBook.Process(order1, &events)
-			
+
 			order2 := model.NewOrder(92454372, uint64(19035), uint64(21610), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
 			events = events[0:0]
 			orderBook.Process(order2, &events)
@@ -165,7 +165,6 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			So(events[1].GetTrade().Price, ShouldEqual, 110000000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 12000000000)
 		})
-
 
 		Convey("I should be able to add a market buy order in an empty market", func() {
 			orderBook := NewOrderBook("btcusd", 8, 8)

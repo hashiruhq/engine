@@ -16,7 +16,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "trading_engine",
 	Short: "Trading engine (name WIP) is a finantial market engine",
-	Long: `A fast and flexible trading engine for the finantial market 
+	Long: `A fast and flexible trading engine for the finantial market
 created by Around25 to support high frequency trading on crypto markets.
 For a complete documentation and available licenses please contact https://around25.com`,
 }

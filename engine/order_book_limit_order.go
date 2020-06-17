@@ -21,15 +21,15 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 						book.LastEventSeqID++
 						book.LastTradeSeqID++
 						*events = append(*events, model.NewTradeEvent(
-							book.LastEventSeqID, 
-							book.MarketID, 
-							book.LastTradeSeqID, 
-							model.MarketSide_Buy, 
-							sellEntry.ID, 
-							order.ID, 
-							sellEntry.OwnerID, 
-							order.OwnerID, 
-							order.Amount, 
+							book.LastEventSeqID,
+							book.MarketID,
+							book.LastTradeSeqID,
+							model.MarketSide_Buy,
+							sellEntry.ID,
+							order.ID,
+							sellEntry.OwnerID,
+							order.OwnerID,
+							order.Amount,
 							sellEntry.Price,
 						))
 						sellEntry.Amount -= order.Amount
@@ -52,15 +52,15 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 					book.LastEventSeqID++
 					book.LastTradeSeqID++
 					*events = append(*events, model.NewTradeEvent(
-						book.LastEventSeqID, 
-						book.MarketID, 
-						book.LastTradeSeqID, 
-						model.MarketSide_Buy, 
-						sellEntry.ID, 
-						order.ID, 
-						sellEntry.OwnerID, 
-						order.OwnerID, 
-						sellEntry.Amount, 
+						book.LastEventSeqID,
+						book.MarketID,
+						book.LastTradeSeqID,
+						model.MarketSide_Buy,
+						sellEntry.ID,
+						order.ID,
+						sellEntry.OwnerID,
+						order.OwnerID,
+						sellEntry.Amount,
 						sellEntry.Price,
 					))
 					order.Amount -= sellEntry.Amount
@@ -82,7 +82,7 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 					break
 				}
 			}
-			
+
 			iterator.Close()
 		}
 	}

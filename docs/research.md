@@ -1,4 +1,4 @@
-# Research 
+# Research
 
 ## Table of contents
 
@@ -7,7 +7,7 @@
 ### Common terms in Finantial markets
 
 **Slippage**
-Slippage refers to the difference between the price you expect and the price at which the trade is actually filled. In fast-moving markets, slippage can be substantial and make the difference between a winning and losing trade. 
+Slippage refers to the difference between the price you expect and the price at which the trade is actually filled. In fast-moving markets, slippage can be substantial and make the difference between a winning and losing trade.
 
 **Long Trade: Profit from a rising market**
 Long trades are the classic method of buying with the intention of profiting from a rising market. All brokers support long trades and you won’t need a margin account – assuming you have the funds to cover the trade. Even though losses could be substantial, they are considered limited because price can only go as low as $0 if the trade moves in the wrong direction.
@@ -55,4 +55,3 @@ According to the software engineering institute an architectural tactic is a mea
 - Two stage authentication for user interfaces connecting to the ATs
 - Encryption on user interfaces and connections to the ATs
 - Observer design pattern for the MVC to manage views
-

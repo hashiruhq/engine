@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 mkdir -p /root/matching_engine/
 cd /root/matching_engine/
@@ -25,7 +25,7 @@ cd /root/matching_engine/
 # go get -v -d ./...
 # go build ./...
 # go install ./...
-# 
+#
 # go test -benchmem -timeout 20s -run=^$ matching_engine/matching_engine -bench ^BenchmarkWithRandomData$
 
 

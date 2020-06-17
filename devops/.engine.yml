@@ -1,5 +1,5 @@
-server: 
-  monitoring: 
+server:
+  monitoring:
     enabled: true
     host: 0.0.0.0
     port: 6060
@@ -15,10 +15,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/btcusd.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.btcusd
-    publish: 
+    publish:
       broker: events
       topic: engine.events.btcusd
     stats:
@@ -34,10 +34,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/ethusd.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.ethusd
-    publish: 
+    publish:
       broker: events
       topic: engine.events.ethusd
     stats:
@@ -46,23 +46,23 @@ markets:
 
 brokers:
   consumers:
-    requests: 
+    requests:
       name: matching_engine_test
-      hosts: 
+      hosts:
         - kafka:9092
       topics:
         - engine.orders.btcusd
         - engine.orders.ethusd
   producers:
-    events: 
-      hosts: 
+    events:
+      hosts:
         - kafka:9092
-      topics: 
+      topics:
         - engine.events.btcusd
         - engine.events.ethusd
-    stats: 
-      hosts: 
+    stats:
+      hosts:
         - kafka:9092
-      topics: 
+      topics:
         - engine.stats.btcusd
         - engine.stats.ethusd

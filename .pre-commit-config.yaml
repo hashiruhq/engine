@@ -1,0 +1,46 @@
+#
+# Pre commit configuration script
+#
+# Usage
+# -----
+# 1. install pre-commit
+# > brew install pre-commit
+# 2. create a .pre-commit-config.yml with all the validation you want
+# 3. install hooks in git hooks
+# > pre-commit install
+#
+# 4. install hook dependencies
+# > go get github.com/fzipp/gocyclo
+# > go get -u golang.org/x/lint/golint
+# > brew install golangci/tap/golangci-lint
+#
+# 5. see pre-commit warnings
+# > pre-commit run --all-files
+#
+# 6. fix issues before any commit
+#
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: check-yaml
+    - id: check-added-large-files
+    - id: check-merge-conflict
+    - id: detect-private-key
+    - id: mixed-line-ending
+  - repo: git://github.com/dnephin/pre-commit-golang
+    rev: master
+    hooks:
+      - id: no-go-testing
+      - id: go-fmt
+      # For more info go to: https://github.com/golangci/golangci-lint
+      # - id: golangci-lint
+      #   args: ["-E", "gofmt", "-E", "gocyclo", "-E", "gocritic", "-E", "bodyclose"]
+      - id: go-unit-tests
+      - id: go-build
+  - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
+    rev: v0.1.0
+    hooks:
+    - id: dockerfilelint

@@ -3,6 +3,7 @@ package engine
 import (
 	"gitlab.com/around25/products/matching-engine/model"
 )
+
 // import "github.com/ryszard/goskiplist/skiplist"
 
 // PricePoint holds the records for a particular price

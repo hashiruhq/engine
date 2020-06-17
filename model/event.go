@@ -65,7 +65,7 @@ func NewTradeEvent(seqID uint64, market string, tradeSeqID uint64, takerSide Mar
 				BidOwnerID: bidOwnerID,
 				Amount:     amount,
 				Price:      price,
-				SeqID:		  tradeSeqID,
+				SeqID:      tradeSeqID,
 			},
 		},
 		CreatedAt: time.Now().UTC().UnixNano(),

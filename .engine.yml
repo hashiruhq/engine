@@ -1,6 +1,6 @@
 server:
   debug: true
-  monitoring: 
+  monitoring:
     enabled: true
     host: 0.0.0.0
     port: 6060
@@ -33,10 +33,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/ltcbtc.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.ltcbtc
-    publish: 
+    publish:
       broker: events
       topic: engine.events.ltcbtc
   ethbtc:
@@ -49,10 +49,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/ethbtc.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.ethbtc
-    publish: 
+    publish:
       broker: events
       topic: engine.events.ethbtc
   xrpbtc:
@@ -65,10 +65,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/xrpbtc.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.xrpbtc
-    publish: 
+    publish:
       broker: events
       topic: engine.events.xrpbtc
   bchbtc:
@@ -81,10 +81,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/bchbtc.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.bchbtc
-    publish: 
+    publish:
       broker: events
       topic: engine.events.bchbtc
   prdxbtc:
@@ -97,10 +97,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/prdxbtc.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.prdxbtc
-    publish: 
+    publish:
       broker: events
       topic: engine.events.prdxbtc
   ltceth:
@@ -113,10 +113,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/ltceth.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.ltceth
-    publish: 
+    publish:
       broker: events
       topic: engine.events.ltceth
   xrpeth:
@@ -129,10 +129,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/xrpeth.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.xrpeth
-    publish: 
+    publish:
       broker: events
       topic: engine.events.xrpeth
   eoseth:
@@ -145,10 +145,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/eoseth.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.eoseth
-    publish: 
+    publish:
       broker: events
       topic: engine.events.eoseth
   prdxeth:
@@ -161,10 +161,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/prdxeth.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.prdxeth
-    publish: 
+    publish:
       broker: events
       topic: engine.events.prdxeth
   btcusdt:
@@ -177,10 +177,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/btcusdt.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.btcusdt
-    publish: 
+    publish:
       broker: events
       topic: engine.events.btcusdt
   ethusdt:
@@ -193,10 +193,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/ethusdt.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.ethusdt
-    publish: 
+    publish:
       broker: events
       topic: engine.events.ethusdt
   ltcusdt:
@@ -209,10 +209,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/ltcusdt.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.ltcusdt
-    publish: 
+    publish:
       broker: events
       topic: engine.events.ltcusdt
   bchusdt:
@@ -225,10 +225,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/bchusdt.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.bchusdt
-    publish: 
+    publish:
       broker: events
       topic: engine.events.bchusdt
   prdxusdt:
@@ -241,10 +241,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/prdxusdt.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.prdxusdt
-    publish: 
+    publish:
       broker: events
       topic: engine.events.prdxusdt
   ltcprdx:
@@ -257,10 +257,10 @@ markets:
     backup:
       interval: 1
       path: /root/backups/ltcprdx.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.ltcprdx
-    publish: 
+    publish:
       broker: events
       topic: engine.events.ltcprdx
   xrpprdx:
@@ -273,19 +273,19 @@ markets:
     backup:
       interval: 1
       path: /root/backups/xrpprdx.dat
-    listen: 
+    listen:
       broker: requests
       topic: engine.orders.xrpprdx
-    publish: 
+    publish:
       broker: events
       topic: engine.events.xrpprdx
 
 brokers:
   consumers:
-    requests: 
-      hosts: 
+    requests:
+      hosts:
         - kafka:9092
   producers:
-    events: 
-      hosts: 
+    events:
+      hosts:
         - kafka:9092

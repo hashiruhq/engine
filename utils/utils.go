@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"math"
-	"github.com/rs/zerolog/log"
 	"github.com/ericlagergren/decimal"
+	"github.com/rs/zerolog/log"
+	"math"
 )
 
 // DecimalToZeroCtx godoc
@@ -27,7 +27,6 @@ var DecimalAwayFromZeroCtx = decimal.Context{
 	MaxScale:      6144,
 	MinScale:      -6143,
 }
-
 
 // Divide two uint64 numbers with a 10^prec precision and return the result in the same format
 func Divide(x, y uint64, xprec, yprec, prec int) uint64 {
