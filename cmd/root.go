@@ -24,6 +24,7 @@ For a complete documentation and available licenses please contact https://aroun
 func init() {
 	// set log level
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	initLoggingEnv()
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./.engine.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&LogLevel, "log-level", "", "info", "logging level to show (options: debug|info|warn|error|fatal|panic, default: info)")
@@ -32,6 +33,19 @@ func init() {
 	viper.AddConfigPath(".")                    // First try to load the config from the current directory
 	viper.AddConfigPath("$HOME")                // Then try to load it from the HOME directory
 	viper.AddConfigPath("/etc/trading_engine/") // As a last resort try to load it from the /etc/trading_engine
+}
+
+func initLoggingEnv() {
+	// load log level from env by default
+	logLevel := os.Getenv("LOG_LEVEL")
+	if logLevel != "" {
+		LogLevel = logLevel
+	}
+	// load log format from env by default
+	logFormat := os.Getenv("LOG_FORMAT")
+	if logFormat != "" {
+		LogFormat = logFormat
+	}
 }
 
 func initConfig() {

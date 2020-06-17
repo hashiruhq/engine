@@ -6,6 +6,7 @@ server:
     port: 6060
 
 kafka:
+  use_tls: false
   reader:
     queue_capacity: 1000
     max_wait: 1000

@@ -34,4 +34,4 @@ EXPOSE 6060
 RUN mkdir -p /root/backups
 WORKDIR /root/
 
-CMD ["./matching_engine", "--log-level=${LOG_LEVEL}", "--log-format=${LOG_FORMAT}", "server"]
+CMD ["./matching_engine", "server"]

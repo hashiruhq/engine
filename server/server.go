@@ -83,8 +83,8 @@ func NewServer(config Config) Server {
 	for key, marketCfg := range config.Markets {
 		marketEngineConfig := MarketEngineConfig{
 			config:   marketCfg,
-			producer: NewProducer(config.Kafka.Writer, config.Brokers.Producers[marketCfg.Publish.Broker], marketCfg.Publish.Topic),
-			consumer: NewConsumer(config.Kafka.Reader, config.Brokers.Consumers[marketCfg.Listen.Broker], marketCfg.Listen.Topic),
+			producer: NewProducer(config.Kafka.Writer, config.Brokers.Producers[marketCfg.Publish.Broker], config.Kafka.UseTLS, marketCfg.Publish.Topic),
+			consumer: NewConsumer(config.Kafka.Reader, config.Brokers.Consumers[marketCfg.Listen.Broker], config.Kafka.UseTLS, marketCfg.Listen.Topic),
 		}
 		markets[key] = NewMarketEngine(marketEngineConfig)
 	}
@@ -118,6 +118,7 @@ func (srv *server) closeMarkets() {
 
 func (srv *server) stopOnSignal() {
 	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, os.Interrupt, syscall.SIGINT)
 	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
 	sig := <-sigc
 	log.Info().Str("section", "server").Str("action", "terminate").Str("signal", sig.String()).Msg("Received termination signal. Closing services")
@@ -174,11 +175,11 @@ func loopProfillingServer(config MonitoringConfig) {
 }
 
 // NewConsumer starts a new consumer based on the config
-func NewConsumer(rCfg net.KafkaReaderConfig, config ConsumerConfig, topic string) net.KafkaConsumer {
-	return net.NewKafkaConsumer(rCfg, config.Hosts, topic, 0)
+func NewConsumer(rCfg net.KafkaReaderConfig, config ConsumerConfig, useTLS bool, topic string) net.KafkaConsumer {
+	return net.NewKafkaConsumer(rCfg, config.Hosts, useTLS, topic, 0)
 }
 
 // NewProducer starts a new producer based on the config
-func NewProducer(wCfg net.KafkaWriterConfig, config ProducerConfig, topic string) net.KafkaProducer {
-	return net.NewKafkaProducer(wCfg, config.Hosts, topic)
+func NewProducer(wCfg net.KafkaWriterConfig, config ProducerConfig, useTLS bool, topic string) net.KafkaProducer {
+	return net.NewKafkaProducer(wCfg, config.Hosts, useTLS, topic)
 }

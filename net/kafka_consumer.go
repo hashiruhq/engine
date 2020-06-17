@@ -2,6 +2,7 @@ package net
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"time"
 
@@ -17,8 +18,20 @@ type kafkaConsumer struct {
 }
 
 // NewKafkaConsumer return a new Kafka consumer
-func NewKafkaConsumer(cfg KafkaReaderConfig, brokers []string, topic string, partition int) KafkaConsumer {
+func NewKafkaConsumer(cfg KafkaReaderConfig, brokers []string, useTLS bool, topic string, partition int) KafkaConsumer {
+	var dialer *kafka.Dialer
+	if useTLS {
+		tlsCfg := &tls.Config{
+			//InsecureSkipVerify: true,
+		}
+		dialer = &kafka.Dialer{
+			Timeout:   10 * time.Second,
+			DualStack: true,
+			TLS:       tlsCfg,
+		}
+	}
 	consumer := kafka.NewReader(kafka.ReaderConfig{
+		Dialer:         dialer,
 		Brokers:        brokers,
 		Topic:          topic,
 		Partition:      partition,
