@@ -50,7 +50,7 @@ func test_gen_orders(timeout, delay, topicCount int) {
 
 	producers := make([]net.KafkaProducer, 0, len(cfg.Brokers.Consumers))
 	for _, consumer := range cfg.Brokers.Consumers {
-		producer := net.NewKafkaProducer(cfg.Kafka.Writer, consumer.Hosts, "testing-producer")
+		producer := net.NewKafkaProducer(cfg.Kafka.Writer, consumer.Hosts, false, "testing-producer")
 		producer.Start()
 		go func(producer net.KafkaProducer, topics []string) {
 			maxTopics := len(topics)

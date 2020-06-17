@@ -20,7 +20,7 @@ var msgs [][]byte = make([][]byte, 0, 2000000)
 var ngin = engine.NewTradingEngine("btcusd", 8, 8)
 
 func init() {
-	GenerateRandomRecordsInFile(BENCHMARK_TEST_FILE, KAFKA_CONSUMER_MARKET, 2000000)
+	// GenerateRandomRecordsInFile(BENCHMARK_TEST_FILE, KAFKA_CONSUMER_MARKET, 2000000)
 	file, err := filepath.Abs(BENCHMARK_TEST_FILE)
 	if err != nil {
 		panic(err.Error())

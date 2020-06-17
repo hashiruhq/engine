@@ -67,7 +67,7 @@ func (mkt *marketEngine) GetMessageChan() <-chan kafka.Message {
 // Start the engine for this market
 func (mkt *marketEngine) Start(ctx context.Context) {
 	// load last market snapshot from the backup files and update offset for the trading engine consumer
-	mkt.LoadMarketFromBackup() 
+	mkt.LoadMarketFromBackup()
 	if err := mkt.producer.Start(); err != nil {
 		log.Fatal().Err(err).Str("section", "init:market").Str("action", "start_producer").Str("market", mkt.name).Msg("Unable to start producer")
 	}

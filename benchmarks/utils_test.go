@@ -37,7 +37,7 @@ func GenerateOrdersInKafka(broker, topic string, n int) {
 	}
 
 	writeConfig := net.KafkaWriterConfig{}
-	producer := net.NewKafkaProducer(writeConfig, []string{broker}, topic)
+	producer := net.NewKafkaProducer(writeConfig, []string{broker}, false, topic)
 	err := producer.Start()
 
 	if err != nil {

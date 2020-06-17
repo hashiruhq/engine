@@ -22,7 +22,7 @@ RUN CGO_ENABLED=0 go build -a -installsuffix cgo --ldflags "-s -w" -o /usr/bin/m
 
 FROM alpine:3.9
 
-RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+RUN apk --no-cache add ca-certificates
 
 COPY --from=build /usr/bin/matching_engine /root/
 COPY --from=build /build/matching-engine/.engine.yml /root/
