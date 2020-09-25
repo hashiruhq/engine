@@ -3,9 +3,8 @@ package engine
 import (
 	"testing"
 
-	"gitlab.com/around25/products/matching-engine/model"
-
 	. "github.com/smartystreets/goconvey/convey"
+	"gitlab.com/around25/products/matching-engine/model"
 )
 
 /**
