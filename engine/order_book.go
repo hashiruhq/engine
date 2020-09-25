@@ -10,7 +10,7 @@ type OrderBook interface {
 	Process(model.Order, *[]model.Event)
 	Cancel(model.Order, *[]model.Event)
 	GetLastTradePriceFromEvents(*[]model.Event) uint64
-	ActivateStopOrders(price uint64, events *[]model.Event) *[]model.Order
+	ActivateStopOrders(events *[]model.Event) *[]model.Order
 	GetHighestBid() uint64
 	GetLowestAsk() uint64
 	GetLastEventSeqID() uint64
@@ -137,8 +137,7 @@ func (book *orderBook) Process(order model.Order, events *[]model.Event) {
 		book.processOrder(order, events)
 		// process activated stop orders
 		if events != nil && len(*events) > 0 {
-			lastPrice := book.GetLastTradePriceFromEvents(events)
-			stopOrders := book.ActivateStopOrders(lastPrice, events)
+			stopOrders := book.ActivateStopOrders(events)
 			if stopOrders != nil && len(*stopOrders) > 0 {
 				for _, stopOrder := range *stopOrders {
 					stopOrder.Stop = model.StopLoss_None

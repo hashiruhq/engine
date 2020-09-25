@@ -8,6 +8,43 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+/**
+Prod Stop orders testing
+
+Stop=Loss
+1. Create sell stop limit order: Stop=95, Limit=90
+2. Create buy limit orders from other account: Limit = 96, Amount=0.2 | Limit=94, Amount=0.2
+3. Create sell market order from third account: Amount=0.4 (last price is 94)
+--
+Expected result: Stop order triggered and executed
+Actual result: Stop order is not triggered
+
+Stop=Loss
+1. Create sell stop limit order: Stop=95, Limit=90
+2. Create buy limit orders from other account: Limit = 96, Amount=0.2 | Limit=94, Amount=0.2
+3. Create sell market order from third account: Amount=0.2 (last price is 96)
+--
+Expected result: Stop order is not triggered
+Actual result: Stop order is not triggered
+
+Stop=Entry
+1. Create sell stop limit order: Stop=95, Limit=90
+2. Create buy limit orders from other account: Limit = 96, Amount=0.2 | Limit=94, Amount=0.2
+3. Create sell market order from third account: Amount=0.4 (last price is 94)
+--
+Expected result: Stop order triggered and executed
+Actual result: Stop order is not triggered
+
+Stop=Entry
+1. Create sell stop limit order: Stop=95, Limit=90
+2. Create buy limit orders from other account: Limit = 96, Amount=0.2 | Limit=94, Amount=0.2
+3. Create sell market order from third account: Amount=0.2 (last price is 96)
+--
+Expected result: Stop order is not triggered and executed
+Actual result: Stop order triggered and executed
+
+*/
+
 func TestOrderBookProcessing(t *testing.T) {
 	book := NewOrderBook("btcusd", 8, 8)
 	events := make([]model.Event, 0, 5)
