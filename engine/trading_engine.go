@@ -12,6 +12,7 @@ type TradingEngine interface {
 	LoadMarket(model.MarketBackup) error
 	CancelOrder(order model.Order, events *[]model.Event)
 	ProcessEvent(order model.Order, events *[]model.Event) interface{}
+	AppendInvalidOrder(order model.Order, events *[]model.Event)
 }
 
 type tradingEngine struct {
@@ -42,6 +43,10 @@ func (ngin *tradingEngine) LoadMarket(market model.MarketBackup) error {
 
 func (ngin *tradingEngine) BackupMarket() model.MarketBackup {
 	return ngin.GetOrderBook().Backup()
+}
+
+func (ngin *tradingEngine) AppendInvalidOrder(order model.Order, events *[]model.Event) {
+	ngin.OrderBook.AppendErrorEvent(events, model.ErrorCode_InvalidOrder, order)
 }
 
 func (ngin *tradingEngine) ProcessEvent(order model.Order, events *[]model.Event) interface{} {

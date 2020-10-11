@@ -126,7 +126,7 @@ message Order {
 
   // User Order ID: An id defined by the user to identity the order
   // UserOrderId string
-  
+
   // FUTURE PROPERTY
 	//
 	// TimeInForce string // time in force. GTC, GTT, IOC, or FOK (default is GTC)

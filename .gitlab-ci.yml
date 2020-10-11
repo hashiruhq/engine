@@ -1,21 +1,43 @@
 stages:
-   - build
-  # - test
+  - check_prebuild
+  - build
+
+# Job to test that all pre-commit checks pass
+check_prebuild:
+  stage: check_prebuild
+  tags:
+    - docker
+    - around25
+  variables:
+  image: around25/docker-precommit-base:latest
+  script:
+    # install precommit check
+    - pre-commit install
+    # optionally install dependencies
+    - go get github.com/fzipp/gocyclo
+    - go get -u golang.org/x/lint/golint
+    - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.22.2
+    # run the check
+    - pre-commit run --all-files
 
 build:
   tags:
     - docker
     - around25
   stage: build
+  dependencies:
+    - check_prebuild
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
     IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_PIPELINE_IID
+    APP_VERSION: $CI_COMMIT_REF_NAME-$CI_PIPELINE_IID
+    GIT_COMMIT: $CI_COMMIT_SHORT_SHA
   services:
     - docker:18.09.7-dind
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-    - docker build -t $IMAGE_TAG .
+    - docker build --build-arg GIT_COMMIT=$GIT_COMMIT --build-arg APP_VERSION=$APP_VERSION -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
   only:
     - develop
@@ -26,15 +48,19 @@ release:
     - docker
     - around25
   stage: build
+  dependencies:
+    - check_prebuild
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
     IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+    APP_VERSION: $CI_COMMIT_REF_NAME-$CI_PIPELINE_IID
+    GIT_COMMIT: $CI_COMMIT_SHORT_SHA
   services:
     - docker:18.09.7-dind
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-    - docker build -t $IMAGE_TAG .
+    - docker build --build-arg GIT_COMMIT=$GIT_COMMIT --build-arg APP_VERSION=$APP_VERSION -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
   only:
     - tags

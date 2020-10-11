@@ -47,6 +47,7 @@ func TestDivide(t *testing.T) {
 			So(utils.Divide(0, 3, 8, 8, 8), ShouldEqual, 0)
 			So(utils.Divide(1, 3, 8, 8, 8), ShouldEqual, 33333333)
 			So(utils.Divide(15, 5, 8, 8, 8), ShouldEqual, 300000000)
+			So(utils.Divide(500000, 100000, 2, 2, 8), ShouldEqual, 500000000)
 			So(utils.Divide(1278543132023424178, 999636900000000, 8, 8, 8), ShouldEqual, 127900753966)
 		})
 	})

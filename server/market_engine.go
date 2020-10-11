@@ -67,7 +67,7 @@ func (mkt *marketEngine) GetMessageChan() <-chan kafka.Message {
 // Start the engine for this market
 func (mkt *marketEngine) Start(ctx context.Context) {
 	// load last market snapshot from the backup files and update offset for the trading engine consumer
-	mkt.LoadMarketFromBackup() 
+	mkt.LoadMarketFromBackup()
 	if err := mkt.producer.Start(); err != nil {
 		log.Fatal().Err(err).Str("section", "init:market").Str("action", "start_producer").Str("market", mkt.name).Msg("Unable to start producer")
 	}
@@ -175,10 +175,17 @@ func (mkt *marketEngine) ProcessOrder() {
 						Uint64("price", order.Price),
 					).
 					Msg("Invalid order received, ignoring")
+				// send invalid notification
+				events := make([]model.Event, 0, 1)
+				mkt.engine.AppendInvalidOrder(order, &events)
+				event.SetEvents(events)
 
 				// Monitor: Update order count for monitoring with prometheus
 				engineOrderCount.WithLabelValues(mkt.name).Inc()
 				ordersQueued.WithLabelValues(mkt.name).Dec()
+				eventsQueued.WithLabelValues(mkt.name).Add(float64(len(event.Events)))
+				// send generated events for storage
+				mkt.events <- event
 				lastTopic = event.Msg.Topic
 				lastPartition = int32(event.Msg.Partition)
 				lastOffset = event.Msg.Offset
@@ -253,6 +260,19 @@ func (mkt *marketEngine) PublishEvents() {
 						Str("type", payload.Type.String()).
 						Str("side", payload.Side.String()).
 						Str("status", payload.Status.String()).
+						Uint64("price", payload.Price).
+						Uint64("funds", payload.Funds).
+						Uint64("amount", payload.Amount)
+				}
+			case model.EventType_Error:
+				{
+					payload := ev.GetError()
+					logEvent = logEvent.
+						Uint64("order_id", payload.OrderID).
+						Uint64("owner_id", payload.OwnerID).
+						Str("type", payload.Type.String()).
+						Str("side", payload.Side.String()).
+						Str("err_code", payload.Code.String()).
 						Uint64("price", payload.Price).
 						Uint64("funds", payload.Funds).
 						Uint64("amount", payload.Amount)

@@ -23,7 +23,7 @@ func (book *orderBook) Load(market model.MarketBackup) error {
 	for _, sellBookEntry := range market.SellOrders {
 		book.addSellBookEntry(*sellBookEntry)
 	}
-	
+
 	// load market orders
 	book.BuyMarketEntries = make([]model.Order, len(market.BuyMarketEntries))
 	for i, order := range market.BuyMarketEntries {

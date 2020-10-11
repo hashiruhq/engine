@@ -65,7 +65,29 @@ func NewTradeEvent(seqID uint64, market string, tradeSeqID uint64, takerSide Mar
 				BidOwnerID: bidOwnerID,
 				Amount:     amount,
 				Price:      price,
-				SeqID:		  tradeSeqID,
+				SeqID:      tradeSeqID,
+			},
+		},
+		CreatedAt: time.Now().UTC().UnixNano(),
+	}
+}
+
+// NewErrorEvent returns a new error event
+func NewErrorEvent(seqID uint64, market string, code ErrorCode, orderType OrderType, side MarketSide, id, ownerID, price, amount, funds uint64) Event {
+	return Event{
+		SeqID:  seqID,
+		Type:   EventType_Error,
+		Market: market,
+		Payload: &Event_Error{
+			Error: &ErrorMsg{
+				Code:    code,
+				OrderID: id,
+				Type:    orderType,
+				Side:    side,
+				OwnerID: ownerID,
+				Amount:  amount,
+				Funds:   funds,
+				Price:   price,
 			},
 		},
 		CreatedAt: time.Now().UTC().UnixNano(),

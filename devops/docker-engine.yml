@@ -1,10 +1,10 @@
 version: '3.2'
 services:
   matching_engine:
-    build: 
+    build:
       context: ../
     restart: always
-    ports: 
+    ports:
       - 6060:6060
     image: matching_engine:local
     volumes:

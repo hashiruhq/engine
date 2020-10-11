@@ -68,12 +68,14 @@ removed from the pending list and since the limit order was filled it would not 
 // all market orders are completed
 func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event) model.Order {
 	if book.LowestAsk == 0 {
+		book.generateCancelOrderEvent(order, events) // cancel the market order
 		return order
 	}
 
 	iterator := book.SellEntries.Seek(book.LowestAsk)
 
 	if iterator == nil {
+		book.generateCancelOrderEvent(order, events) // cancel the market order
 		return order
 	}
 
@@ -85,18 +87,18 @@ func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event
 		amountAffordable := utils.Divide(order.Funds, iterator.Key(), book.PricePrecision, book.PricePrecision, book.VolumePrecision)
 		for index := 0; index < len(pricePoint.Entries); index++ {
 			sellEntry := &pricePoint.Entries[index]
-
 			amount := utils.Min(order.Amount, amountAffordable)
 
 			// if we can fill the amount instantly and we have the necessary funds then fill the order and return trade
 			// if we can fill the amount instantly, but we don't have the necessary funds then fill as much as we can afford and return the trade
 			if sellEntry.Amount >= amount {
-				// funds := utils.Multiply(amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+				funds := utils.Multiply(amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
 				book.LastEventSeqID++
 				book.LastTradeSeqID++
 				*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Buy, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, amount, sellEntry.Price))
 				sellEntry.Amount -= amount
 				order.Amount -= amount
+				order.Funds -= funds
 				order.SetStatus(model.OrderStatus_Filled)
 				if sellEntry.Amount == 0 {
 					sellEntry.SetStatus(model.OrderStatus_Filled)
@@ -111,7 +113,7 @@ func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event
 			// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 			// we complete the sell order and we move to the next order
 			// @todo CH: check for overflow issues
-			funds := utils.Multiply(amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+			funds := utils.Multiply(sellEntry.Amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
 			book.LastEventSeqID++
 			book.LastTradeSeqID++
 			*events = append(*events, model.NewTradeEvent(book.LastEventSeqID, book.MarketID, book.LastTradeSeqID, model.MarketSide_Buy, sellEntry.ID, order.ID, sellEntry.OwnerID, order.OwnerID, sellEntry.Amount, sellEntry.Price))
@@ -125,6 +127,7 @@ func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event
 
 		if complete {
 			book.closeAskIterator(iterator)
+			book.generateCancelOrderEvent(order, events) // cancel the market order
 			return order
 		}
 
@@ -137,6 +140,7 @@ func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event
 	}
 	iterator.Close()
 
+	book.generateCancelOrderEvent(order, events) // cancel the market order
 	return order
 }
 
@@ -149,11 +153,13 @@ func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event
 // all market orders are completed
 func (book *orderBook) processMarketSell(order model.Order, events *[]model.Event) model.Order {
 	if book.HighestBid == 0 {
+		book.generateCancelOrderEvent(order, events) // cancel the market order
 		return order
 	}
 
 	iterator := book.BuyEntries.Seek(book.HighestBid)
 	if iterator == nil {
+		book.generateCancelOrderEvent(order, events) // cancel the market order
 		return order
 	}
 
@@ -196,6 +202,7 @@ func (book *orderBook) processMarketSell(order model.Order, events *[]model.Even
 
 		if complete {
 			book.closeBidIterator(iterator)
+			book.generateCancelOrderEvent(order, events) // cancel the market order
 			return order
 		}
 
@@ -207,6 +214,6 @@ func (book *orderBook) processMarketSell(order model.Order, events *[]model.Even
 		}
 	}
 	iterator.Close()
-
+	book.generateCancelOrderEvent(order, events) // cancel the market order
 	return order
 }

@@ -101,6 +101,25 @@ func (book *orderBook) addStopOrder(order model.Order) {
  * 2. Activate pending stop orders
  */
 
+func (book *orderBook) GetFirstTradePriceFromEvents(events *[]model.Event) uint64 {
+	price := uint64(0)
+	if events == nil {
+		return price
+	}
+	eventCount := len(*events)
+	if eventCount == 0 {
+		return price
+	}
+	for i := 0; i <= eventCount-1; i++ {
+		if (*events)[i].Type == model.EventType_NewTrade {
+			trade := (*events)[i].GetTrade()
+			price = trade.Price
+			break
+		}
+	}
+	return price
+}
+
 func (book *orderBook) GetLastTradePriceFromEvents(events *[]model.Event) uint64 {
 	lastPrice := uint64(0)
 	if events == nil {
@@ -121,15 +140,25 @@ func (book *orderBook) GetLastTradePriceFromEvents(events *[]model.Event) uint64
 }
 
 // Activate stop orders that have the price
-func (book *orderBook) ActivateStopOrders(price uint64, events *[]model.Event) *[]model.Order {
+func (book *orderBook) ActivateStopOrders(events *[]model.Event) *[]model.Order {
 	orders := &[]model.Order{}
-	if price == 0 {
-		return orders
+	firstPrice := book.GetFirstTradePriceFromEvents(events)
+	lastPrice := book.GetLastTradePriceFromEvents(events)
+	min, max := firstPrice, lastPrice
+	if firstPrice > lastPrice {
+		min = lastPrice
+		max = firstPrice
 	}
 	// activate stop entry orders
-	book.activateStopEntryOrders(price, events, orders)
+	if max != 0 {
+		book.activateStopEntryOrders(max, events, orders)
+	}
+
 	// activate stop loss price
-	book.activateStopLossOrders(price, events, orders)
+	if min != 0 {
+		book.activateStopLossOrders(min, events, orders)
+	}
+
 	return orders
 }
 
@@ -173,7 +202,7 @@ func (book *orderBook) activateStopLossOrders(lastPrice uint64, events *[]model.
 		return
 	}
 
-	for lastPrice >= book.HighestLossPrice {
+	for lastPrice <= book.HighestLossPrice {
 		price := iterator.Key()
 		pricePoint := iterator.Value()
 		*orders = append(*orders, pricePoint.Entries...)

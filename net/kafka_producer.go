@@ -2,6 +2,7 @@ package net
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -15,8 +16,20 @@ type kafkaProducer struct {
 }
 
 // NewKafkaProducer returns a new producer
-func NewKafkaProducer(cfg KafkaWriterConfig, brokers []string, topic string) KafkaProducer {
+func NewKafkaProducer(cfg KafkaWriterConfig, brokers []string, useTLS bool, topic string) KafkaProducer {
+	var dialer *kafka.Dialer
+	if useTLS {
+		tlsCfg := &tls.Config{
+			//InsecureSkipVerify: true,
+		}
+		dialer = &kafka.Dialer{
+			Timeout:   10 * time.Second,
+			DualStack: true,
+			TLS:       tlsCfg,
+		}
+	}
 	producer := kafka.NewWriter(kafka.WriterConfig{
+		Dialer:           dialer,
 		Brokers:          brokers,
 		Topic:            topic,
 		QueueCapacity:    cfg.QueueCapacity,

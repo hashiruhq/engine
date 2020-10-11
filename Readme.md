@@ -22,7 +22,7 @@ There are three types of Stop orders:
 - __Loss__: which means that the order triggers when the last trade price changes to a value at or below the `StopPrice`
 - __Entry__: which means that the order triggers when the last trade price changes to a value at or above the `StopPrice`
 
-Stop orders will only be activated by the next trade. 
+Stop orders will only be activated by the next trade.
 When it's added no checks will be done based on the previous last trade price.
 
 The processing flow for stop orders is as follows:
