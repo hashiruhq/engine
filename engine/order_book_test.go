@@ -462,7 +462,7 @@ func TestOrderBookProcessing(t *testing.T) {
 			order := model.NewOrder(96, uint64(110000000), uint64(800000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder)
 			events = events[0:0]
 			orderBook.Cancel(order, &events)
-			So(len(events), ShouldEqual, 0)
+			So(len(events), ShouldEqual, 1)
 
 			state := orderBook.GetMarket()
 			So(state[0].Len(), ShouldBeZeroValue)
