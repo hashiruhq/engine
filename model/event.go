@@ -72,6 +72,28 @@ func NewTradeEvent(seqID uint64, market string, tradeSeqID uint64, takerSide Mar
 	}
 }
 
+// NewErrorEvent returns a new error event
+func NewErrorEvent(seqID uint64, market string, code ErrorCode, orderType OrderType, side MarketSide, id, ownerID, price, amount, funds uint64) Event {
+	return Event{
+		SeqID:  seqID,
+		Type:   EventType_Error,
+		Market: market,
+		Payload: &Event_Error{
+			Error: &ErrorMsg{
+				Code:    code,
+				OrderID: id,
+				Type:    orderType,
+				Side:    side,
+				OwnerID: ownerID,
+				Amount:  amount,
+				Funds:   funds,
+				Price:   price,
+			},
+		},
+		CreatedAt: time.Now().UTC().UnixNano(),
+	}
+}
+
 // FromBinary loads an event from a byte array
 func (event *Event) FromBinary(msg []byte) error {
 	return proto.Unmarshal(msg, event)
