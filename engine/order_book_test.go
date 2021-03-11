@@ -247,7 +247,6 @@ func TestOrderBookProcessing(t *testing.T) {
 			buy01 := model.Order{ID: 23, Price: uint64(113000), Amount: uint64(234), Funds: uint64(154000), Side: model.MarketSide_Buy, Type: model.OrderType_Limit, EventType: model.CommandType_NewOrder}
 			orderBook.Process(buy01, &events)
 			So(len(events), ShouldEqual, 7)
-			dumpEvents(events)
 			So(orderBook.GetLowestAsk(), ShouldEqual, 113000)
 			So(orderBook.GetHighestBid(), ShouldEqual, 66000)
 			So(orderBook.GetHighestLossPrice(), ShouldEqual, 0)
