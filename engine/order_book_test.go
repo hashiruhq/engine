@@ -66,19 +66,19 @@ func TestOrderBookProcessing(t *testing.T) {
 		//	1.0 120      -
 		Convey("Add a first buy order", func() {
 			book.Process(model.NewOrder(1, uint64(100000000), uint64(12000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 		})
 		// BUY          SELL
 		// 1.0 120      1.1 120
 		Convey("Add a first sell order", func() {
 			book.Process(model.NewOrder(2, uint64(110000000), uint64(12000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 		})
 		// BUY          SELL
 		// -            1.1 120
 		Convey("Add a matching sell order", func() {
 			book.Process(model.NewOrder(3, uint64(90000000), uint64(12000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 4)
 			So(events[1].GetTrade().Amount, ShouldEqual, 12000000000)
 			So(events[1].GetTrade().Price, ShouldEqual, 100000000)
 
@@ -91,7 +91,7 @@ func TestOrderBookProcessing(t *testing.T) {
 		// -            1.1 100
 		Convey("Add a sell order with the same price", func() {
 			book.Process(model.NewOrder(4, uint64(110000000), uint64(2000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 4)
 			So(events[1].GetTrade().Amount, ShouldEqual, 2000000000)
 			So(events[1].GetTrade().Price, ShouldEqual, 110000000)
 
@@ -102,7 +102,7 @@ func TestOrderBookProcessing(t *testing.T) {
 		// 1.11 20      -
 		Convey("Add a buy order with a larger amount than the available sell", func() {
 			book.Process(model.NewOrder(5, uint64(111000000), uint64(12000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 4)
 			So(events[1].GetTrade().Amount, ShouldEqual, 10000000000)
 			So(events[1].GetTrade().Price, ShouldEqual, 110000000)
 			So(book.GetHighestBid(), ShouldEqual, 111000000)
@@ -117,10 +117,10 @@ func TestOrderBookProcessing(t *testing.T) {
 		// 1.11 20
 		Convey("Add two another buy orders with a higher price", func() {
 			book.Process(model.NewOrder(6, uint64(120000000), uint64(12000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 			events = events[0:0]
 			book.Process(model.NewOrder(7, uint64(120000000), uint64(1000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 		})
 		// ORDER: SELL 1.30 10
 		// BUY          SELL
@@ -128,10 +128,10 @@ func TestOrderBookProcessing(t *testing.T) {
 		// 1.11 20
 		Convey("Add two sell orders at the same price without matching", func() {
 			book.Process(model.NewOrder(7, uint64(130000000), uint64(1000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 			events = events[0:0]
 			book.Process(model.NewOrder(8, uint64(130000000), uint64(1000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 		})
 		// ORDER: SELL 1.40 20
 		// BUY          SELL
@@ -139,14 +139,14 @@ func TestOrderBookProcessing(t *testing.T) {
 		// 1.11 20
 		Convey("Add a buy order that clears the sell side of the order book", func() {
 			book.Process(model.NewOrder(9, uint64(140000000), uint64(2000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 3)
+			So(len(events), ShouldEqual, 6)
 		})
 		// ORDER: SELL 1.00 140
 		// BUY          SELL
 		// -            -
 		Convey("Add a sell order that clears the buy side of the order book", func() {
 			book.Process(model.NewOrder(10, uint64(100000000), uint64(15000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 4)
+			So(len(events), ShouldEqual, 8)
 
 			state := book.GetMarket()
 			So(state[0].Len(), ShouldEqual, 0)
@@ -157,7 +157,7 @@ func TestOrderBookProcessing(t *testing.T) {
 			book.Process(model.NewOrder(12, uint64(130000000), uint64(1000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
 			events = events[0:0]
 			book.Process(model.NewOrder(13, uint64(140000000), uint64(1300000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 3)
+			So(len(events), ShouldEqual, 6)
 			So(book.GetLowestAsk(), ShouldEqual, uint64(130000000))
 		})
 
@@ -165,7 +165,7 @@ func TestOrderBookProcessing(t *testing.T) {
 			book.Process(model.NewOrder(14, uint64(140000000), uint64(1000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
 			events = events[0:0]
 			book.Process(model.NewOrder(15, uint64(110000000), uint64(800000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 4)
 			So(book.GetHighestBid(), ShouldEqual, 0)
 		})
 
@@ -196,7 +196,7 @@ func TestOrderBookProcessing(t *testing.T) {
 			orderBook.Process(model.NewOrder(21, uint64(110000000), uint64(12000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
 			events = events[0:0]
 			orderBook.Process(model.NewOrder(22, uint64(110000000), uint64(12000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 4)
 			So(events[1].GetTrade().Price, ShouldEqual, 110000000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 12000000000)
 		})
@@ -246,7 +246,8 @@ func TestOrderBookProcessing(t *testing.T) {
 			events = events[0:0]
 			buy01 := model.Order{ID: 23, Price: uint64(113000), Amount: uint64(234), Funds: uint64(154000), Side: model.MarketSide_Buy, Type: model.OrderType_Limit, EventType: model.CommandType_NewOrder}
 			orderBook.Process(buy01, &events)
-			So(len(events), ShouldEqual, 4)
+			So(len(events), ShouldEqual, 7)
+			dumpEvents(events)
 			So(orderBook.GetLowestAsk(), ShouldEqual, 113000)
 			So(orderBook.GetHighestBid(), ShouldEqual, 66000)
 			So(orderBook.GetHighestLossPrice(), ShouldEqual, 0)
@@ -255,10 +256,10 @@ func TestOrderBookProcessing(t *testing.T) {
 			So(events[0].GetOrderStatus().Amount, ShouldEqual, 234)
 			So(events[1].GetTrade().Price, ShouldEqual, 113000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 234)
-			So(events[2].GetOrderActivation().Price, ShouldEqual, 66000)
-			So(events[2].GetOrderActivation().Amount, ShouldEqual, 100)
-			So(events[3].GetOrderStatus().Price, ShouldEqual, 66000)
-			So(events[3].GetOrderStatus().Amount, ShouldEqual, 100)
+			So(events[4].GetOrderActivation().Price, ShouldEqual, 66000)
+			So(events[4].GetOrderActivation().Amount, ShouldEqual, 100)
+			So(events[5].GetOrderStatus().Price, ShouldEqual, 66000)
+			So(events[5].GetOrderStatus().Amount, ShouldEqual, 100)
 
 			// cancel activated stop order resulting in order book:
 			// SELL 947@200000
@@ -373,7 +374,7 @@ func TestOrderBookProcessing(t *testing.T) {
 			events = events[0:0]
 			buy02 := model.Order{ID: 26, Price: uint64(113000), Amount: uint64(713), Funds: uint64(154000), Side: model.MarketSide_Buy, Type: model.OrderType_Limit, EventType: model.CommandType_NewOrder}
 			orderBook.Process(buy02, &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 4)
 			So(orderBook.GetLowestAsk(), ShouldEqual, 200000)
 			So(orderBook.GetHighestBid(), ShouldEqual, 0)
 			So(events[0].GetOrderStatus().Price, ShouldEqual, 113000)
@@ -384,7 +385,7 @@ func TestOrderBookProcessing(t *testing.T) {
 			events = events[0:0]
 			buy03 := model.Order{ID: 27, Price: uint64(66000), Amount: uint64(234), Funds: uint64(154000), Side: model.MarketSide_Buy, Type: model.OrderType_Limit, EventType: model.CommandType_NewOrder}
 			orderBook.Process(buy03, &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 			So(orderBook.GetLowestAsk(), ShouldEqual, 200000)
 			So(orderBook.GetHighestBid(), ShouldEqual, 66000)
 			So(events[0].GetOrderStatus().Price, ShouldEqual, 66000)
@@ -398,7 +399,7 @@ func TestOrderBookProcessing(t *testing.T) {
 			events = events[0:0]
 			buy04 := model.Order{ID: 28, Price: uint64(66000), Amount: uint64(234), Funds: uint64(154000), Side: model.MarketSide_Buy, Type: model.OrderType_Limit, EventType: model.CommandType_NewOrder}
 			orderBook.Process(buy04, &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 			So(orderBook.GetLowestAsk(), ShouldEqual, 200000)
 			So(orderBook.GetHighestBid(), ShouldEqual, 66000)
 			So(events[0].GetOrderStatus().Price, ShouldEqual, 66000)
@@ -411,7 +412,7 @@ func TestOrderBookProcessing(t *testing.T) {
 			orderBook.Process(model.NewOrder(24, uint64(110000000), uint64(12000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
 			events = events[0:0]
 			orderBook.Process(model.NewOrder(25, uint64(110000000), uint64(12000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 4)
 			So(events[1].GetTrade().Price, ShouldEqual, 120000000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 12000000000)
 		})
@@ -422,7 +423,7 @@ func TestOrderBookProcessing(t *testing.T) {
 			orderBook.Process(model.NewOrder(27, uint64(110000000), uint64(12000000000), model.MarketSide_Buy, model.OrderType_Limit, model.CommandType_NewOrder), &events)
 			events = events[0:0]
 			orderBook.Process(model.NewOrder(28, uint64(110000000), uint64(11000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 4)
 			So(events[1].GetTrade().Price, ShouldEqual, 120000000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 11000000000)
 		})

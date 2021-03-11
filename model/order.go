@@ -55,6 +55,16 @@ func (order *Order) Filled() bool {
 	return false
 }
 
+// GetUnfilledAmount - get the amount of units left to be filled
+func (order *Order) GetUnfilledAmount() uint64 {
+	return order.Amount - order.FilledAmount
+}
+
+// GetUnusedFunds - get the remaining funds available for trading
+func (order *Order) GetUnusedFunds() uint64 {
+	return order.Funds - order.UsedFunds
+}
+
 //***************************
 // Interface Implementations
 //***************************
