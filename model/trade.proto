@@ -1,6 +1,8 @@
 syntax = "proto3";
 package model;
 
+option go_package = "gitlab.com/around25/products/matching-engine/model";
+
 import "order.proto";
 
 message Trade {

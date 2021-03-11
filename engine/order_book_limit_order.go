@@ -2,7 +2,59 @@ package engine
 
 import (
 	"gitlab.com/around25/products/matching-engine/model"
+	"gitlab.com/around25/products/matching-engine/utils"
 )
+
+// append a new order status to the list of events with the current state of the order
+func (book *orderBook) appendOrderStatusEvent(events *[]model.Event, order model.Order) {
+	book.LastEventSeqID++
+	*events = append(*events, model.NewOrderStatusEvent(
+		book.LastEventSeqID,
+		order.Market,
+		order.Type,
+		order.Side,
+		order.ID,
+		order.OwnerID,
+		order.Price,
+		order.Amount,
+		order.Funds,
+		order.Status,
+		order.FilledAmount,
+		order.UsedFunds,
+	))
+}
+
+func (book *orderBook) appendTradeEvent(events *[]model.Event, order, existingOrder model.Order, amount uint64) {
+	book.LastEventSeqID++
+	book.LastTradeSeqID++
+	if order.Side == model.MarketSide_Buy {
+		*events = append(*events, model.NewTradeEvent(
+			book.LastEventSeqID,
+			order.Market,
+			book.LastTradeSeqID,
+			order.Side,
+			existingOrder.ID,
+			order.ID,
+			existingOrder.OwnerID,
+			order.OwnerID,
+			amount,
+			existingOrder.Price,
+		))
+	} else {
+		*events = append(*events, model.NewTradeEvent(
+			book.LastEventSeqID,
+			order.Market,
+			book.LastTradeSeqID,
+			order.Side,
+			order.ID,
+			existingOrder.ID,
+			order.OwnerID,
+			existingOrder.OwnerID,
+			amount,
+			existingOrder.Price,
+		))
+	}
+}
 
 func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event) {
 	if book.LowestAsk <= order.Price && book.LowestAsk != 0 {
@@ -16,30 +68,27 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 				for index := 0; index < len(pricePoint.Entries); index++ {
 					sellEntry := &pricePoint.Entries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
-					if sellEntry.Amount >= order.Amount {
-						// funds := utils.Multiply(order.Amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
-						book.LastEventSeqID++
-						book.LastTradeSeqID++
-						*events = append(*events, model.NewTradeEvent(
-							book.LastEventSeqID,
-							book.MarketID,
-							book.LastTradeSeqID,
-							model.MarketSide_Buy,
-							sellEntry.ID,
-							order.ID,
-							sellEntry.OwnerID,
-							order.OwnerID,
-							order.Amount,
-							sellEntry.Price,
-						))
-						sellEntry.Amount -= order.Amount
+					orderUnfilledAmount := order.GetUnfilledAmount()
+					sellEntryUnfilledAmount := sellEntry.GetUnfilledAmount()
+					if sellEntryUnfilledAmount >= orderUnfilledAmount {
+						funds := utils.Multiply(orderUnfilledAmount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						book.appendTradeEvent(events, order, *sellEntry, orderUnfilledAmount)
+						sellEntry.FilledAmount += orderUnfilledAmount
+						sellEntry.UsedFunds += funds
+						order.FilledAmount += orderUnfilledAmount
+						order.UsedFunds += funds
 						order.SetStatus(model.OrderStatus_Filled)
-						if sellEntry.Amount == 0 {
+
+						if sellEntry.GetUnfilledAmount() == 0 {
 							sellEntry.SetStatus(model.OrderStatus_Filled)
 							book.removeSellBookEntry(sellEntry.Price, pricePoint, index)
 						} else {
 							sellEntry.SetStatus(model.OrderStatus_PartiallyFilled)
 						}
+
+						// Add updates to the events for the filled orders
+						book.appendOrderStatusEvent(events, order)      // order is filled
+						book.appendOrderStatusEvent(events, *sellEntry) // order is filled or partially filled
 
 						complete = true
 						break
@@ -47,25 +96,18 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
-
-					// funds := utils.Multiply(sellEntry.Amount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
-					book.LastEventSeqID++
-					book.LastTradeSeqID++
-					*events = append(*events, model.NewTradeEvent(
-						book.LastEventSeqID,
-						book.MarketID,
-						book.LastTradeSeqID,
-						model.MarketSide_Buy,
-						sellEntry.ID,
-						order.ID,
-						sellEntry.OwnerID,
-						order.OwnerID,
-						sellEntry.Amount,
-						sellEntry.Price,
-					))
-					order.Amount -= sellEntry.Amount
+					funds := utils.Multiply(sellEntryUnfilledAmount, sellEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+					book.appendTradeEvent(events, order, *sellEntry, sellEntryUnfilledAmount)
+					order.FilledAmount += sellEntryUnfilledAmount
+					order.UsedFunds += funds
 					order.SetStatus(model.OrderStatus_PartiallyFilled)
+					sellEntry.FilledAmount += sellEntryUnfilledAmount
+					sellEntry.UsedFunds += funds
 					sellEntry.SetStatus(model.OrderStatus_Filled)
+
+					// Add updates to the events for the filled orders
+					book.appendOrderStatusEvent(events, *sellEntry) // order is filled
+
 					book.removeSellBookEntry(sellEntry.Price, pricePoint, index)
 					index--
 				}
@@ -89,6 +131,10 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 
 	// if there are no more orders just add the buy order to the list
 	book.addBuyBookEntry(order)
+
+	// Add updates to the events for the added order
+	book.appendOrderStatusEvent(events, order) // order is partially filled
+
 	if book.HighestBid < order.Price || book.HighestBid == 0 {
 		book.HighestBid = order.Price
 	}
@@ -106,31 +152,27 @@ func (book *orderBook) processLimitSell(order model.Order, events *[]model.Event
 				for index := 0; index < len(pricePoint.Entries); index++ {
 					buyEntry := &pricePoint.Entries[index]
 					// if we can fill the trade instantly then we add the trade and complete the order
-					if buyEntry.Amount >= order.Amount {
-						// funds := utils.Multiply(order.Amount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
-						book.LastEventSeqID++
-						book.LastTradeSeqID++
-						*events = append(*events, model.NewTradeEvent(
-							book.LastEventSeqID,
-							book.MarketID,
-							book.LastTradeSeqID,
-							model.MarketSide_Sell,
-							order.ID,
-							buyEntry.ID,
-							order.OwnerID,
-							buyEntry.OwnerID,
-							order.Amount,
-							buyEntry.Price,
-						))
-						buyEntry.Amount -= order.Amount
-
+					orderUnfilledAmount := order.GetUnfilledAmount()
+					buyEntryUnfilledAmount := buyEntry.GetUnfilledAmount()
+					if buyEntryUnfilledAmount >= orderUnfilledAmount {
+						funds := utils.Multiply(orderUnfilledAmount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+						book.appendTradeEvent(events, order, *buyEntry, orderUnfilledAmount)
+						buyEntry.FilledAmount += orderUnfilledAmount
+						buyEntry.UsedFunds += funds
+						order.FilledAmount += orderUnfilledAmount
+						order.UsedFunds += funds
 						order.SetStatus(model.OrderStatus_Filled)
-						if buyEntry.Amount == 0 {
+						if buyEntry.GetUnfilledAmount() == 0 {
 							buyEntry.SetStatus(model.OrderStatus_Filled)
 							book.removeBuyBookEntry(buyEntry.Price, pricePoint, index)
 						} else {
 							buyEntry.SetStatus(model.OrderStatus_PartiallyFilled)
 						}
+
+						// Add updates to the events for the filled orders
+						book.appendOrderStatusEvent(events, order)     // order is filled
+						book.appendOrderStatusEvent(events, *buyEntry) // order is filled or partially filled
+
 						complete = true
 						break
 					}
@@ -138,24 +180,15 @@ func (book *orderBook) processLimitSell(order model.Order, events *[]model.Event
 					// if the sell order has a lower amount than what the buy order is then we fill only what we can from the sell order,
 					// we complete the sell order and we move to the next order
 
-					// funds := utils.Multiply(buyEntry.Amount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
-					book.LastEventSeqID++
-					book.LastTradeSeqID++
-					*events = append(*events, model.NewTradeEvent(
-						book.LastEventSeqID,
-						book.MarketID,
-						book.LastTradeSeqID,
-						model.MarketSide_Sell,
-						order.ID,
-						buyEntry.ID,
-						order.OwnerID,
-						buyEntry.OwnerID,
-						buyEntry.Amount,
-						buyEntry.Price,
-					))
-					order.Amount -= buyEntry.Amount
+					funds := utils.Multiply(buyEntryUnfilledAmount, buyEntry.Price, book.VolumePrecision, book.PricePrecision, book.PricePrecision)
+					book.appendTradeEvent(events, order, *buyEntry, buyEntryUnfilledAmount)
+					order.FilledAmount += buyEntryUnfilledAmount
+					order.UsedFunds += funds
 					order.SetStatus(model.OrderStatus_PartiallyFilled)
+					buyEntry.FilledAmount += buyEntryUnfilledAmount
+					buyEntry.UsedFunds += funds
 					buyEntry.SetStatus(model.OrderStatus_Filled)
+					book.appendOrderStatusEvent(events, *buyEntry) // order is filled
 					book.removeBuyBookEntry(buyEntry.Price, pricePoint, index)
 					index--
 				}
@@ -178,6 +211,10 @@ func (book *orderBook) processLimitSell(order model.Order, events *[]model.Event
 
 	// if there are no more orders just add the buy order to the list
 	book.addSellBookEntry(order)
+
+	// Add updates to the events for the added order
+	book.appendOrderStatusEvent(events, order) // order is partially filled
+
 	if book.LowestAsk > order.Price || book.LowestAsk == 0 {
 		book.LowestAsk = order.Price
 	}

@@ -157,7 +157,7 @@ func (book *orderBook) ackOrder(order model.Order, events *[]model.Event) model.
 		order.Status = model.OrderStatus_Untouched
 	}
 	book.LastEventSeqID++
-	event := model.NewOrderStatusEvent(book.LastEventSeqID, order.Market, order.Type, order.Side, order.ID, order.OwnerID, order.Price, order.Amount, order.Funds, order.Status)
+	event := model.NewOrderStatusEvent(book.LastEventSeqID, order.Market, order.Type, order.Side, order.ID, order.OwnerID, order.Price, order.Amount, order.Funds, order.Status, order.FilledAmount, order.UsedFunds)
 	*events = append(*events, event)
 	return order
 }
@@ -230,7 +230,7 @@ func (book *orderBook) cancelStopLossOrder(order model.Order, events *[]model.Ev
 			ord := pricePoint.Entries[i]
 			ord.SetStatus(model.OrderStatus_Cancelled)
 			book.LastEventSeqID++
-			*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
+			*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status, ord.FilledAmount, ord.UsedFunds))
 			book.StopLossOrders.removeEntryByPriceAndIndex(price, pricePoint, i)
 			if len(pricePoint.Entries) == 0 && book.HighestLossPrice == price {
 				if ok := iterator.Previous(); ok {
@@ -266,7 +266,7 @@ func (book *orderBook) cancelStopEntryOrder(order model.Order, events *[]model.E
 			ord := pricePoint.Entries[i]
 			ord.SetStatus(model.OrderStatus_Cancelled)
 			book.LastEventSeqID++
-			*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
+			*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status, ord.FilledAmount, ord.UsedFunds))
 			book.StopEntryOrders.removeEntryByPriceAndIndex(price, pricePoint, i)
 			if len(pricePoint.Entries) == 0 && book.LowestEntryPrice == price {
 				if ok := iterator.Next(); ok {
@@ -321,7 +321,7 @@ func (book *orderBook) cancelLimitOrder(order model.Order, events *[]model.Event
 				ord := pricePoint.Entries[i]
 				ord.SetStatus(model.OrderStatus_Cancelled)
 				book.LastEventSeqID++
-				*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
+				*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status, ord.FilledAmount, ord.UsedFunds))
 				book.removeBuyBookEntry(ord.Price, pricePoint, i)
 				// adjust highest bid
 				if len(pricePoint.Entries) == 0 && book.HighestBid == ord.Price {
@@ -354,7 +354,7 @@ func (book *orderBook) cancelLimitOrder(order model.Order, events *[]model.Event
 			ord := pricePoint.Entries[i]
 			ord.SetStatus(model.OrderStatus_Cancelled)
 			book.LastEventSeqID++
-			*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status))
+			*events = append(*events, model.NewOrderStatusEvent(book.LastEventSeqID, book.MarketID, ord.Type, ord.Side, ord.ID, ord.OwnerID, ord.Price, ord.Amount, ord.Funds, ord.Status, ord.FilledAmount, ord.UsedFunds))
 			book.removeSellBookEntry(ord.Price, pricePoint, i)
 			// adjust lowest ask
 			if len(pricePoint.Entries) == 0 && book.LowestAsk == ord.Price {
@@ -389,6 +389,8 @@ func (book *orderBook) generateCancelOrderEvent(order model.Order, events *[]mod
 		order.Amount,
 		order.Funds,
 		model.OrderStatus_Cancelled,
+		order.FilledAmount,
+		order.UsedFunds,
 	))
 }
 
