@@ -9,10 +9,10 @@ require (
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/coreos/go-etcd v2.0.0+incompatible // indirect
 	github.com/ericlagergren/decimal v0.0.0-20181231230500-73749d4874d5
-	github.com/fzipp/gocyclo v0.0.0-20150627053110-6acd4345c835 // indirect
+	github.com/fzipp/gocyclo v0.3.1 // indirect
 	github.com/gin-gonic/gin v1.4.0 // indirect
 	github.com/golang/lint v0.0.0-20181217174547-8f45f776aaf1 // indirect
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.4.1
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/pprof v0.0.0-20190208070709-b421f19a5c07 // indirect
 	github.com/googleapis/gax-go v2.0.2+incompatible // indirect
@@ -52,11 +52,11 @@ require (
 	go4.org v0.0.0-20181109185143-00e24f1b2599 // indirect
 	golang.org/x/build v0.0.0-20190214165022-ebe19e37a462 // indirect
 	golang.org/x/exp v0.0.0-20190212162250-21964bba6549 // indirect
-	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
+	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5 // indirect
 	golang.org/x/oauth2 v0.0.0-20190212230446-3e8b2be13635 // indirect
 	golang.org/x/perf v0.0.0-20190124201629-844a5f5b46f4 // indirect
-	golang.org/x/tools v0.0.0-20200925191224-5d1fdd8fa346 // indirect
-	honnef.co/go/tools v0.0.0-20190128043916-71123fcbb8fe // indirect
+	golang.org/x/tools v0.1.0 // indirect
+	google.golang.org/protobuf v1.25.0
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
 

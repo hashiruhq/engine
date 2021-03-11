@@ -3,10 +3,52 @@ package engine
 import (
 	"testing"
 
+	"github.com/rs/zerolog/log"
 	. "github.com/smartystreets/goconvey/convey"
 	"gitlab.com/around25/products/matching-engine/model"
 	"gitlab.com/around25/products/matching-engine/utils"
 )
+
+func dumpEvents(events []model.Event) {
+	for i, e := range events {
+		switch e.Type {
+		case model.EventType_NewTrade:
+			{
+				t := e.GetTrade()
+				log.Warn().
+					Int("index", i).
+					Uint64("price", t.Price).
+					Uint64("amount", t.Amount).
+					Uint64("bid_owner", t.BidOwnerID).
+					Uint64("ask_owner", t.AskOwnerID).
+					Msg("Trade generated")
+			}
+		case model.EventType_OrderStatusChange:
+			{
+				s := e.GetOrderStatus()
+				log.Warn().
+					Int("index", i).
+					Uint64("id", s.ID).
+					Uint64("owner_id", s.OwnerID).
+					Uint64("price", s.Price).
+					Uint64("amount", s.Amount).
+					Uint64("filled_amount", s.FilledAmount).
+					Uint64("used_funds", s.UsedFunds).
+					Uint64("funds", s.Funds).
+					Str("status", s.Status.String()).
+					Str("side", s.Side.String()).
+					Str("type", s.Type.String()).
+					Msg("Order status")
+			}
+		default:
+			// log.Warn().
+			// 	Str("type", e.GetType().String()).
+			// 	Str("market", e.Market).
+			// 	Uint64("seqid", e.SeqID).
+			// 	Msg("Event generated")
+		}
+	}
+}
 
 func TestBuyMarketOrderIssue(t *testing.T) {
 	events := make([]model.Event, 0, 5)
@@ -28,23 +70,25 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			orderBook := NewOrderBook("prdxusdt", 5, 1)
 
 			events = events[0:0]
-			order1 := model.NewOrder(90664015, uint64(12255), uint64(11045), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
+			order1 := model.NewOrder(1001, uint64(12255), uint64(11045), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
 			orderBook.Process(order1, &events)
 
-			order2 := model.NewOrder(90664015, uint64(12259), uint64(10605), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
+			order2 := model.NewOrder(1002, uint64(12259), uint64(10605), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
 			events = events[0:0]
 			orderBook.Process(order2, &events)
 
 			events = events[0:0]
 			lockedFunds := uint64(19900000)
-			marketOrder := model.Order{ID: 90664126, Amount: 16704, Funds: lockedFunds, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}
+			marketOrder := model.Order{ID: 1003, Amount: 16704, Funds: lockedFunds, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}
 			orderBook.Process(marketOrder, &events)
 
-			So(len(events), ShouldEqual, 4)
+			So(len(events), ShouldEqual, 6)
 			So(events[0].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Untouched)
 			trade1 := events[1].GetTrade()
-			trade2 := events[2].GetTrade()
-			So(events[3].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Cancelled)
+			So(events[2].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Filled)
+			trade2 := events[3].GetTrade()
+			So(events[4].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Filled)
+			So(events[5].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_PartiallyFilled)
 
 			usedFunds := trade1.Price*trade1.Amount/10 + trade2.Price*trade2.Amount/10
 
@@ -60,31 +104,33 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			lockedFunds := uint64(66058)
 
 			events = events[0:0]
-			order1 := model.NewOrder(92454370, uint64(19034), uint64(16434), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
+			order1 := model.NewOrder(1001, uint64(19034), uint64(16434), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
 			orderBook.Process(order1, &events)
 
-			order2 := model.NewOrder(92454372, uint64(19035), uint64(21610), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
+			order2 := model.NewOrder(1002, uint64(19035), uint64(21610), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
 			events = events[0:0]
 			orderBook.Process(order2, &events)
 
-			order3 := model.NewOrder(92454373, uint64(19036), uint64(400000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
+			order3 := model.NewOrder(1003, uint64(19036), uint64(400000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder)
 			events = events[0:0]
 			orderBook.Process(order3, &events)
 
-			marketOrder := model.Order{ID: 92454464, Price: 18999, Amount: 347000, StopPrice: 18999, Funds: lockedFunds, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}
+			marketOrder := model.Order{ID: 1004, Price: 18999, Amount: 347000, StopPrice: 18999, Funds: lockedFunds, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}
 			events = events[0:0]
 			orderBook.Process(marketOrder, &events)
 
-			So(len(events), ShouldEqual, 5)
+			So(len(events), ShouldEqual, 8)
 			So(events[0].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Untouched)
 			t1 := events[1].GetTrade()
-			t2 := events[2].GetTrade()
-			t3 := events[3].GetTrade()
+			So(events[2].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Filled)
+			t2 := events[3].GetTrade()
+			So(events[4].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Filled)
+			t3 := events[5].GetTrade()
 			usedFunds := utils.Multiply(t1.Price, t1.Amount, 2, 5, 2) +
 				utils.Multiply(t2.Price, t2.Amount, 2, 5, 2) +
 				utils.Multiply(t3.Price, t3.Amount, 2, 5, 2)
-			So(events[4].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Cancelled)
-			So(events[4].GetOrderStatus().GetFunds(), ShouldEqual, lockedFunds-usedFunds)
+			So(events[6].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Filled)
+			So(events[6].GetOrderStatus().GetFilledAmount(), ShouldEqual, marketOrder.Amount)
 
 			So(lockedFunds, ShouldBeGreaterThanOrEqualTo, usedFunds)
 			So(t1.Price, ShouldEqual, 19034)
@@ -109,11 +155,11 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			marketOrder := model.Order{ID: 2, Price: 0, Amount: 4997355, Funds: lockedFunds, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}
 			orderBook.Process(marketOrder, &events)
 
-			So(len(events), ShouldEqual, 3)
+			So(len(events), ShouldEqual, 4)
 			So(events[0].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Untouched)
 			trade1 := events[1].GetTrade()
-			So(events[2].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Cancelled)
-			So(events[2].GetOrderStatus().GetFunds(), ShouldEqual, 500000-4998)
+			So(events[2].GetOrderStatus().GetStatus(), ShouldEqual, model.OrderStatus_Filled)
+			So(events[2].GetOrderStatus().GetUsedFunds(), ShouldEqual, 4998)
 
 			So(lockedFunds, ShouldBeGreaterThanOrEqualTo, 4998)
 			So(trade1.Price, ShouldEqual, 100000)
@@ -126,13 +172,13 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 
 			events = events[0:0]
 			orderBook.Process(model.Order{ID: 33, Amount: 10000000000, Funds: 1100000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}, &events)
-			So(len(events), ShouldEqual, 3)
+			So(len(events), ShouldEqual, 4)
 			So(events[1].GetTrade().Price, ShouldEqual, 110000000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 1000000000)
 
 			events = events[0:0]
 			orderBook.Process(model.Order{ID: 34, Amount: 15000000000, Funds: 23456000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}, &events)
-			So(len(events), ShouldEqual, 3)
+			So(len(events), ShouldEqual, 5)
 			So(events[1].GetTrade().Price, ShouldEqual, 110000000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 11000000000)
 		})
@@ -144,13 +190,13 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 
 			events = events[0:0]
 			orderBook.Process(model.Order{ID: 37, Amount: 10000000000, Funds: 1100000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}, &events)
-			So(len(events), ShouldEqual, 3)
+			So(len(events), ShouldEqual, 4)
 			So(events[1].GetTrade().Price, ShouldEqual, 110000000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 1000000000)
 
 			events = events[0:0]
 			orderBook.Process(model.Order{ID: 38, Amount: 15000000000, Funds: 23456000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}, &events)
-			So(len(events), ShouldEqual, 4)
+			So(len(events), ShouldEqual, 6)
 			So(events[1].GetTrade().Price, ShouldEqual, 110000000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 11000000000)
 		})
@@ -162,7 +208,7 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 
 			events = events[0:0]
 			orderBook.Process(model.Order{ID: 41, Amount: 12000000000, Funds: 51100000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}, &events)
-			So(len(events), ShouldEqual, 3)
+			So(len(events), ShouldEqual, 4)
 			So(events[1].GetTrade().Price, ShouldEqual, 110000000)
 			So(events[1].GetTrade().Amount, ShouldEqual, 12000000000)
 		})
@@ -188,7 +234,7 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			orderBook.Process(model.Order{ID: 67, Amount: 11000000000, Funds: 13200000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}, &events)
 			events = events[0:0]
 			orderBook.Process(model.NewOrder(68, uint64(120000000), uint64(12000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 			So(events[0].GetOrderStatus().Status, ShouldEqual, model.OrderStatus_Untouched)
 		})
 
@@ -198,7 +244,7 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			orderBook.Process(model.Order{ID: 72, Amount: 11000000000, Funds: 13200000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}, &events)
 			events = events[0:0]
 			orderBook.Process(model.NewOrder(73, uint64(120000000), uint64(24000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 1)
+			So(len(events), ShouldEqual, 2)
 			So(events[0].GetOrderStatus().Status, ShouldEqual, model.OrderStatus_Untouched)
 		})
 
