@@ -104,16 +104,16 @@ func (book *orderBook) processMarketBuy(order model.Order, events *[]model.Event
 				order.FilledAmount += amount
 				order.UsedFunds += funds
 				order.SetStatus(model.OrderStatus_Filled)
+				// Add updates to the events for the filled orders
+				book.appendOrderStatusEvent(events, order) // order is filled
 				if sellEntry.GetUnfilledAmount() == 0 {
 					sellEntry.SetStatus(model.OrderStatus_Filled)
+					book.appendOrderStatusEvent(events, *sellEntry) // order is filled or partially filled
 					book.removeSellBookEntry(sellEntry.Price, pricePoint, index)
 				} else {
 					sellEntry.SetStatus(model.OrderStatus_PartiallyFilled)
+					book.appendOrderStatusEvent(events, *sellEntry) // order is filled or partially filled
 				}
-
-				// Add updates to the events for the filled orders
-				book.appendOrderStatusEvent(events, order)      // order is filled
-				book.appendOrderStatusEvent(events, *sellEntry) // order is filled or partially filled
 
 				complete = true
 				break
@@ -203,16 +203,16 @@ func (book *orderBook) processMarketSell(order model.Order, events *[]model.Even
 				order.FilledAmount += orderUnfilledAmount
 				order.UsedFunds += funds
 				order.SetStatus(model.OrderStatus_Filled)
+				// Add updates to the events for the filled orders
+				book.appendOrderStatusEvent(events, order) // order is filled
 				if buyEntry.GetUnfilledAmount() == 0 {
 					buyEntry.SetStatus(model.OrderStatus_Filled)
+					book.appendOrderStatusEvent(events, *buyEntry) // order is filled or partially filled
 					book.removeBuyBookEntry(buyEntry.Price, pricePoint, index)
 				} else {
 					buyEntry.SetStatus(model.OrderStatus_PartiallyFilled)
+					book.appendOrderStatusEvent(events, *buyEntry) // order is filled or partially filled
 				}
-
-				// Add updates to the events for the filled orders
-				book.appendOrderStatusEvent(events, order)     // order is filled
-				book.appendOrderStatusEvent(events, *buyEntry) // order is filled or partially filled
 
 				complete = true
 				break

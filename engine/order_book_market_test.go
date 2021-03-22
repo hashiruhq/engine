@@ -3,52 +3,10 @@ package engine
 import (
 	"testing"
 
-	"github.com/rs/zerolog/log"
 	. "github.com/smartystreets/goconvey/convey"
 	"gitlab.com/around25/products/matching-engine/model"
 	"gitlab.com/around25/products/matching-engine/utils"
 )
-
-func dumpEvents(events []model.Event) {
-	for i, e := range events {
-		switch e.Type {
-		case model.EventType_NewTrade:
-			{
-				t := e.GetTrade()
-				log.Warn().
-					Int("index", i).
-					Uint64("price", t.Price).
-					Uint64("amount", t.Amount).
-					Uint64("bid_owner", t.BidOwnerID).
-					Uint64("ask_owner", t.AskOwnerID).
-					Msg("Trade generated")
-			}
-		case model.EventType_OrderStatusChange:
-			{
-				s := e.GetOrderStatus()
-				log.Warn().
-					Int("index", i).
-					Uint64("id", s.ID).
-					Uint64("owner_id", s.OwnerID).
-					Uint64("price", s.Price).
-					Uint64("amount", s.Amount).
-					Uint64("filled_amount", s.FilledAmount).
-					Uint64("used_funds", s.UsedFunds).
-					Uint64("funds", s.Funds).
-					Str("status", s.Status.String()).
-					Str("side", s.Side.String()).
-					Str("type", s.Type.String()).
-					Msg("Order status")
-			}
-		default:
-			// log.Warn().
-			// 	Str("type", e.GetType().String()).
-			// 	Str("market", e.Market).
-			// 	Uint64("seqid", e.SeqID).
-			// 	Msg("Event generated")
-		}
-	}
-}
 
 func TestBuyMarketOrderIssue(t *testing.T) {
 	events := make([]model.Event, 0, 5)
@@ -234,7 +192,7 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			orderBook.Process(model.Order{ID: 67, Amount: 11000000000, Funds: 13200000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}, &events)
 			events = events[0:0]
 			orderBook.Process(model.NewOrder(68, uint64(120000000), uint64(12000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 1)
 			So(events[0].GetOrderStatus().Status, ShouldEqual, model.OrderStatus_Untouched)
 		})
 
@@ -244,7 +202,7 @@ func TestBuyMarketOrderIssue(t *testing.T) {
 			orderBook.Process(model.Order{ID: 72, Amount: 11000000000, Funds: 13200000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Market, Side: model.MarketSide_Buy}, &events)
 			events = events[0:0]
 			orderBook.Process(model.NewOrder(73, uint64(120000000), uint64(24000000000), model.MarketSide_Sell, model.OrderType_Limit, model.CommandType_NewOrder), &events)
-			So(len(events), ShouldEqual, 2)
+			So(len(events), ShouldEqual, 1)
 			So(events[0].GetOrderStatus().Status, ShouldEqual, model.OrderStatus_Untouched)
 		})
 
