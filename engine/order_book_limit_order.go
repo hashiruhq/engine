@@ -79,16 +79,18 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 						order.UsedFunds += funds
 						order.SetStatus(model.OrderStatus_Filled)
 
+						// Add updates to the events for the filled orders
+						book.appendOrderStatusEvent(events, order) // order is filled
+
 						if sellEntry.GetUnfilledAmount() == 0 {
 							sellEntry.SetStatus(model.OrderStatus_Filled)
+							book.appendOrderStatusEvent(events, *sellEntry) // order is filled or partially filled
+
 							book.removeSellBookEntry(sellEntry.Price, pricePoint, index)
 						} else {
 							sellEntry.SetStatus(model.OrderStatus_PartiallyFilled)
+							book.appendOrderStatusEvent(events, *sellEntry) // order is filled or partially filled
 						}
-
-						// Add updates to the events for the filled orders
-						book.appendOrderStatusEvent(events, order)      // order is filled
-						book.appendOrderStatusEvent(events, *sellEntry) // order is filled or partially filled
 
 						complete = true
 						break
@@ -131,9 +133,10 @@ func (book *orderBook) processLimitBuy(order model.Order, events *[]model.Event)
 
 	// if there are no more orders just add the buy order to the list
 	book.addBuyBookEntry(order)
-
 	// Add updates to the events for the added order
-	book.appendOrderStatusEvent(events, order) // order is partially filled
+	if order.Status != model.OrderStatus_Untouched {
+		book.appendOrderStatusEvent(events, order) // order is partially filled
+	}
 
 	if book.HighestBid < order.Price || book.HighestBid == 0 {
 		book.HighestBid = order.Price
@@ -162,16 +165,17 @@ func (book *orderBook) processLimitSell(order model.Order, events *[]model.Event
 						order.FilledAmount += orderUnfilledAmount
 						order.UsedFunds += funds
 						order.SetStatus(model.OrderStatus_Filled)
+						// Add updates to the events for the filled orders
+						book.appendOrderStatusEvent(events, order) // order is filled
+
 						if buyEntry.GetUnfilledAmount() == 0 {
 							buyEntry.SetStatus(model.OrderStatus_Filled)
+							book.appendOrderStatusEvent(events, *buyEntry) // order is filled or partially filled
 							book.removeBuyBookEntry(buyEntry.Price, pricePoint, index)
 						} else {
 							buyEntry.SetStatus(model.OrderStatus_PartiallyFilled)
+							book.appendOrderStatusEvent(events, *buyEntry) // order is filled or partially filled
 						}
-
-						// Add updates to the events for the filled orders
-						book.appendOrderStatusEvent(events, order)     // order is filled
-						book.appendOrderStatusEvent(events, *buyEntry) // order is filled or partially filled
 
 						complete = true
 						break
@@ -213,7 +217,9 @@ func (book *orderBook) processLimitSell(order model.Order, events *[]model.Event
 	book.addSellBookEntry(order)
 
 	// Add updates to the events for the added order
-	book.appendOrderStatusEvent(events, order) // order is partially filled
+	if order.Status != model.OrderStatus_Untouched {
+		book.appendOrderStatusEvent(events, order) // order is partially filled
+	}
 
 	if book.LowestAsk > order.Price || book.LowestAsk == 0 {
 		book.LowestAsk = order.Price

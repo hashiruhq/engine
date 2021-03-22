@@ -76,7 +76,7 @@ func TestStopOrders(t *testing.T) {
 		book.Process(order3, &events)
 		events = events[0:0]
 		book.Process(order4, &events)
-		So(len(events), ShouldEqual, 10)
+		So(len(events), ShouldEqual, 9)
 		So(book.GetHighestLossPrice(), ShouldEqual, 0)
 		status := events[4].GetOrderActivation()
 		So(status.GetStatus(), ShouldEqual, model.OrderStatus_Pending)
@@ -131,7 +131,8 @@ func TestStopOrders(t *testing.T) {
 		events = events[0:0]
 		book.Process(order4, &events)
 		status := events[0].GetOrderStatus()
-		So(len(events), ShouldEqual, 9)
+		So(status.GetStatus(), ShouldEqual, model.OrderStatus_Untouched)
+		So(len(events), ShouldEqual, 8)
 		So(book.GetLowestEntryPrice(), ShouldEqual, 0)
 		status = events[4].GetOrderActivation()
 		So(status.GetStatus(), ShouldEqual, model.OrderStatus_Pending)

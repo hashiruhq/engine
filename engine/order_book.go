@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"github.com/rs/zerolog/log"
 	"gitlab.com/around25/products/matching-engine/model"
 )
 
@@ -447,4 +448,62 @@ func (book *orderBook) closeAskIterator(iterator Iterator) {
 		book.LowestAsk = 0
 	}
 	iterator.Close()
+}
+
+func dumpOrder(order model.Order) {
+	log.Warn().
+		Uint64("id", order.ID).
+		Uint64("owner_id", order.OwnerID).
+		Uint64("price", order.Price).
+		Uint64("amount", order.Amount).
+		Uint64("filled_amount", order.FilledAmount).
+		Uint64("used_funds", order.UsedFunds).
+		Uint64("funds", order.Funds).
+		Str("status", order.Status.String()).
+		Str("side", order.Side.String()).
+		Str("type", order.Type.String()).
+		Msg("Order")
+}
+
+func dumpEvents(events []model.Event) {
+	for i, e := range events {
+		switch e.Type {
+		case model.EventType_NewTrade:
+			{
+				t := e.GetTrade()
+				log.Warn().
+					Int("index", i).
+					Uint64("price", t.Price).
+					Uint64("amount", t.Amount).
+					Uint64("bid_owner", t.BidOwnerID).
+					Uint64("bid_id", t.BidID).
+					Uint64("ask_owner", t.AskOwnerID).
+					Uint64("ask_id", t.AskID).
+					Msg("Trade generated")
+			}
+		case model.EventType_OrderStatusChange:
+			{
+				s := e.GetOrderStatus()
+				log.Warn().
+					Int("index", i).
+					Uint64("id", s.ID).
+					Uint64("owner_id", s.OwnerID).
+					Uint64("price", s.Price).
+					Uint64("amount", s.Amount).
+					Uint64("filled_amount", s.FilledAmount).
+					Uint64("used_funds", s.UsedFunds).
+					Uint64("funds", s.Funds).
+					Str("status", s.Status.String()).
+					Str("side", s.Side.String()).
+					Str("type", s.Type.String()).
+					Msg("Order status")
+			}
+		default:
+			// log.Warn().
+			// 	Str("type", e.GetType().String()).
+			// 	Str("market", e.Market).
+			// 	Uint64("seqid", e.SeqID).
+			// 	Msg("Event generated")
+		}
+	}
 }
