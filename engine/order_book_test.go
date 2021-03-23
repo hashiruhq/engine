@@ -515,5 +515,36 @@ func TestOrderBookProcessing(t *testing.T) {
 			So(events[5].GetOrderStatus().UsedFunds, ShouldEqual, 5000000)
 		})
 
+		Convey("Issue #004 [23.03.2021] - UsedFunds precision", func() {
+			orderBook := NewOrderBook("btcusdt", 2, 6)
+			order1 := model.Order{ID: 1, Price: 6000000, Amount: 2000000, StopPrice: 0, Funds: 2000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Limit, Side: model.MarketSide_Sell}
+			order2 := model.Order{ID: 2, Price: 6000000, Amount: 2000000, StopPrice: 0, Funds: 12000000, EventType: model.CommandType_NewOrder, Type: model.OrderType_Limit, Side: model.MarketSide_Buy}
+			events = events[0:0]
+			orderBook.Process(order1, &events)
+			orderBook.Process(order2, &events)
+			dumpEvents(events)
+			/*
+				{"level":"warn","index":0,"id":1,"owner_id":0,"price":6000000,"amount":200000000,"filled_amount":0,"used_funds":0,"funds":200000000,"status":"Untouched","side":"Sell","type":"Limit","time":"2021-03-23T12:07:22+02:00","message":"Order status"}
+				{"level":"warn","index":1,"id":2,"owner_id":0,"price":6000000,"amount":200000000,"filled_amount":0,"used_funds":0,"funds":12000000,"status":"Untouched","side":"Buy","type":"Limit","time":"2021-03-23T12:07:22+02:00","message":"Order status"}
+				{"level":"warn","index":2,"price":6000000,"amount":200000000,"bid_owner":0,"bid_id":2,"ask_owner":0,"ask_id":1,"time":"2021-03-23T12:07:22+02:00","message":"Trade generated"}
+				{"level":"warn","index":3,"id":2,"owner_id":0,"price":6000000,"amount":200000000,"filled_amount":200000000,"used_funds":12000000,"funds":12000000,"status":"Filled","side":"Buy","type":"Limit","time":"2021-03-23T12:07:22+02:00","message":"Order status"}
+				{"level":"warn","index":4,"id":1,"owner_id":0,"price":6000000,"amount":200000000,"filled_amount":200000000,"used_funds":12000000,"funds":200000000,"status":"Filled","side":"Sell","type":"Limit","time":"2021-03-23T12:07:22+02:00","message":"Order status"}
+			*/
+			So(len(events), ShouldEqual, 5)
+			// trade := events[2].GetTrade()
+			order2status := events[3].GetOrderStatus()
+			order1status := events[4].GetOrderStatus()
+			So(order1status.ID, ShouldEqual, 1)
+			So(order1status.Status, ShouldEqual, model.OrderStatus_Filled)
+			So(order1status.FilledAmount, ShouldEqual, 2000000)
+			So(order1status.UsedFunds, ShouldEqual, 12000000)
+
+			So(order2status.ID, ShouldEqual, 2)
+			So(order2status.Status, ShouldEqual, model.OrderStatus_Filled)
+			So(order2status.FilledAmount, ShouldEqual, 2000000)
+			So(order2status.UsedFunds, ShouldEqual, 12000000)
+
+		})
+
 	})
 }
