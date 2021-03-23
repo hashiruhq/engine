@@ -7,8 +7,8 @@ import (
 // Load the full order book from the backup object
 func (book *orderBook) Load(market model.MarketBackup) error {
 	book.MarketID = market.MarketID
-	book.PricePrecision = int(market.PricePrecision)
-	book.VolumePrecision = int(market.VolumePrecision)
+	// book.PricePrecision = int(market.PricePrecision)
+	// book.VolumePrecision = int(market.VolumePrecision)
 	book.LowestAsk = market.LowestAsk
 	book.HighestBid = market.HighestBid
 	book.LowestEntryPrice = market.LowestEntryPrice
