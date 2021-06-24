@@ -11,11 +11,11 @@ import (
 
 // LogLevel Flag
 var LogLevel = "info"
-var LogFormat = "json"
+var LogFormat = "pretty"
 var cfgFile string
 var rootCmd = &cobra.Command{
-	Use:   "trading_engine",
-	Short: "Trading engine (name WIP) is a finantial market engine",
+	Use:   "trade_engine",
+	Short: "Hashiru Trade engine is a finantial market engine",
 	Long: `A fast and flexible trading engine for the finantial market
 created by Around25 to support high frequency trading on crypto markets.
 For a complete documentation and available licenses please contact https://around25.com`,
@@ -27,8 +27,6 @@ func init() {
 	initLoggingEnv()
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./.engine.yaml)")
-	rootCmd.PersistentFlags().StringVarP(&LogLevel, "log-level", "", "info", "logging level to show (options: debug|info|warn|error|fatal|panic, default: info)")
-	rootCmd.PersistentFlags().StringVarP(&LogFormat, "log-format", "", "info", "log format to generate (Options: json|pretty, default: json)")
 	viper.SetConfigName(".engine")
 	viper.AddConfigPath(".")                    // First try to load the config from the current directory
 	viper.AddConfigPath("$HOME")                // Then try to load it from the HOME directory

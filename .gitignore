@@ -1,4 +1,5 @@
 debug
+build/
 backups/
 matching-engine
 engine.test

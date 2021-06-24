@@ -1,0 +1,62 @@
+version: '3.2'
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    restart: always
+    environment:
+      KAFKA_BROKER_ID: 1
+      # change this to the IP of the container after it starts for the first time
+      # restart the engine and the api after Kafka has started
+      KAFKA_ADVERTISED_HOST_NAME: "172.22.0.7"
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LOG_RETENTION_HOURS_PER_TOPIC: 8784
+      # HOSTNAME_COMMAND: "route -n | awk '/UG[ \t]/{print $$2}'"
+      KAFKA_CREATE_TOPICS: engine.orders.btcusdt:1:1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  kafka_manager:
+    image: sheepkiller/kafka-manager
+    ports:
+      - "9000:9000"
+    environment:
+      ZK_HOSTS: zookeeper:2181
+
+  prometheus:
+    image: quay.io/prometheus/prometheus
+    ports:
+      - "9090:9090"
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  # login with admin/admin
+  # add the "http://prometheus:9090" as a data source
+  # and import the grafana_dashboard.json file to see the metrics
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    restart: always
+    volumes:
+      - grafana:/var/lib/grafana
+
+  matching_engine:
+    build:
+      context: ./
+    image: matching_engine:local
+    ports:
+      - 6060:6060
+    volumes:
+      - backups:/root/backups
+
+volumes:
+  grafana:
+  backups:

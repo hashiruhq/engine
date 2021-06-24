@@ -1,4 +1,4 @@
-FROM golang:1.13 as build
+FROM golang:1.16 as build
 RUN mkdir -p /build/matching-engine
 WORKDIR /build/matching-engine/
 
@@ -18,7 +18,9 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -a -installsuffix cgo --ldflags "-s -w" -o /usr/bin/matching_engine
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo \
+  --ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.GitCommit=$GIT_COMMIT' -X 'gitlab.com/around25/products/matching-engine/version.AppVersion=$APP_VERSION' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=$PRODUCT_ID' -X 'gitlab.com/around25/products/matching-engine/version.MaxUses=$MAX_USES'" \
+  -o /usr/bin/matching_engine
 
 FROM alpine:3.9
 

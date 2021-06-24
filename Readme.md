@@ -1,10 +1,10 @@
 # Trading Engine
 
-## Improvement Requirements
-- Add FilledAmount field to OrderStatusMsg
-- When market order is filled send OrderStatusMsg with OrderStatus_Filled instead of OrderStatus_Cancelled
-- Send OrderStatusMsg with OrderStatus_Filled for all filled orders. (Now, filled limit orders do not generate such events)
-
+## License Todos
+- Generate a license lock file and increment the number of uses if the file is missing
+- Generate license metrics to a server I control to see exact number of metrics and check for compromised keys
+- Update the changelog and include it in the distributed package
+- Create a Readme file template with information on how to get started
 ## To Do
 
 - !!! When the engine restarts it should fetch the last trade generate for each connected market

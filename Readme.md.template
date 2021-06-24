@@ -1,0 +1,16 @@
+# Hashiru Trade Engine
+
+## Installation
+
+While it is possible to start the engine as a standalone application it is easier to start it using Docker and Docker Compose.
+The next command starts the engine service, Apache Kafka as the message queue, Prometheus and Grafana for monitoring.
+
+```sh
+docker-compose up -d
+```
+
+If you're looking for a demo HTTP API interface for it head over to https://github.com/hashiruhq/demo_exchange_api for a basic demo version.
+Read how to integrate it with the downloaded files or contact us to help.
+
+While testing you can use the engine in "dev" more by simply setting the env to "dev" which will allow you to
+use all the features of the engine, but with a 20k limit or how many commands it can process for each market.

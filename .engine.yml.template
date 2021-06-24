@@ -1,5 +1,5 @@
 license_key: ""
-# in dev mode you can run it locally without a key with some limitations
+# in dev mode you can run it locally without a key with a 20k topic offset limit
 # use any other environment to go in production mode where key is needed
 env: dev
 
@@ -28,29 +28,23 @@ kafka:
     async: false
 
 markets:
-  ltcbtc:
-    market_id: ltcbtc
-    price_precision: 8
+  btcusdt:
+    market_id: btcusdt
+    price_precision: 4
     volume_precision: 8
-    quote_increments: 0.01 # not used yet
-    base_min: 0.0001 # not used yet
-    base_max: 10000 # not used yet
     backup:
       interval: 1
-      path: /root/backups/ltcbtc.dat
+      path: /root/backups/btcusdt.dat
     listen:
       broker: requests
-      topic: engine.orders.ltcbtc
+      topic: engine.orders.btcusdt
     publish:
       broker: events
-      topic: engine.events.ltcbtc
+      topic: engine.events.btcusdt
   ethbtc:
     market_id: ethbtc
     price_precision: 8
     volume_precision: 8
-    quote_increments: 0.01 # not used yet
-    base_min: 0.0001 # not used yet
-    base_max: 10000 # not used yet
     backup:
       interval: 1
       path: /root/backups/ethbtc.dat

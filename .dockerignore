@@ -4,4 +4,8 @@ CHANGELOG
 Readme.md
 docker-compose.yml
 devops/
+debug/
+build/
+backups/
+*.template
 .git

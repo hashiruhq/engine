@@ -40,9 +40,10 @@ type marketEngine struct {
 
 // MarketEngineConfig structure
 type MarketEngineConfig struct {
-	producer net.KafkaProducer
-	consumer net.KafkaConsumer
-	config   MarketConfig
+	producer  net.KafkaProducer
+	consumer  net.KafkaConsumer
+	config    MarketConfig
+	maxOffset int64
 }
 
 // NewMarketEngine open a new market
@@ -86,6 +87,11 @@ func (mkt *marketEngine) Start(ctx context.Context) {
 
 // Process a new message from the consumer
 func (mkt *marketEngine) Process(msg kafka.Message) {
+	if mkt.config.maxOffset != 0 && msg.Offset >= mkt.config.maxOffset {
+		log.Warn().Str("section", "market").Str("action", "process").Str("market", mkt.name).Int64("offset", mkt.config.maxOffset).Msg("Maximum offset reached for development version. Market shutting down.")
+		mkt.Close()
+		return
+	}
 	// Monitor: Increment the number of messages that has been received by the market
 	messagesQueued.WithLabelValues(mkt.name).Inc()
 	mkt.messages <- engine.NewEvent(msg)

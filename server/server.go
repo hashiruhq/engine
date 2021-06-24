@@ -13,11 +13,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	"gitlab.com/around25/products/matching-engine/license"
 	"gitlab.com/around25/products/matching-engine/net"
+	"gitlab.com/around25/products/matching-engine/version"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+const EnvDev = "dev"
+const VariantDev = "(Dev)"
+const EnvDevMaxOffset int64 = 20000
 
 // Server interface
 type Server interface {
@@ -28,6 +34,7 @@ type server struct {
 	config  Config
 	ctx     context.Context
 	markets map[string]MarketEngine
+	checker *license.LicenseChecker
 }
 
 var (
@@ -80,11 +87,17 @@ func init() {
 func NewServer(config Config) Server {
 	// start markets
 	markets := make(map[string]MarketEngine)
+	maxOffset := int64(0)
+	if config.Environment == EnvDev || version.Variant == VariantDev {
+		maxOffset = EnvDevMaxOffset
+		log.Info().Str("section", "server").Str("action", "init").Msg("Running in development mode. Limited to max 20k commands per market.")
+	}
 	for key, marketCfg := range config.Markets {
 		marketEngineConfig := MarketEngineConfig{
-			config:   marketCfg,
-			producer: NewProducer(config.Kafka.Writer, config.Brokers.Producers[marketCfg.Publish.Broker], config.Kafka.UseTLS, marketCfg.Publish.Topic),
-			consumer: NewConsumer(config.Kafka.Reader, config.Brokers.Consumers[marketCfg.Listen.Broker], config.Kafka.UseTLS, marketCfg.Listen.Topic),
+			config:    marketCfg,
+			producer:  NewProducer(config.Kafka.Writer, config.Brokers.Producers[marketCfg.Publish.Broker], config.Kafka.UseTLS, marketCfg.Publish.Topic),
+			consumer:  NewConsumer(config.Kafka.Reader, config.Brokers.Consumers[marketCfg.Listen.Broker], config.Kafka.UseTLS, marketCfg.Listen.Topic),
+			maxOffset: maxOffset,
 		}
 		markets[key] = NewMarketEngine(marketEngineConfig)
 	}
@@ -93,13 +106,46 @@ func NewServer(config Config) Server {
 		config:  config,
 		ctx:     context.Background(),
 		markets: markets,
+		checker: license.NewLicenseChecker(version.ProductID, config.LicenseKey, version.Variant),
 	}
+}
+
+func (srv *server) checkLicense() {
+	cfg := srv.config
+	log.Info().Str("section", "server").Str("action", "check_license").Msg("Checking server license")
+	uses, err := license.VerifyLicense(version.ProductID, cfg.LicenseKey, version.Variant, false)
+	if err != nil {
+		log.Info().Str("section", "server").Str("action", "check_license").Msg(err.Error())
+		os.Exit(1)
+		return
+	}
+	if uses > version.MaxUses {
+		log.Info().Str("section", "server").Str("action", "check_license").Int("max_instances", version.MaxUses).Msg("Max instances exceeded")
+		os.Exit(2)
+		return
+	}
+	if len(cfg.Markets) > version.MaxMarkets {
+		log.Info().Str("section", "server").Str("action", "check_license").Int("max_markets", version.MaxMarkets).Msg("Max number of markets exceeded")
+		os.Exit(3)
+		return
+	}
+	// start periodic license checker
+	exitChannel := srv.checker.Start()
+	go func(exitChannel chan bool) {
+		<-exitChannel
+		srv.shutdown(4)
+	}(exitChannel)
 }
 
 // Listen for new events that affect the market and process them
 func (srv *server) Listen() {
 	// start prometheus profilling metrics
 	go loopProfillingServer(srv.config.Server.Monitoring)
+	// check license
+	if srv.config.Environment != EnvDev && version.Variant != VariantDev {
+		srv.checkLicense()
+	}
+
 	// start all markets and listen for incomming events
 	for _, market := range srv.markets {
 		market.Start(srv.ctx)
@@ -120,12 +166,18 @@ func (srv *server) stopOnSignal() {
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, os.Interrupt, syscall.SIGINT)
 	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
-	sig := <-sigc
-	log.Info().Str("section", "server").Str("action", "terminate").Str("signal", sig.String()).Msg("Received termination signal. Closing services")
+	<-sigc
+	srv.shutdown(0)
+}
+
+func (srv *server) shutdown(code int) {
+	log.Info().Str("section", "server").Str("action", "terminate").Msg("Received shutdown signal. Starting graceful shutdown...")
+	log.Debug().Str("section", "server").Str("action", "terminate").Msg("Markets closing...")
 	srv.closeMarkets()
-	time.Sleep(time.Second)
+	log.Debug().Str("section", "server").Str("action", "terminate").Msg("Waiting a few seconds to finish")
+	time.Sleep(1 * time.Second)
 	log.Info().Str("section", "server").Str("action", "terminate").Msg("Exiting")
-	os.Exit(0)
+	os.Exit(code)
 }
 
 func (srv *server) ReceiveMessages() {

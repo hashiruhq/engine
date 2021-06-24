@@ -1,0 +1,15 @@
+FROM alpine:3.9
+
+RUN apk --no-cache add ca-certificates
+
+COPY ./matching_engine_linux_amd64 /root/
+COPY ./.engine.yml /root/
+
+ENV LOG_LEVEL="info"
+ENV LOG_FORMAT="json"
+
+EXPOSE 6060
+RUN mkdir -p /root/backups
+WORKDIR /root/
+
+CMD ["./matching_engine_linux_amd64", "server"]

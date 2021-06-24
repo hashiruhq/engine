@@ -65,10 +65,12 @@ type MonitoringConfig struct {
 
 // Config structure
 type Config struct {
-	Markets map[string]MarketConfig
-	Brokers BrokersConfig
-	Server  ServerConfig
-	Kafka   net.KafkaConfig
+	LicenseKey  string `mapstructure:"license_key"`
+	Environment string `mapstructure:"env"`
+	Markets     map[string]MarketConfig
+	Brokers     BrokersConfig
+	Server      ServerConfig
+	Kafka       net.KafkaConfig
 }
 
 // LoadConfig Load server configuration from the yaml file
