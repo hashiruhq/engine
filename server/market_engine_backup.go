@@ -6,7 +6,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"gitlab.com/around25/products/matching-engine/model"
+	"github.com/hashiruhq/engine/model"
 )
 
 // BackupMarket saves the given snapshot of the order book as binary into the backups folder with the name of the market pair

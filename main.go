@@ -1,9 +1,9 @@
-package main // import "gitlab.com/around25/products/matching-engine"
+package main // import "github.com/hashiruhq/engine"
 
 import (
 	"runtime"
 
-	"gitlab.com/around25/products/matching-engine/cmd"
+	"github.com/hashiruhq/engine/cmd"
 )
 
 func init() {

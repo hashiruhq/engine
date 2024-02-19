@@ -10,9 +10,9 @@ import (
 	"math/rand"
 	"os"
 
+	"github.com/hashiruhq/engine/model"
+	"github.com/hashiruhq/engine/net"
 	"github.com/segmentio/kafka-go"
-	"gitlab.com/around25/products/matching-engine/model"
-	"gitlab.com/around25/products/matching-engine/net"
 )
 
 const KAFKA_BROKER = "kafka:9092"

@@ -21,7 +21,7 @@ package engine
  */
 
 import (
-	"gitlab.com/around25/products/matching-engine/model"
+	"github.com/hashiruhq/engine/model"
 )
 
 /**
@@ -162,7 +162,7 @@ func (book *orderBook) ActivateStopOrders(events *[]model.Event) *[]model.Order 
 	return orders
 }
 
-//traverse pending stop entry orders and activate the ones that have a stop price lower or equal to the last price
+// traverse pending stop entry orders and activate the ones that have a stop price lower or equal to the last price
 func (book *orderBook) activateStopEntryOrders(lastPrice uint64, events *[]model.Event, orders *[]model.Order) {
 	if book.LowestEntryPrice == 0 || book.LowestEntryPrice > lastPrice {
 		return
@@ -192,7 +192,7 @@ func (book *orderBook) activateStopEntryOrders(lastPrice uint64, events *[]model
 	iterator.Close()
 }
 
-//traverse pending stop orders orders and activate the ones that have a stop price higher or equal to the last price
+// traverse pending stop orders orders and activate the ones that have a stop price higher or equal to the last price
 func (book *orderBook) activateStopLossOrders(lastPrice uint64, events *[]model.Event, orders *[]model.Order) {
 	if book.HighestLossPrice == 0 || book.HighestLossPrice < lastPrice {
 		return

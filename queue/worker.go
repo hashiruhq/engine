@@ -1,7 +1,7 @@
 package queue
 
 // import (
-// 	"gitlab.com/around25/products/matching-engine/engine"
+// 	"github.com/hashiruhq/engine/engine"
 // )
 
 // var (

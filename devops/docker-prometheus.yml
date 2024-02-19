@@ -7,7 +7,7 @@ services:
       - "9090:9090"
     restart: always
     volumes:
-      - /root/trading_engine/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /root/hashiru_engine/prometheus.yml:/etc/prometheus/prometheus.yml
   grafana:
     image: grafana/grafana
     ports:

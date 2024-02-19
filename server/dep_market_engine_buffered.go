@@ -10,9 +10,9 @@ THIS FILE IS DEPRECATED AND SHOULD NOT BE USED EXCEPT FOR TESTING
 // 	"os"
 // 	"time"
 
-// 	"gitlab.com/around25/products/matching-engine/engine"
-// 	"gitlab.com/around25/products/matching-engine/net"
-// 	"gitlab.com/around25/products/matching-engine/queue"
+// 	"github.com/hashiruhq/engine/engine"
+// 	"github.com/hashiruhq/engine/net"
+// 	"github.com/hashiruhq/engine/queue"
 
 // 	"github.com/Shopify/sarama"
 // )

@@ -4,9 +4,9 @@ package benchmarks_test
 // 	"log"
 // 	"testing"
 
-// 	"gitlab.com/around25/products/matching-engine/engine"
-// 	"gitlab.com/around25/products/matching-engine/net"
-// 	"gitlab.com/around25/products/matching-engine/queue"
+// 	"github.com/hashiruhq/engine/engine"
+// 	"github.com/hashiruhq/engine/net"
+// 	"github.com/hashiruhq/engine/queue"
 
 // 	"github.com/Shopify/sarama"
 // )

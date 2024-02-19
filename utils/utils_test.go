@@ -3,8 +3,8 @@ package utils_test
 import (
 	"testing"
 
+	"github.com/hashiruhq/engine/utils"
 	. "github.com/smartystreets/goconvey/convey"
-	"gitlab.com/around25/products/matching-engine/utils"
 )
 
 func BenchmarkDivideUint64(b *testing.B) {

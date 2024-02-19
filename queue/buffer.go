@@ -3,7 +3,7 @@ package queue
 // import (
 // 	"runtime"
 
-// 	"gitlab.com/around25/products/matching-engine/engine"
+// 	"github.com/hashiruhq/engine/engine"
 // )
 
 // // Buffer structure to process messages in a buffered ring

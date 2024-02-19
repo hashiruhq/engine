@@ -11,8 +11,8 @@ package benchmarks_test
 // 	"time"
 
 // 	"github.com/golang/protobuf/proto"
-// 	"gitlab.com/around25/products/matching-engine/engine"
-// 	"gitlab.com/around25/products/matching-engine/model"
+// 	"github.com/hashiruhq/engine/engine"
+// 	"github.com/hashiruhq/engine/model"
 // )
 
 // var arr []model.Order = make([]model.Order, 0, 2000000)

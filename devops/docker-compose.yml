@@ -7,7 +7,7 @@ services:
       - "9090:9090"
     restart: always
     volumes:
-      - /root/trading_engine/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /root/hashiru_engine/prometheus.yml:/etc/prometheus/prometheus.yml
   grafana:
     image: grafana/grafana
     ports:
@@ -34,16 +34,16 @@ services:
       KAFKA_LOG_RETENTION_HOURS_PER_TOPIC: 3
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-  matching_engine:
+  hashiru_engine:
     build:
       context: ../
     restart: always
     ports:
       - 6060:6060
-    image: matching_engine:local
+    image: hashiru_engine:local
     volumes:
       - backups:/root/backups
-      - /root/matching_engine/.engine.yml:/root/.engine.yml
+      - /root/hashiru_engine/.engine.yml:/root/.engine.yml
   # Debug: Kafka Manager
   kafka_manager:
     image: sheepkiller/kafka-manager

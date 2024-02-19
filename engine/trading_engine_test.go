@@ -3,8 +3,8 @@ package engine_test
 import (
 	"testing"
 
-	"gitlab.com/around25/products/matching-engine/engine"
-	"gitlab.com/around25/products/matching-engine/model"
+	"github.com/hashiruhq/engine/engine"
+	"github.com/hashiruhq/engine/model"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

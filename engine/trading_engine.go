@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"gitlab.com/around25/products/matching-engine/model"
+	"github.com/hashiruhq/engine/model"
 )
 
 // TradingEngine contains the current order book and information about the service since it was created

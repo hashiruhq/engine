@@ -1,8 +1,8 @@
 package engine
 
 import (
+	"github.com/hashiruhq/engine/model"
 	"github.com/segmentio/kafka-go"
-	"gitlab.com/around25/products/matching-engine/model"
 )
 
 // Event structure for order execution

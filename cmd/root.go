@@ -30,7 +30,7 @@ func init() {
 	viper.SetConfigName(".engine")
 	viper.AddConfigPath(".")                    // First try to load the config from the current directory
 	viper.AddConfigPath("$HOME")                // Then try to load it from the HOME directory
-	viper.AddConfigPath("/etc/trading_engine/") // As a last resort try to load it from the /etc/trading_engine
+	viper.AddConfigPath("/etc/hashiru_engine/") // As a last resort try to load it from the /etc/trading_engine
 }
 
 func initLoggingEnv() {

@@ -13,9 +13,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"gitlab.com/around25/products/matching-engine/license"
-	"gitlab.com/around25/products/matching-engine/net"
-	"gitlab.com/around25/products/matching-engine/version"
+	"github.com/hashiruhq/engine/license"
+	"github.com/hashiruhq/engine/net"
+	"github.com/hashiruhq/engine/version"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

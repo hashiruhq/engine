@@ -21,7 +21,7 @@ package engine
  */
 
 import (
-	"gitlab.com/around25/products/matching-engine/model"
+	"github.com/hashiruhq/engine/model"
 )
 
 func (s *SkipList) addOrder(price uint64, order model.Order) {

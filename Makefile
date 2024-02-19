@@ -29,10 +29,10 @@ build-dev:
 	cp ./model/trade.proto ./build/dev/model/trade.proto
 	cp ./docs/grafana_dashboard.json ./build/dev/grafana_dashboard.json
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix dev \
-  	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Dev)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=0' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=3'" \
+  	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Dev)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=0' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=3'" \
   	-o ./build/dev/matching_engine_linux_amd64
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix dev \
-  	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Dev)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=0' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=3'" \
+  	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Dev)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=0' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=3'" \
   	-o ./build/dev/matching_engine_darwin_amd64
 	zip -r ./build/matching_engine_dev.zip ./build/dev
 
@@ -49,10 +49,10 @@ build-starter:
 	cp ./model/trade.proto ./build/starter/model/trade.proto
 	cp ./docs/grafana_dashboard.json ./build/starter/grafana_dashboard.json
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix starter \
-  	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Starter)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=2' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=5'" \
+  	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Starter)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=2' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=5'" \
   	-o ./build/starter/matching_engine_linux_amd64
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix starter \
-  	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Starter)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=2' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=5'" \
+  	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Starter)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=2' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=5'" \
   	-o ./build/starter/matching_engine_darwin_amd64
 	zip -r ./build/matching_engine_starter.zip ./build/starter
 
@@ -69,10 +69,10 @@ build-premium:
 	cp ./model/trade.proto ./build/premium/model/trade.proto
 	cp ./docs/grafana_dashboard.json ./build/premium/grafana_dashboard.json
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix premium \
-  	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Premium)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=4' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=25'" \
+  	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Premium)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=4' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=25'" \
   	-o ./build/premium/matching_engine_linux_amd64
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix premium \
-  	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Premium)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=4' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=25'" \
+  	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Premium)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=4' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=25'" \
   	-o ./build/premium/matching_engine_darwin_amd64
 	zip -r ./build/matching_engine_premium.zip ./build/premium
 
@@ -89,10 +89,10 @@ build-enterprise:
 	cp ./model/trade.proto ./build/enterprise/model/trade.proto
 	cp ./docs/grafana_dashboard.json ./build/enterprise/grafana_dashboard.json
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix enterprise \
-  	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Enterprise)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=15' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=50'" \
+  	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Enterprise)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=15' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=50'" \
   	-o ./build/enterprise/matching_engine_linux_amd64
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix enterprise \
-  	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Enterprise)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=15' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=50'" \
+  	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Enterprise)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=15' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=50'" \
   	-o ./build/enterprise/matching_engine_darwin_amd64
 	zip -r ./build/matching_engine_enterprise.zip ./build/enterprise
 
@@ -109,10 +109,10 @@ build-corporate:
 	cp ./model/trade.proto ./build/corporate/model/trade.proto
 	cp ./docs/grafana_dashboard.json ./build/corporate/grafana_dashboard.json
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix corporate \
-  	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Corporate)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=50' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=250'" \
+  	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Corporate)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=50' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=250'" \
   	-o ./build/corporate/matching_engine_linux_amd64
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -a -installsuffix corporate \
- 	 	--ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.Variant=(Corporate)' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=rNsKn' -X 'gitlab.com/around25/products/matching-engine/version.SMaxUses=50' -X 'gitlab.com/around25/products/matching-engine/version.SMaxMarkets=250'" \
+ 	 	--ldflags "-s -w -X 'github.com/hashiruhq/engine/version.Variant=(Corporate)' -X 'github.com/hashiruhq/engine/version.ProductID=rNsKn' -X 'github.com/hashiruhq/engine/version.SMaxUses=50' -X 'github.com/hashiruhq/engine/version.SMaxMarkets=250'" \
   	-o ./build/corporate/matching_engine_darwin_amd64
 	zip -r ./build/matching_engine_corporate.zip ./build/corporate
 

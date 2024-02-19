@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"gitlab.com/around25/products/matching-engine/model"
+	"github.com/hashiruhq/engine/model"
 )
 
 // import "github.com/ryszard/goskiplist/skiplist"

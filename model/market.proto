@@ -1,7 +1,7 @@
 syntax = "proto3";
 package model;
 
-option go_package = "gitlab.com/around25/products/matching-engine/model";
+option go_package = "github.com/hashiruhq/engine/model";
 
 import "order.proto";
 

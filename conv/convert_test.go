@@ -3,7 +3,7 @@ package conv_test
 import (
 	"testing"
 
-	"gitlab.com/around25/products/matching-engine/conv"
+	"github.com/hashiruhq/engine/conv"
 
 	. "github.com/smartystreets/goconvey/convey"
 )

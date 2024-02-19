@@ -3,10 +3,10 @@ package engine_test
 import (
 	"testing"
 
+	"github.com/hashiruhq/engine/engine"
+	"github.com/hashiruhq/engine/model"
 	"github.com/segmentio/kafka-go"
 	. "github.com/smartystreets/goconvey/convey"
-	"gitlab.com/around25/products/matching-engine/engine"
-	"gitlab.com/around25/products/matching-engine/model"
 )
 
 func TestEventsUsage(t *testing.T) {

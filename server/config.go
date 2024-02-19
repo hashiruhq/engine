@@ -1,9 +1,9 @@
 package server
 
 import (
+	"github.com/hashiruhq/engine/net"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
-	"gitlab.com/around25/products/matching-engine/net"
 )
 
 // ConsumerConfig structure

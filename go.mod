@@ -1,4 +1,4 @@
-module gitlab.com/around25/products/matching-engine
+module github.com/hashiruhq/engine
 
 require (
 	cloud.google.com/go v0.36.0 // indirect

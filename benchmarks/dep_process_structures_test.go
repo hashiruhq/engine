@@ -3,8 +3,8 @@ package benchmarks_test
 // import (
 // 	"testing"
 
-// 	"gitlab.com/around25/products/matching-engine/engine"
-// 	"gitlab.com/around25/products/matching-engine/queue"
+// 	"github.com/hashiruhq/engine/engine"
+// 	"github.com/hashiruhq/engine/queue"
 
 // 	"github.com/Shopify/sarama"
 // )

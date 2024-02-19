@@ -6,9 +6,9 @@ package benchmarks_test
 // 	"testing"
 // 	"time"
 
-// 	"gitlab.com/around25/products/matching-engine/engine"
-// 	"gitlab.com/around25/products/matching-engine/model"
-// 	"gitlab.com/around25/products/matching-engine/net"
+// 	"github.com/hashiruhq/engine/engine"
+// 	"github.com/hashiruhq/engine/model"
+// 	"github.com/hashiruhq/engine/net"
 // )
 
 // func init() {

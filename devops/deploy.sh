@@ -1,7 +1,7 @@
 #!/bin/bash
 
-mkdir -p /root/matching_engine/
-cd /root/matching_engine/
+mkdir -p /root/hashiru_engine/
+cd /root/hashiru_engine/
 
 # mkdir /srv/go
 # mkdir /srv/go/src
@@ -31,20 +31,20 @@ cd /root/matching_engine/
 
 # mkdir /srv/matching_engine/linux_amd64
 # cd /srv/matching_engine/linux_amd64
-wget -O matching_engine https://data.cloud.around25.net/s/xTDVDaLzPesymmV/download
-chmod +x matching_engine
+wget -O hashiru_engine https://data.cloud.around25.net/s/xTDVDaLzPesymmV/download
+chmod +x hashiru_engine
 
 # create systemd file under: /etc/systemd/system/matching_engine.service
 [Unit]
 Description=Matching Engine
 
 [Service]
-ExecStart=/root/matching_engine/matching_engine
+ExecStart=/root/hashiru_engine/hashiru_engine
 
 [Install]
 WantedBy=multi-user.target
 
 # restart the config
 systemctl daemon-reload
-systemctl enable matching_engine.service
-systemctl start matching_engine.service
+systemctl enable hashiru_engine.service
+systemctl start hashiru_engine.service

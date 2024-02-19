@@ -1,14 +1,14 @@
 version: '3.2'
 services:
-  matching_engine:
+  hashiru_engine:
     build:
       context: ../
     restart: always
     ports:
       - 6060:6060
-    image: matching_engine:local
+    image: hashiru_engine:local
     volumes:
       - backups:/root/backups
-      # - /root/matching_engine/.engine.yml:/root/.engine.yml
+      # - /root/hashiru_engine/.engine.yml:/root/.engine.yml
 volumes:
   backups:

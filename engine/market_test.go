@@ -3,8 +3,8 @@ package engine_test
 import (
 	"testing"
 
+	"github.com/hashiruhq/engine/model"
 	. "github.com/smartystreets/goconvey/convey"
-	"gitlab.com/around25/products/matching-engine/model"
 )
 
 func TestMarketConvertFromAndToBinary(t *testing.T) {

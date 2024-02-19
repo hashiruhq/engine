@@ -3,9 +3,9 @@ package engine
 import (
 	"testing"
 
+	"github.com/hashiruhq/engine/model"
+	"github.com/hashiruhq/engine/utils"
 	. "github.com/smartystreets/goconvey/convey"
-	"gitlab.com/around25/products/matching-engine/model"
-	"gitlab.com/around25/products/matching-engine/utils"
 )
 
 /**

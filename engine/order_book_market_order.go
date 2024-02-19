@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"gitlab.com/around25/products/matching-engine/model"
-	"gitlab.com/around25/products/matching-engine/utils"
+	"github.com/hashiruhq/engine/model"
+	"github.com/hashiruhq/engine/utils"
 )
 
 /**

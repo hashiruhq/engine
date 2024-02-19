@@ -19,7 +19,7 @@ RUN go mod download
 COPY . .
 
 RUN CGO_ENABLED=0 go build -a -installsuffix cgo \
-  --ldflags "-s -w -X 'gitlab.com/around25/products/matching-engine/version.GitCommit=$GIT_COMMIT' -X 'gitlab.com/around25/products/matching-engine/version.AppVersion=$APP_VERSION' -X 'gitlab.com/around25/products/matching-engine/version.ProductID=$PRODUCT_ID' -X 'gitlab.com/around25/products/matching-engine/version.MaxUses=$MAX_USES'" \
+  --ldflags "-s -w -X 'github.com/hashiruhq/engine/version.GitCommit=$GIT_COMMIT' -X 'github.com/hashiruhq/engine/version.AppVersion=$APP_VERSION' -X 'github.com/hashiruhq/engine/version.ProductID=$PRODUCT_ID' -X 'github.com/hashiruhq/engine/version.MaxUses=$MAX_USES'" \
   -o /usr/bin/matching_engine
 
 FROM alpine:3.9

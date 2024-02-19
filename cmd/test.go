@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"gitlab.com/around25/products/matching-engine/model"
-	"gitlab.com/around25/products/matching-engine/net"
-	"gitlab.com/around25/products/matching-engine/server"
+	"github.com/hashiruhq/engine/model"
+	"github.com/hashiruhq/engine/net"
+	"github.com/hashiruhq/engine/server"
 
 	"github.com/segmentio/kafka-go"
 	"github.com/spf13/cobra"
